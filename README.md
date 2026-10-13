@@ -43,7 +43,7 @@ Then follow the core package README for admins, the sync schedule and the queue 
 
 ## Routes
 
-All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`) with the `web` and `auth` middleware. Menu links: `route('mailbox.index')` and `route('mailbox.settings.index')`. Every route is gated with the core abilities (`accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`); the pages hide controls the user cannot use.
+All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`) with the `web` and `auth` middleware. Menu links: `route('mailbox.index')` (show it with `@can('accessAnyMailbox')` / `$can('accessAnyMailbox')`) and `route('mailbox.settings.index')`. Every route is gated with the core abilities (`accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`); the pages hide controls the user cannot use.
 
 ## Development
 

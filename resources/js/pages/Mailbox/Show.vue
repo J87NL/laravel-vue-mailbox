@@ -14,6 +14,7 @@ const props = defineProps<{
     hasRemoteImages: boolean
     history: AuditEntry[]
     html: string
+    imageOrigin: string
     remoteImages: boolean
     mailbox: MailboxSummary
     message: {
@@ -112,7 +113,7 @@ function addresses(list: MailAddress[] | null): string {
                     <Link href="?images=1" class="underline" preserve-scroll>Afbeeldingen tonen</Link>
                 </p>
 
-                <MessageFrame :html="html" :remote-images="remoteImages" />
+                <MessageFrame :html="html" :image-origin="imageOrigin" :remote-images="remoteImages" />
 
                 <ul v-if="attachments.length" class="mt-4 flex flex-wrap gap-2">
                     <li v-for="attachment in attachments" :key="attachment.url">

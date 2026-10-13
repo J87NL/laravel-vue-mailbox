@@ -24,7 +24,8 @@ final class MessagesTable extends AbstractTable
 
     public static function fromSignedParameters(array $parameters, Request $request): static
     {
-        return new self(MailboxFolder::query()->with('mailbox')->findOrFail($parameters['folder']));
+        return new self(MailboxFolder::query()
+            ->with('mailbox')->findOrFail($parameters['folder']));
     }
 
     public function authorize(Request $request): bool
@@ -39,12 +40,29 @@ final class MessagesTable extends AbstractTable
 
     public function signedParameters(): array
     {
-        return ['folder' => $this->folder->id];
+        return [
+            'folder' => $this->folder->id,
+        ];
     }
 
     public function for(): Builder
     {
-        return MailboxMessage::query()->whereBelongsTo($this->folder, 'folder');
+        return MailboxMessage::query()
+            ->select([
+                'id',
+                'mailbox_id',
+                'mailbox_folder_id',
+                'uid',
+                'subject',
+                'from_email',
+                'from_name',
+                'sent_at',
+                'is_seen',
+                'is_flagged',
+                'is_answered',
+                'has_attachments',
+            ])
+            ->whereBelongsTo($this->folder, 'folder');
     }
 
     public function configure(TableBuilder $table): void
@@ -52,7 +70,11 @@ final class MessagesTable extends AbstractTable
         $table
             ->name('messages')
             ->defaultSortDesc('sent_at')
-            ->withGlobalSearch(columns: ['subject', 'from_email', 'from_name'])
+            ->withGlobalSearch(columns: [
+                'subject',
+                'from_email',
+                'from_name',
+            ])
             ->column('from_name', __('mailbox::mailbox.from'), canBeHidden: false, highlight: true, as: fn (?string $name, MailboxMessage $message): string => $this->sender($name, $message))
             ->column('subject', __('mailbox::mailbox.subject'), canBeHidden: false, as: fn (?string $subject, MailboxMessage $message): string => $this->subject($subject, $message))
             ->column('has_attachments', __('mailbox::mailbox.attachments'), boolean: true, alignment: 'center')
@@ -65,11 +87,17 @@ final class MessagesTable extends AbstractTable
             return;
         }
 
+        $mailbox = $this->folder->mailbox;
+
         $table
-            ->bulkAction(__('mailbox::mailbox.archive'), before: fn (array $ids) => app(ArchiveMessages::class)->handle($this->folder->mailbox, $this->messages($ids), auth()->user()))
-            ->bulkAction(__('mailbox::mailbox.delete'), before: fn (array $ids) => app(DeleteMessages::class)->handle($this->folder->mailbox, $this->messages($ids), auth()->user()), confirm: __('mailbox::mailbox.delete_confirm'))
-            ->bulkAction(__('mailbox::mailbox.mark_read'), before: fn (array $ids) => app(MarkMessages::class)->read($this->messages($ids), auth()->user()))
-            ->bulkAction(__('mailbox::mailbox.mark_unread'), before: fn (array $ids) => app(MarkMessages::class)->unread($this->messages($ids), auth()->user()));
+            ->bulkAction(__('mailbox::mailbox.archive'), before: fn (array $ids): int => app(ArchiveMessages::class)->handle($mailbox, $this->messages($ids), auth()->user()))
+            ->bulkAction(__('mailbox::mailbox.delete'), before: fn (array $ids): int => app(DeleteMessages::class)->handle($mailbox, $this->messages($ids), auth()->user()), confirm: __('mailbox::mailbox.delete_confirm'))
+            ->bulkAction(__('mailbox::mailbox.mark_read'), before: function (array $ids): void {
+                app(MarkMessages::class)->read($this->messages($ids), auth()->user());
+            })
+            ->bulkAction(__('mailbox::mailbox.mark_unread'), before: function (array $ids): void {
+                app(MarkMessages::class)->unread($this->messages($ids), auth()->user());
+            });
     }
 
     /**

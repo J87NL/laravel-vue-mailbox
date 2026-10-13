@@ -19,10 +19,31 @@ class MessageActionController extends Controller
     public function __invoke(Request $request, Mailbox $mailbox): RedirectResponse
     {
         $data = $request->validate([
-            'action' => ['required', Rule::in(['archive', 'delete', 'flag', 'move', 'read', 'unflag', 'unread'])],
-            'folder_id' => ['required_if:action,move', 'nullable', 'integer'],
-            'ids' => ['required', 'array', 'max:500'],
-            'ids.*' => ['integer'],
+            'action' => [
+                'required',
+                Rule::in([
+                    'archive',
+                    'delete',
+                    'flag',
+                    'move',
+                    'read',
+                    'unflag',
+                    'unread',
+                ]),
+            ],
+            'folder_id' => [
+                'required_if:action,move',
+                'nullable',
+                'integer',
+            ],
+            'ids' => [
+                'required',
+                'array',
+                'max:500',
+            ],
+            'ids.*' => [
+                'integer',
+            ],
         ]);
 
         $messages = $mailbox->messages()->with('folder')->whereKey($data['ids'])->get();
@@ -40,7 +61,11 @@ class MessageActionController extends Controller
             default => abort(422),
         };
 
-        if (in_array($data['action'], ['flag', 'read', 'unflag'], true)) {
+        if (in_array($data['action'], [
+            'flag',
+            'read',
+            'unflag',
+        ], true)) {
             return back();
         }
 

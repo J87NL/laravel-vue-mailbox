@@ -3,13 +3,14 @@ import { computed, ref } from 'vue'
 
 const props = defineProps<{
     html: string
+    imageOrigin: string
     remoteImages: boolean
 }>()
 
 const frame = ref<HTMLIFrameElement | null>(null)
 const height = ref(400)
 
-const imageSources = computed(() => props.remoteImages ? '* data:' : `data: ${window.location.origin}`)
+const imageSources = computed(() => props.remoteImages ? '* data:' : `data: ${props.imageOrigin}`)
 
 const srcdoc = computed(() => `<!doctype html>
 <html>

@@ -18,18 +18,19 @@ pest()->extend(TestCase::class)->in('Feature');
  */
 function mailbox(array $attributes = []): Mailbox
 {
-    return Mailbox::query()->create([
-        'active' => true,
-        'email' => 'team@example.com',
-        'imap_host' => 'imap.example.com',
-        'imap_password' => 'imap-secret',
-        'imap_username' => 'team@example.com',
-        'name' => 'Team',
-        'smtp_host' => 'smtp.example.com',
-        'smtp_password' => 'smtp-secret',
-        'smtp_username' => 'team@example.com',
-        ...$attributes,
-    ])->refresh();
+    return Mailbox::query()
+        ->create([
+            'active' => true,
+            'email' => 'team@example.com',
+            'imap_host' => 'imap.example.com',
+            'imap_password' => 'imap-secret',
+            'imap_username' => 'team@example.com',
+            'name' => 'Team',
+            'smtp_host' => 'smtp.example.com',
+            'smtp_password' => 'smtp-secret',
+            'smtp_username' => 'team@example.com',
+            ...$attributes,
+        ])->refresh();
 }
 
 /**
@@ -37,15 +38,16 @@ function mailbox(array $attributes = []): Mailbox
  */
 function folder(Mailbox $mailbox, string $path = 'INBOX', FolderRole $role = FolderRole::Inbox, array $attributes = []): MailboxFolder
 {
-    return MailboxFolder::query()->create([
-        'mailbox_id' => $mailbox->id,
-        'name' => $path,
-        'path' => $path,
-        'role' => $role,
-        'selectable' => true,
-        'synced_at' => now(),
-        ...$attributes,
-    ])->refresh();
+    return MailboxFolder::query()
+        ->create([
+            'mailbox_id' => $mailbox->id,
+            'name' => $path,
+            'path' => $path,
+            'role' => $role,
+            'selectable' => true,
+            'synced_at' => now(),
+            ...$attributes,
+        ])->refresh();
 }
 
 /**
@@ -53,17 +55,18 @@ function folder(Mailbox $mailbox, string $path = 'INBOX', FolderRole $role = Fol
  */
 function storedMessage(MailboxFolder $folder, int $uid, array $attributes = []): MailboxMessage
 {
-    return MailboxMessage::query()->create([
-        'body_fetched_at' => now(),
-        'body_html' => '<p>Hello</p>',
-        'from_email' => 'sender@example.org',
-        'mailbox_folder_id' => $folder->id,
-        'mailbox_id' => $folder->mailbox_id,
-        'message_id' => sprintf('message-%d@example.org', $uid),
-        'subject' => sprintf('Message %d', $uid),
-        'uid' => $uid,
-        ...$attributes,
-    ])->refresh();
+    return MailboxMessage::query()
+        ->create([
+            'body_fetched_at' => now(),
+            'body_html' => '<p>Hello</p>',
+            'from_email' => 'sender@example.org',
+            'mailbox_folder_id' => $folder->id,
+            'mailbox_id' => $folder->mailbox_id,
+            'message_id' => sprintf('message-%d@example.org', $uid),
+            'subject' => sprintf('Message %d', $uid),
+            'uid' => $uid,
+            ...$attributes,
+        ])->refresh();
 }
 
 /**
@@ -71,23 +74,25 @@ function storedMessage(MailboxFolder $folder, int $uid, array $attributes = []):
  */
 function user(array $attributes = []): User
 {
-    return User::query()->create([
-        'email' => sprintf('user-%s@example.com', uniqid()),
-        'name' => 'Test User',
-        ...$attributes,
-    ]);
+    return User::query()
+        ->create([
+            'email' => sprintf('user-%s@example.com', uniqid()),
+            'name' => 'Test User',
+            ...$attributes,
+        ]);
 }
 
 function member(Mailbox $mailbox, AccessLevel $level): User
 {
     $user = user();
 
-    MailboxAccess::query()->create([
-        'accessor_id' => $user->id,
-        'accessor_type' => $user->getMorphClass(),
-        'level' => $level,
-        'mailbox_id' => $mailbox->id,
-    ]);
+    MailboxAccess::query()
+        ->create([
+            'accessor_id' => $user->id,
+            'accessor_type' => $user->getMorphClass(),
+            'level' => $level,
+            'mailbox_id' => $mailbox->id,
+        ]);
 
     return $user;
 }

@@ -25,7 +25,8 @@ function endpoint(string $name, Mailbox $mailbox): array
 {
     $folder = $mailbox->folders()->firstOrFail();
     $message = $mailbox->messages()->firstOrFail();
-    $access = MailboxAccess::query()->where('mailbox_id', $mailbox->id)->firstOrFail();
+    $access = MailboxAccess::query()
+        ->where('mailbox_id', $mailbox->id)->firstOrFail();
 
     return match ($name) {
         'folders.show' => ['get', route('mailbox.folders.show', [$mailbox, $folder])],

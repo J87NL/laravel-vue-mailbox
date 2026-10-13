@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 namespace J87NL\VueMailbox\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
-use J87NL\Mailbox\Actions\FetchMessageBody;
 use J87NL\Mailbox\Actions\MarkMessages;
 use J87NL\Mailbox\Html\MessageHtml;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAuditEntry;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\VueMailbox\Support\FolderTree;
+use J87NL\VueMailbox\Support\MessageBodyLoader;
 
 class MessageController extends Controller
 {
@@ -28,12 +29,14 @@ class MessageController extends Controller
         Request $request,
         Mailbox $mailbox,
         MailboxMessage $message,
-        FetchMessageBody $fetchBody,
+        MessageBodyLoader $loader,
         MarkMessages $markMessages,
         FolderTree $tree,
-    ): Response {
-        $message->load('folder');
-        $fetchBody->handle($message);
+    ): Response|RedirectResponse {
+        if (is_null($loader->load($message->load('folder')))) {
+            return $loader->backToFolder($message);
+        }
+
         $canWork = Gate::allows('workInMailbox', $mailbox);
 
         if ($canWork && ! $message->is_seen) {
@@ -51,12 +54,23 @@ class MessageController extends Controller
             'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
             'folders' => $tree->for($mailbox),
             'history' => $this->history($message),
+            'imageOrigin' => $request->getSchemeAndHttpHost(),
             'mailbox' => [
                 'email' => $mailbox->email,
                 'id' => $mailbox->id,
                 'name' => $mailbox->name,
             ],
-            'message' => $message->only(['id', 'subject', 'from_email', 'from_name', 'to', 'cc', 'sent_at', 'is_flagged', 'is_answered']),
+            'message' => $message->only([
+                'id',
+                'subject',
+                'from_email',
+                'from_name',
+                'to',
+                'cc',
+                'sent_at',
+                'is_flagged',
+                'is_answered',
+            ]),
         ]);
     }
 

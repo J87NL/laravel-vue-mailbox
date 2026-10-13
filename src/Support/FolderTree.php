@@ -45,7 +45,6 @@ class FolderTree
             ->map(fn (Mailbox $mailbox): array => [
                 'email' => $mailbox->email,
                 'id' => $mailbox->id,
-                'last_error' => $mailbox->last_error,
                 'name' => $mailbox->name,
                 'synced_at' => $mailbox->synced_at?->toIso8601String(),
                 'url' => route(config('vue-mailbox.routes.name').'folders.show', $mailbox),

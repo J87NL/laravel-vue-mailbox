@@ -26,7 +26,8 @@ it('only lets writers run bulk actions on the message table', function (AccessLe
         ->postJson($url, ['ids' => [$message->id]])
         ->assertStatus($status);
 
-    expect(MailboxMessage::query()->count())->toBe($remaining);
+    expect(MailboxMessage::query()
+        ->count())->toBe($remaining);
 })->with([
     'reader' => [AccessLevel::Read, 403, 1],
     'writer' => [AccessLevel::Write, 200, 0],

@@ -15,12 +15,17 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
     ->name(config('vue-mailbox.routes.name'))
     ->group(function (): void {
         Route::get('inline/{message}/{cid}', [AttachmentController::class, 'inline'])
-            ->middleware(['web', 'signed'])
+            ->middleware([
+                'web',
+                'signed',
+            ])
             ->where('cid', '.*')
             ->name('inline');
 
         Route::middleware(config('vue-mailbox.routes.middleware'))->group(function (): void {
-            Route::get('/', [FolderController::class, 'index'])->name('index');
+            Route::get('/', [FolderController::class, 'index'])
+                ->middleware('can:accessAnyMailbox')
+                ->name('index');
 
             Route::prefix('settings')->name('settings.')->group(function (): void {
                 Route::get('/', [MailboxSettingsController::class, 'index'])->name('index');

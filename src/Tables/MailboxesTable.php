@@ -21,7 +21,8 @@ class MailboxesTable extends AbstractTable
 
     public function for(): Builder
     {
-        return Mailbox::query()->whereKey($this->manageableIds());
+        return Mailbox::query()
+            ->whereKey($this->manageableIds());
     }
 
     public function configure(TableBuilder $table): void
@@ -29,7 +30,10 @@ class MailboxesTable extends AbstractTable
         $table
             ->name('mailboxes')
             ->defaultSort('name')
-            ->withGlobalSearch(columns: ['name', 'email'])
+            ->withGlobalSearch(columns: [
+                'name',
+                'email',
+            ])
             ->column('name', __('mailbox::mailbox.name'), sortable: true, highlight: true)
             ->column('email', __('mailbox::mailbox.address'), sortable: true)
             ->column('active', __('mailbox::mailbox.active'), boolean: true, alignment: 'center')
@@ -41,7 +45,8 @@ class MailboxesTable extends AbstractTable
 
     private function manageableIds(): array
     {
-        $mailboxes = Mailbox::query()->get();
+        $mailboxes = Mailbox::query()
+            ->get();
         $user = auth()->user();
 
         if (! is_null($user)) {

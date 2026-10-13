@@ -10,20 +10,31 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use J87NL\Mailbox\Actions\FetchMessageBody;
 use J87NL\Mailbox\Actions\SendMessage;
 use J87NL\Mailbox\Forms\ComposeForm;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\VueMailbox\Support\FolderTree;
+use J87NL\VueMailbox\Support\MessageBodyLoader;
 
 class ComposeController extends Controller
 {
-    public function create(Request $request, Mailbox $mailbox, FetchMessageBody $fetchBody, FolderTree $tree): Response
+    private const FORWARD_PREFIXES = [
+        'fw:',
+        'fwd:',
+    ];
+
+    public function create(Request $request, Mailbox $mailbox, MessageBodyLoader $loader, FolderTree $tree): Response|RedirectResponse
     {
         $routes = config('vue-mailbox.routes.name');
-        $source = $request->integer('reply') ? $mailbox->messages()->with('folder')->find($request->integer('reply')) : null;
+        $source = $request->integer('reply')
+            ? $mailbox->messages()->with('folder')->find($request->integer('reply'))
+            : null;
         $mode = $request->string('mode', 'reply')->value();
+
+        if ($source && is_null($loader->load($source))) {
+            return $loader->backToFolder($source);
+        }
 
         return Inertia::render(config('vue-mailbox.pages.compose'), [
             'backUrl' => $source
@@ -32,9 +43,13 @@ class ComposeController extends Controller
             'folders' => $tree->for($mailbox),
             'form' => ComposeForm::make(
                 route($routes.'compose.store', $mailbox),
-                $source ? $this->defaults($mailbox, $fetchBody->handle($source), $mode) : [],
+                $source ? $this->defaults($mailbox, $source, $mode) : [],
             ),
-            'mailbox' => ['id' => $mailbox->id, 'name' => $mailbox->name, 'email' => $mailbox->email],
+            'mailbox' => [
+                'email' => $mailbox->email,
+                'id' => $mailbox->id,
+                'name' => $mailbox->name,
+            ],
             'mode' => $source ? $mode : 'new',
         ]);
     }
@@ -55,32 +70,71 @@ class ComposeController extends Controller
             ->with('success', __('mailbox::mailbox.sent'));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function defaults(Mailbox $mailbox, MailboxMessage $source, string $mode): array
     {
         $subject = (string) $source->subject;
+        $body = sprintf('<p></p>%s', $this->quote($source));
 
         if ($mode === 'forward') {
             return [
-                'body' => '<p></p>'.$this->quote($source),
-                'subject' => Str::startsWith(Str::lower($subject), ['fw:', 'fwd:']) ? $subject : 'Fwd: '.$subject,
+                'body' => $body,
+                'subject' => Str::startsWith(Str::lower($subject), self::FORWARD_PREFIXES) ? $subject : sprintf('Fwd: %s', $subject),
             ];
         }
 
+        $recipients = $this->replyRecipients($source);
+
         return [
-            'body' => '<p></p>'.$this->quote($source),
-            'cc' => $mode === 'reply_all' ? $this->others($mailbox, $source) : '',
+            'body' => $body,
+            'cc' => $mode === 'reply_all' ? $this->others($mailbox, $source, $recipients) : '',
             'reply_to_message' => $source->id,
-            'subject' => Str::startsWith(Str::lower($subject), 're:') ? $subject : 'Re: '.$subject,
-            'to' => (string) $source->from_email,
+            'subject' => Str::startsWith(Str::lower($subject), 're:') ? $subject : sprintf('Re: %s', $subject),
+            'to' => implode(', ', $recipients),
         ];
     }
 
-    private function others(Mailbox $mailbox, MailboxMessage $source): string
+    /**
+     * @return array<int, string>
+     */
+    private function replyRecipients(MailboxMessage $source): array
     {
+        $replyTo = collect($source->reply_to ?? [])
+            ->pluck('email')
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($replyTo !== []) {
+            return $replyTo;
+        }
+
+        if (is_null($source->from_email)) {
+            return [];
+        }
+
+        return [
+            $source->from_email,
+        ];
+    }
+
+    /**
+     * @param  array<int, string>  $recipients
+     */
+    private function others(Mailbox $mailbox, MailboxMessage $source, array $recipients): string
+    {
+        $excluded = array_map(fn (string $email): string => Str::lower($email), [
+            $mailbox->email,
+            (string) $source->from_email,
+            ...$recipients,
+        ]);
+
         return collect([...($source->to ?? []), ...($source->cc ?? [])])
             ->pluck('email')
-            ->reject(fn (?string $email): bool => in_array(Str::lower((string) $email), [Str::lower($mailbox->email), Str::lower((string) $source->from_email)], true))
             ->filter()
+            ->reject(fn (string $email): bool => in_array(Str::lower($email), $excluded, true))
             ->unique()
             ->implode(', ');
     }

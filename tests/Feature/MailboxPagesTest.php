@@ -113,7 +113,8 @@ it('sends a reply through the compose form', function (): void {
     $sent = $this->connector->transport->sent[0];
 
     expect($sent->getHeaders()->get('In-Reply-To')->getBodyAsString())->toBe('<question@example.org>')
-        ->and(MailboxMessage::query()->find($message->id)->is_answered)->toBeTrue();
+        ->and(MailboxMessage::query()
+            ->find($message->id)->is_answered)->toBeTrue();
 });
 
 it('rejects invalid recipients', function (): void {
@@ -143,13 +144,15 @@ it('moves only into folders of the same mailbox', function (): void {
         ])
         ->assertNotFound();
 
-    expect(MailboxMessage::query()->whereKey($message->id)->exists())->toBeTrue();
+    expect(MailboxMessage::query()
+        ->whereKey($message->id)->exists())->toBeTrue();
 });
 
 it('shows an error instead of revoking the last manager', function (): void {
     $mailbox = mailbox();
     $manager = member($mailbox, AccessLevel::Manage);
-    $access = MailboxAccess::query()->sole();
+    $access = MailboxAccess::query()
+        ->sole();
 
     $this->actingAs($manager)
         ->from(route('mailbox.settings.edit', $mailbox))
@@ -157,7 +160,8 @@ it('shows an error instead of revoking the last manager', function (): void {
         ->assertRedirect(route('mailbox.settings.edit', $mailbox))
         ->assertSessionHasErrors('accessor');
 
-    expect(MailboxAccess::query()->count())->toBe(1);
+    expect(MailboxAccess::query()
+        ->count())->toBe(1);
 });
 
 it('turns a failing connection test into form errors when creating a mailbox', function (): void {
@@ -183,5 +187,113 @@ it('turns a failing connection test into form errors when creating a mailbox', f
         ])
         ->assertSessionHasErrors('imap_host');
 
-    expect(Mailbox::query()->count())->toBe(0);
+    expect(Mailbox::query()
+        ->count())->toBe(0);
+});
+
+it('sends users without any mailbox away from the mailbox index', function (): void {
+    $mailbox = mailbox();
+    folder($mailbox);
+
+    $this->actingAs(user())
+        ->get(route('mailbox.index'))
+        ->assertForbidden();
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.index'))
+        ->assertRedirect(route('mailbox.folders.show', $mailbox));
+});
+
+it('returns to the folder when the message vanished on the server', function (): void {
+    $mailbox = mailbox();
+    $folder = folder($mailbox);
+    $message = storedMessage($folder, 1, ['body_fetched_at' => null]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.messages.show', [$mailbox, $message]))
+        ->assertRedirect(route('mailbox.folders.show', [$mailbox, $folder]))
+        ->assertSessionHas('error');
+
+    expect(MailboxMessage::query()
+        ->whereKey($message->id)
+        ->exists())->toBeFalse();
+    Bus::assertDispatched(SyncFolderJob::class, fn (SyncFolderJob $job): bool => $job->folderId === $folder->id);
+});
+
+it('answers 404 for attachments of a vanished message', function (): void {
+    $mailbox = mailbox();
+    $message = storedMessage(folder($mailbox), 1);
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.attachments.download', [$mailbox, $message, 0]))
+        ->assertNotFound();
+});
+
+it('strips path separators from attachment filenames', function (): void {
+    $mailbox = mailbox();
+    $message = storedMessage(folder($mailbox), 1);
+    $raw = implode("\r\n", [
+        'From: sender@example.org',
+        'MIME-Version: 1.0',
+        'Content-Type: multipart/mixed; boundary=XX',
+        '',
+        '--XX',
+        'Content-Type: text/plain',
+        '',
+        'See attachment',
+        '--XX',
+        'Content-Type: application/pdf',
+        'Content-Disposition: attachment; filename="../evil/report.pdf"',
+        '',
+        'PDF',
+        '--XX--',
+        '',
+    ]);
+    $this->connector->remote($mailbox)->folder('INBOX')->setMessages([
+        new FakeMessage(1, [], $raw),
+    ]);
+
+    $response = $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.attachments.download', [$mailbox, $message, 0]))
+        ->assertOk();
+
+    expect($response->headers->get('Content-Disposition'))->toContain('evil-report.pdf')
+        ->not->toContain('/')
+        ->not->toContain('\\')
+        ->and($response->headers->get('Content-Type'))->toBe('application/octet-stream');
+});
+
+it('replies to the Reply-To address and leaves it out of the copies', function (): void {
+    $mailbox = mailbox();
+    $message = storedMessage(folder($mailbox), 1, [
+        'cc' => [['email' => 'colleague@example.org', 'name' => '']],
+        'reply_to' => [['email' => 'support@example.org', 'name' => 'Support']],
+        'to' => [['email' => 'team@example.com', 'name' => ''], ['email' => 'support@example.org', 'name' => '']],
+    ]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $message->id, 'mode' => 'reply_all']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('form.defaults.to', 'support@example.org')
+            ->where('form.defaults.cc', 'colleague@example.org'));
+});
+
+it('passes the app origin for the image policy of the message frame', function (): void {
+    $mailbox = mailbox();
+    $message = storedMessage(folder($mailbox), 1);
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.messages.show', [$mailbox, $message]))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('imageOrigin', 'http://localhost'));
+});
+
+it('labels access rows with the accessor names', function (): void {
+    $mailbox = mailbox();
+    $manager = member($mailbox, AccessLevel::Manage);
+    $manager->update(['name' => 'Ada Manager']);
+
+    $this->actingAs($manager)
+        ->get(route('mailbox.settings.edit', $mailbox))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('accessTable', fn (mixed $table): bool => str_contains((string) json_encode($table), 'User: Ada Manager')));
 });

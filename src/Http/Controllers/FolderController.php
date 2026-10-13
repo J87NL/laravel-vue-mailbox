@@ -49,10 +49,18 @@ class FolderController extends Controller
 
         return Inertia::render(config('vue-mailbox.pages.index'), [
             'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
-            'folder' => ['id' => $folder->id, 'name' => $folder->name, 'role' => $folder->role->value],
+            'folder' => [
+                'id' => $folder->id,
+                'name' => $folder->name,
+                'role' => $folder->role->value,
+            ],
             'folderForm' => $canWork ? FolderForm::make($mailbox, route($routes.'folders.store', $mailbox)) : null,
             'folders' => $this->tree->for($mailbox),
-            'mailbox' => ['id' => $mailbox->id, 'name' => $mailbox->name, 'email' => $mailbox->email],
+            'mailbox' => [
+                'email' => $mailbox->email,
+                'id' => $mailbox->id,
+                'name' => $mailbox->name,
+            ],
             'mailboxes' => $this->tree->mailboxes(),
             'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
             'table' => MessagesTable::build($folder),
