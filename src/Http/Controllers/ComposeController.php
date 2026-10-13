@@ -151,7 +151,7 @@ class ComposeController extends Controller
             ->pluck('email')
             ->filter()
             ->reject(fn (string $email): bool => in_array(Str::lower($email), $excluded, true))
-            ->unique()
+            ->unique(fn (string $email): string => Str::lower($email))
             ->implode(', ');
     }
 
