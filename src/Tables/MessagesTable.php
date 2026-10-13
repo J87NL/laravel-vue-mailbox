@@ -1,0 +1,109 @@
+<?php
+
+declare(strict_types=1);
+
+namespace J87NL\VueMailbox\Tables;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use J87NL\Mailbox\Actions\ArchiveMessages;
+use J87NL\Mailbox\Actions\DeleteMessages;
+use J87NL\Mailbox\Actions\MarkMessages;
+use J87NL\Mailbox\Models\MailboxFolder;
+use J87NL\Mailbox\Models\MailboxMessage;
+use TranquilTools\TableBuilder\AbstractTable;
+use TranquilTools\TableBuilder\TableBuilder;
+
+final class MessagesTable extends AbstractTable
+{
+    public function __construct(
+        private readonly MailboxFolder $folder,
+    ) {}
+
+    public static function fromSignedParameters(array $parameters, Request $request): static
+    {
+        return new self(MailboxFolder::query()->with('mailbox')->findOrFail($parameters['folder']));
+    }
+
+    public function authorize(Request $request): bool
+    {
+        return Gate::allows('accessMailbox', $this->folder->mailbox);
+    }
+
+    public function authorizeBulkAction(Request $request, int $key): bool
+    {
+        return Gate::allows('workInMailbox', $this->folder->mailbox);
+    }
+
+    public function signedParameters(): array
+    {
+        return ['folder' => $this->folder->id];
+    }
+
+    public function for(): Builder
+    {
+        return MailboxMessage::query()->whereBelongsTo($this->folder, 'folder');
+    }
+
+    public function configure(TableBuilder $table): void
+    {
+        $table
+            ->name('messages')
+            ->defaultSortDesc('sent_at')
+            ->withGlobalSearch(columns: ['subject', 'from_email', 'from_name'])
+            ->column('from_name', __('mailbox::mailbox.from'), canBeHidden: false, highlight: true, as: fn (?string $name, MailboxMessage $message): string => $this->sender($name, $message))
+            ->column('subject', __('mailbox::mailbox.subject'), canBeHidden: false, as: fn (?string $subject, MailboxMessage $message): string => $this->subject($subject, $message))
+            ->column('has_attachments', __('mailbox::mailbox.attachments'), boolean: true, alignment: 'center')
+            ->column('sent_at', __('mailbox::mailbox.received'), sortable: true, as: fn (mixed $value, MailboxMessage $message): string => $this->received($message))
+            ->rowLink(fn (MailboxMessage $message): string => route(config('vue-mailbox.routes.name').'messages.show', [$this->folder->mailbox, $message]))
+            ->emptyState(title: __('mailbox::mailbox.empty'))
+            ->paginate(config('vue-mailbox.per_page'));
+
+        if (! Gate::allows('workInMailbox', $this->folder->mailbox)) {
+            return;
+        }
+
+        $table
+            ->bulkAction(__('mailbox::mailbox.archive'), before: fn (array $ids) => app(ArchiveMessages::class)->handle($this->folder->mailbox, $this->messages($ids), auth()->user()))
+            ->bulkAction(__('mailbox::mailbox.delete'), before: fn (array $ids) => app(DeleteMessages::class)->handle($this->folder->mailbox, $this->messages($ids), auth()->user()), confirm: __('mailbox::mailbox.delete_confirm'))
+            ->bulkAction(__('mailbox::mailbox.mark_read'), before: fn (array $ids) => app(MarkMessages::class)->read($this->messages($ids), auth()->user()))
+            ->bulkAction(__('mailbox::mailbox.mark_unread'), before: fn (array $ids) => app(MarkMessages::class)->unread($this->messages($ids), auth()->user()));
+    }
+
+    /**
+     * @param  array<int, int|string>  $ids
+     * @return Collection<int, MailboxMessage>
+     */
+    private function messages(array $ids): Collection
+    {
+        return MailboxMessage::query()
+            ->whereBelongsTo($this->folder, 'folder')
+            ->whereKey($ids)
+            ->with('folder')
+            ->get();
+    }
+
+    private function received(MailboxMessage $message): string
+    {
+        if (! $message->sent_at) {
+            return '';
+        }
+
+        return $message->sent_at->isToday() ? $message->sent_at->format('H:i') : $message->sent_at->format('d-m-Y');
+    }
+
+    private function sender(?string $name, MailboxMessage $message): string
+    {
+        return $name ?: (string) $message->from_email;
+    }
+
+    private function subject(?string $subject, MailboxMessage $message): string
+    {
+        $flag = $message->is_flagged ? '⚑ ' : '';
+        $answered = $message->is_answered ? '↩ ' : '';
+
+        return $flag.$answered.($subject ?: '—');
+    }
+}

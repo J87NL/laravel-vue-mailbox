@@ -1,0 +1,78 @@
+{
+    "name": "j87nl/laravel-vue-mailbox",
+    "description": "A VueJS/Inertia shared mailbox UI for j87nl/laravel-mailbox, built on the FormBuilder and TableBuilder",
+    "keywords": [
+        "laravel",
+        "vue",
+        "inertia",
+        "imap",
+        "shared-inbox",
+        "j87"
+    ],
+    "homepage": "https://github.com/J87NL/laravel-vue-mailbox",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Johan",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "inertiajs/inertia-laravel": "^2.0|^3.0",
+        "spatie/laravel-package-tools": "^1.16",
+        "spatie/laravel-query-builder": "^6.0|^7.0",
+        "j87nl/laravel-mailbox": "^0.1",
+        "tranquil-tools/laravel-vue-form-builder": "^1.2",
+        "tranquil-tools/laravel-vue-table-builder": "^1.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.14",
+        "orchestra/testbench": "^9.0.0||^10.0.0||^11.0.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "J87NL\\VueMailbox\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "J87NL\\VueMailbox\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "J87NL\\VueMailbox\\VueMailboxServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../laravel-mailbox",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "j87nl/laravel-mailbox": "0.1.0"
+                }
+            }
+        }
+    ],
+    "scripts": {
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
+        "format": "vendor/bin/pint",
+        "test": "vendor/bin/pest"
+    }
+}
