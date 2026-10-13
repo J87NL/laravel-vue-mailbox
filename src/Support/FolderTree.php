@@ -21,6 +21,7 @@ class FolderTree
             ->map(fn (MailboxFolder $folder): array => [
                 'depth' => $folder->depth(),
                 'id' => $folder->id,
+                'label' => $folder->role->label() ?? $folder->name,
                 'name' => $folder->name,
                 'path' => $folder->path,
                 'role' => $folder->role->value,

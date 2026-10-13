@@ -1,5 +1,6 @@
 export interface MailboxFolder {
     id: number
+    label: string
     name: string
     path: string
     role: 'inbox' | 'drafts' | 'sent' | 'archive' | 'junk' | 'trash' | 'custom'

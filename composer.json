@@ -22,7 +22,7 @@
         "inertiajs/inertia-laravel": "^2.0|^3.0",
         "spatie/laravel-package-tools": "^1.16",
         "spatie/laravel-query-builder": "^6.0|^7.0",
-        "j87nl/laravel-mailbox": "^0.1",
+        "j87nl/laravel-mailbox": "^0.1.2",
         "tranquil-tools/laravel-vue-form-builder": "^1.2",
         "tranquil-tools/laravel-vue-table-builder": "^1.0"
     },

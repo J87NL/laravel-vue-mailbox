@@ -39,7 +39,13 @@ import 'hugerte/plugins/lists'
 registerWysiwygEditor('hugerte', HugeRteEditor)
 ```
 
-Then follow the core package README for admins, the sync schedule and the queue worker.
+The pages use plain Tailwind utility classes and no host UI kit. Let Tailwind scan the package so those classes are generated, e.g. in Tailwind 4:
+
+```css
+@source '../../vendor/j87nl/laravel-vue-mailbox/resources/js';
+```
+
+Then follow the core package README for admins, the sync schedule, the queue worker and the configuration keys (`MAILBOX_DISPLAY_TIMEZONE`, `MAILBOX_CONNECTION_TIMEOUT`, …).
 
 ## Routes
 
@@ -47,7 +53,14 @@ All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`)
 
 ## Development
 
-The core package is required through a Composer path repository (`../laravel-mailbox`), so check out both repositories side by side.
+The core package comes from Packagist (`j87nl/laravel-mailbox`). To work against a local checkout of the core, add a path repository temporarily and do not commit it:
+
+```bash
+composer config repositories.core path ../laravel-mailbox
+composer require j87nl/laravel-mailbox:@dev
+# when done
+git checkout composer.json && composer update j87nl/laravel-mailbox
+```
 
 ```bash
 composer install

@@ -3,14 +3,17 @@
 declare(strict_types=1);
 
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Jobs\SyncFolderJob;
+use J87NL\Mailbox\Jobs\SyncMailboxJob;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAccess;
 use J87NL\Mailbox\Models\MailboxMessage;
+use J87NL\VueMailbox\Tables\MessagesTable;
 
 beforeEach(function (): void {
     Bus::fake([SyncFolderJob::class]);
@@ -296,4 +299,84 @@ it('labels access rows with the accessor names', function (): void {
         ->get(route('mailbox.settings.edit', $mailbox))
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->where('accessTable', fn (mixed $table): bool => str_contains((string) json_encode($table), 'User: Ada Manager')));
+});
+
+it('fetches the folder list on the first visit instead of answering 404', function (): void {
+    Bus::fake([SyncFolderJob::class, SyncMailboxJob::class]);
+    $mailbox = mailbox();
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.folders.show', $mailbox))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('folder.role', 'inbox')
+            ->where('syncing', null));
+
+    Bus::assertDispatched(SyncFolderJob::class);
+});
+
+it('shows a synchronising state when the folder list cannot be fetched yet', function (): void {
+    Bus::fake([SyncFolderJob::class, SyncMailboxJob::class]);
+    $mailbox = mailbox();
+    $this->connector->failImap('Connection refused');
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.folders.show', $mailbox))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('Mailbox/Index')
+            ->where('folder', null)
+            ->where('table', null)
+            ->where('syncing', fn (string $message): bool => $message !== ''));
+
+    Bus::assertDispatched(SyncMailboxJob::class);
+});
+
+it('replies to the original recipients when the message was sent by the mailbox itself', function (string $mode, string $to, string $cc): void {
+    $mailbox = mailbox();
+    $message = storedMessage(folder($mailbox, 'Sent', FolderRole::Sent), 1, [
+        'cc' => [['email' => 'copy@example.org', 'name' => ''], ['email' => 'TEAM@example.com', 'name' => '']],
+        'from_email' => 'Team@Example.com',
+        'to' => [['email' => 'customer@example.org', 'name' => ''], ['email' => 'second@example.org', 'name' => '']],
+    ]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $message->id, 'mode' => $mode]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('form.defaults.to', $to)
+            ->where('form.defaults.cc', $cc));
+})->with([
+    'reply' => ['reply', 'customer@example.org, second@example.org', ''],
+    'reply all' => ['reply_all', 'customer@example.org, second@example.org', 'copy@example.org'],
+]);
+
+it('formats dates for display in the display timezone', function (): void {
+    config()->set('app.timezone', 'UTC');
+    config()->set('mailbox.display_timezone', 'Europe/Amsterdam');
+    $mailbox = mailbox();
+    $folder = folder($mailbox);
+    $message = storedMessage($folder, 1, [
+        'body_text' => 'Hi',
+        'sent_at' => Carbon::parse('2026-10-01 22:30:00', 'UTC'),
+    ]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $message->id]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('form.defaults.body', fn (string $body): bool => str_contains($body, '02-10-2026 00:30')));
+
+    expect((string) json_encode(MessagesTable::build($folder)))->toContain('02-10-2026');
+});
+
+it('labels folders by role and keeps custom folder names', function (): void {
+    $mailbox = mailbox();
+    $inbox = folder($mailbox, 'INBOX');
+    folder($mailbox, 'INBOX.Sent Items', FolderRole::Sent);
+    folder($mailbox, 'Projecten', FolderRole::Custom);
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.folders.show', [$mailbox, $inbox]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('folder.label', 'Inbox')
+            ->where('folders', fn (mixed $folders): bool => collect($folders)->pluck('label')->all() === ['Inbox', 'Sent', 'Projecten']));
 });

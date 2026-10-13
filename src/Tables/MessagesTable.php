@@ -13,6 +13,7 @@ use J87NL\Mailbox\Actions\DeleteMessages;
 use J87NL\Mailbox\Actions\MarkMessages;
 use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
+use J87NL\Mailbox\Support\DisplayTime;
 use TranquilTools\TableBuilder\AbstractTable;
 use TranquilTools\TableBuilder\TableBuilder;
 
@@ -119,7 +120,7 @@ final class MessagesTable extends AbstractTable
             return '';
         }
 
-        return $message->sent_at->isToday() ? $message->sent_at->format('H:i') : $message->sent_at->format('d-m-Y');
+        return DisplayTime::format($message->sent_at, DisplayTime::isToday($message->sent_at) ? 'H:i' : 'd-m-Y');
     }
 
     private function sender(?string $name, MailboxMessage $message): string

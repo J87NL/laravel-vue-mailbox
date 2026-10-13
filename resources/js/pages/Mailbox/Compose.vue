@@ -4,6 +4,7 @@ import Form from '@form-builder/components/Form.vue'
 import type { FormSchema } from '@form-builder/types/form-builder'
 import FolderList from '@mailbox/components/FolderList.vue'
 import type { MailboxFolder, MailboxSummary } from '@mailbox/types'
+import { ui } from '@mailbox/ui'
 
 const props = defineProps<{
     backUrl: string
@@ -33,12 +34,12 @@ const titles: Record<typeof props.mode, string> = {
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-semibold">{{ titles[mode] }}</h1>
-                    <p class="text-sm text-gray-500">Vanaf {{ mailbox.email }}</p>
+                    <p :class="ui.muted">Vanaf {{ mailbox.email }}</p>
                 </div>
-                <Link :href="backUrl" class="btn">Annuleren</Link>
+                <Link :href="backUrl" :class="ui.button">Annuleren</Link>
             </div>
 
-            <div class="rounded-lg border bg-white p-4 dark:bg-gray-900">
+            <div :class="ui.panel">
                 <Form :schema="form" />
             </div>
         </main>

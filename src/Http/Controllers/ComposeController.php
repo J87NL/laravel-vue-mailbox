@@ -14,6 +14,7 @@ use J87NL\Mailbox\Actions\SendMessage;
 use J87NL\Mailbox\Forms\ComposeForm;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
+use J87NL\Mailbox\Support\DisplayTime;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Support\MessageBodyLoader;
 
@@ -85,7 +86,7 @@ class ComposeController extends Controller
             ];
         }
 
-        $recipients = $this->replyRecipients($source);
+        $recipients = $this->replyRecipients($mailbox, $source);
 
         return [
             'body' => $body,
@@ -99,8 +100,18 @@ class ComposeController extends Controller
     /**
      * @return array<int, string>
      */
-    private function replyRecipients(MailboxMessage $source): array
+    private function replyRecipients(Mailbox $mailbox, MailboxMessage $source): array
     {
+        if ($this->isOwnAddress($mailbox, $source->from_email)) {
+            return collect($source->to ?? [])
+                ->pluck('email')
+                ->filter()
+                ->reject(fn (string $email): bool => $this->isOwnAddress($mailbox, $email))
+                ->unique()
+                ->values()
+                ->all();
+        }
+
         $replyTo = collect($source->reply_to ?? [])
             ->pluck('email')
             ->filter()
@@ -118,6 +129,11 @@ class ComposeController extends Controller
         return [
             $source->from_email,
         ];
+    }
+
+    private function isOwnAddress(Mailbox $mailbox, ?string $email): bool
+    {
+        return ! is_null($email) && Str::lower($email) === Str::lower($mailbox->email);
     }
 
     /**
@@ -147,7 +163,7 @@ class ComposeController extends Controller
         return sprintf(
             '<p>%s — %s</p><blockquote>%s</blockquote>',
             e($sender),
-            e((string) $source->sent_at?->format('d-m-Y H:i')),
+            e(DisplayTime::format($source->sent_at, 'd-m-Y H:i')),
             $body,
         );
     }

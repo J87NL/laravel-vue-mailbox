@@ -14,8 +14,10 @@ use J87NL\Mailbox\Actions\CreateFolder;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Forms\FolderForm;
 use J87NL\Mailbox\Jobs\SyncFolderJob;
+use J87NL\Mailbox\Jobs\SyncMailboxJob;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxFolder;
+use J87NL\Mailbox\Sync\SyncFolders;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Tables\MessagesTable;
 
@@ -34,37 +36,21 @@ class FolderController extends Controller
         return redirect($first['url']);
     }
 
-    public function show(Mailbox $mailbox, ?MailboxFolder $folder = null): Response
+    public function show(Mailbox $mailbox, SyncFolders $syncFolders, ?MailboxFolder $folder = null): Response
     {
-        $folder ??= $mailbox->folderWithRole(FolderRole::Inbox);
+        $folder ??= $this->inbox($mailbox, $syncFolders);
 
-        abort_if(is_null($folder), 404);
+        if (is_null($folder)) {
+            SyncMailboxJob::dispatch($mailbox->id);
+
+            return $this->render($mailbox, null);
+        }
 
         if ($folder->needsSync()) {
             SyncFolderJob::dispatch($folder->id);
         }
 
-        $routes = config('vue-mailbox.routes.name');
-        $canWork = Gate::allows('workInMailbox', $mailbox);
-
-        return Inertia::render(config('vue-mailbox.pages.index'), [
-            'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
-            'folder' => [
-                'id' => $folder->id,
-                'name' => $folder->name,
-                'role' => $folder->role->value,
-            ],
-            'folderForm' => $canWork ? FolderForm::make($mailbox, route($routes.'folders.store', $mailbox)) : null,
-            'folders' => $this->tree->for($mailbox),
-            'mailbox' => [
-                'email' => $mailbox->email,
-                'id' => $mailbox->id,
-                'name' => $mailbox->name,
-            ],
-            'mailboxes' => $this->tree->mailboxes(),
-            'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
-            'table' => MessagesTable::build($folder),
-        ]);
+        return $this->render($mailbox, $folder);
     }
 
     public function store(Request $request, Mailbox $mailbox, CreateFolder $createFolder): RedirectResponse
@@ -78,5 +64,39 @@ class FolderController extends Controller
         $folder = $createFolder->handle($mailbox, $data['name'], $parent, $request->user());
 
         return redirect()->route(config('vue-mailbox.routes.name').'folders.show', [$mailbox, $folder]);
+    }
+
+    private function inbox(Mailbox $mailbox, SyncFolders $syncFolders): ?MailboxFolder
+    {
+        $syncFolders->bootstrap($mailbox);
+
+        return $mailbox->folderWithRole(FolderRole::Inbox);
+    }
+
+    private function render(Mailbox $mailbox, ?MailboxFolder $folder): Response
+    {
+        $routes = config('vue-mailbox.routes.name');
+        $canWork = Gate::allows('workInMailbox', $mailbox);
+
+        return Inertia::render(config('vue-mailbox.pages.index'), [
+            'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
+            'folder' => is_null($folder) ? null : [
+                'id' => $folder->id,
+                'label' => $folder->role->label() ?? $folder->name,
+                'name' => $folder->name,
+                'role' => $folder->role->value,
+            ],
+            'folderForm' => $canWork ? FolderForm::make($mailbox, route($routes.'folders.store', $mailbox)) : null,
+            'folders' => $this->tree->for($mailbox),
+            'mailbox' => [
+                'email' => $mailbox->email,
+                'id' => $mailbox->id,
+                'name' => $mailbox->name,
+            ],
+            'mailboxes' => $this->tree->mailboxes(),
+            'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
+            'syncing' => is_null($folder) ? __('mailbox::mailbox.syncing') : null,
+            'table' => is_null($folder) ? null : MessagesTable::build($folder),
+        ]);
     }
 }

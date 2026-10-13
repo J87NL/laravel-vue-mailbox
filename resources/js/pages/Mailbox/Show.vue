@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import FolderList from '@mailbox/components/FolderList.vue'
 import MessageFrame from '@mailbox/components/MessageFrame.vue'
 import type { AuditEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
+import { ui } from '@mailbox/ui'
 
 const props = defineProps<{
     actionsUrl: string | null
@@ -70,29 +71,29 @@ function addresses(list: MailAddress[] | null): string {
         </aside>
 
         <main class="flex min-w-0 flex-1 flex-col gap-4">
-            <div class="flex flex-wrap items-center gap-2">
-                <Link :href="backUrl" class="btn">Terug</Link>
+            <div :class="ui.toolbar">
+                <Link :href="backUrl" :class="ui.button">Terug</Link>
                 <template v-if="composeUrl">
-                    <Link :href="replyUrl('reply')" class="btn">Beantwoorden</Link>
-                    <Link :href="replyUrl('reply_all')" class="btn">Allen beantwoorden</Link>
-                    <Link :href="replyUrl('forward')" class="btn">Doorsturen</Link>
+                    <Link :href="replyUrl('reply')" :class="ui.primaryButton">Beantwoorden</Link>
+                    <Link :href="replyUrl('reply_all')" :class="ui.button">Allen beantwoorden</Link>
+                    <Link :href="replyUrl('forward')" :class="ui.button">Doorsturen</Link>
                 </template>
                 <template v-if="actionsUrl">
-                    <button type="button" class="btn" @click="act('archive')">Archiveren</button>
-                    <button type="button" class="btn btn-danger" @click="act('delete')">Verwijderen</button>
-                    <button type="button" class="btn" @click="act('unread')">Ongelezen</button>
-                    <button type="button" class="btn" @click="act(message.is_flagged ? 'unflag' : 'flag')">
+                    <button type="button" :class="ui.button" @click="act('archive')">Archiveren</button>
+                    <button type="button" :class="ui.dangerButton" @click="act('delete')">Verwijderen</button>
+                    <button type="button" :class="ui.button" @click="act('unread')">Ongelezen</button>
+                    <button type="button" :class="ui.button" @click="act(message.is_flagged ? 'unflag' : 'flag')">
                         {{ message.is_flagged ? 'Markering weg' : 'Markeren' }}
                     </button>
-                    <select v-model="moveTarget" class="rounded-md border px-2 py-1 text-sm" @change="move">
+                    <select v-model="moveTarget" :class="ui.select" @change="move">
                         <option value="">Verplaatsen naar…</option>
-                        <option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ folder.path }}</option>
+                        <option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ "\u00a0".repeat(folder.depth * 2) }}{{ folder.label }}</option>
                     </select>
                 </template>
             </div>
 
-            <article class="rounded-lg border bg-white p-4 dark:bg-gray-900">
-                <header class="mb-4 border-b pb-3">
+            <article :class="ui.panel">
+                <header class="mb-4 border-b border-gray-200 pb-3 dark:border-gray-700">
                     <h1 class="text-xl font-semibold">{{ message.subject ?? '(geen onderwerp)' }}</h1>
                     <dl class="mt-2 grid grid-cols-[4rem_1fr] gap-x-2 text-sm text-gray-600 dark:text-gray-300">
                         <dt>Van</dt>
@@ -108,7 +109,7 @@ function addresses(list: MailAddress[] | null): string {
                     </dl>
                 </header>
 
-                <p v-if="hasRemoteImages" class="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                <p v-if="hasRemoteImages" class="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">
                     Externe afbeeldingen zijn verborgen om je privacy te beschermen.
                     <Link href="?images=1" class="underline" preserve-scroll>Afbeeldingen tonen</Link>
                 </p>
@@ -117,12 +118,12 @@ function addresses(list: MailAddress[] | null): string {
 
                 <ul v-if="attachments.length" class="mt-4 flex flex-wrap gap-2">
                     <li v-for="attachment in attachments" :key="attachment.url">
-                        <a :href="attachment.url" class="btn text-sm">{{ attachment.filename ?? 'bijlage' }}</a>
+                        <a :href="attachment.url" :class="ui.button">{{ attachment.filename ?? 'bijlage' }}</a>
                     </li>
                 </ul>
             </article>
 
-            <section v-if="history.length" class="text-sm text-gray-500">
+            <section v-if="history.length" :class="ui.muted">
                 <h2 class="mb-1 font-medium text-gray-700 dark:text-gray-300">Geschiedenis</h2>
                 <ul>
                     <li v-for="(entry, index) in history" :key="index">
