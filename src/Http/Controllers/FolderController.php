@@ -68,6 +68,12 @@ class FolderController extends Controller
 
     private function inbox(Mailbox $mailbox, SyncFolders $syncFolders): ?MailboxFolder
     {
+        $inbox = $mailbox->folderWithRole(FolderRole::Inbox);
+
+        if (! is_null($inbox)) {
+            return $inbox;
+        }
+
         $syncFolders->bootstrap($mailbox);
 
         return $mailbox->folderWithRole(FolderRole::Inbox);

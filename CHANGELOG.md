@@ -9,6 +9,8 @@
 - Replace the host-specific `btn` classes with self-contained Tailwind utility classes.
 - Require j87nl/laravel-mailbox ^0.1.2.
 - Document the Tailwind source path and the local development setup; add `.gitattributes`.
+- Only fetch the folder list on demand when the mailbox has no inbox yet.
+- Compare own-sender reply recipients case-insensitively.
 
 ## 0.1.0 - 2026-10-13
 

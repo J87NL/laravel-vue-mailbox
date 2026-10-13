@@ -107,7 +107,7 @@ class ComposeController extends Controller
                 ->pluck('email')
                 ->filter()
                 ->reject(fn (string $email): bool => $this->isOwnAddress($mailbox, $email))
-                ->unique()
+                ->unique(fn (string $email): string => Str::lower($email))
                 ->values()
                 ->all();
         }
