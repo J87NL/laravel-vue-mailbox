@@ -29,6 +29,15 @@ class MessageBodyLoader
         return $this->unlessGone($message, fn (): ?Attachment => $this->fetch->attachment($message, $index));
     }
 
+    /**
+     * @param  array<int, int>  $indexes
+     * @return array<int, Attachment|null>|null
+     */
+    public function attachmentsAt(MailboxMessage $message, array $indexes): ?array
+    {
+        return $this->unlessGone($message, fn (): array => $this->fetch->attachmentsAt($message, $indexes));
+    }
+
     public function inlineAttachment(MailboxMessage $message, string $contentId): ?Attachment
     {
         return $this->unlessGone($message, fn (): ?Attachment => $this->fetch->inlineAttachment($message, $contentId));

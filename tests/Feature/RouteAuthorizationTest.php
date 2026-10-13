@@ -25,6 +25,10 @@ function endpoint(string $name, Mailbox $mailbox): array
 {
     $folder = $mailbox->folders()->firstOrFail();
     $message = $mailbox->messages()->firstOrFail();
+    $contact = $mailbox->contacts()
+        ->firstOrCreate([
+            'email' => 'contact@example.org',
+        ]);
     $access = MailboxAccess::query()
         ->where('mailbox_id', $mailbox->id)->firstOrFail();
 
@@ -36,6 +40,14 @@ function endpoint(string $name, Mailbox $mailbox): array
         'messages.actions' => ['post', route('mailbox.messages.actions', $mailbox)],
         'compose.create' => ['get', route('mailbox.compose.create', $mailbox)],
         'compose.store' => ['post', route('mailbox.compose.store', $mailbox)],
+        'addresses' => ['get', route('mailbox.addresses', $mailbox)],
+        'contacts.index' => ['get', route('mailbox.contacts.index', $mailbox)],
+        'contacts.create' => ['get', route('mailbox.contacts.create', $mailbox)],
+        'contacts.store' => ['post', route('mailbox.contacts.store', $mailbox)],
+        'contacts.edit' => ['get', route('mailbox.contacts.edit', [$mailbox, $contact])],
+        'contacts.update' => ['put', route('mailbox.contacts.update', [$mailbox, $contact])],
+        'contacts.destroy' => ['delete', route('mailbox.contacts.destroy', [$mailbox, $contact])],
+        'messages.contact' => ['post', route('mailbox.messages.contact', [$mailbox, $message])],
         'settings.edit' => ['get', route('mailbox.settings.edit', $mailbox)],
         'settings.update' => ['put', route('mailbox.settings.update', $mailbox)],
         'settings.access.store' => ['post', route('mailbox.settings.access.store', $mailbox)],
@@ -69,6 +81,14 @@ function routeMatrix(): array
         'messages.actions' => 'write',
         'compose.create' => 'write',
         'compose.store' => 'write',
+        'addresses' => 'write',
+        'contacts.index' => 'read',
+        'contacts.create' => 'write',
+        'contacts.store' => 'write',
+        'contacts.edit' => 'write',
+        'contacts.update' => 'write',
+        'contacts.destroy' => 'write',
+        'messages.contact' => 'write',
         'settings.edit' => 'manage',
         'settings.update' => 'manage',
         'settings.access.store' => 'manage',

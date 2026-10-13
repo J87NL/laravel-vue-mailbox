@@ -52,6 +52,7 @@ class MessageController extends Controller
             'attachments' => $this->attachments($mailbox, $message),
             'backUrl' => route($routes.'folders.show', [$mailbox, $message->folder]),
             'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
+            'contactUrl' => $canWork && ! is_null($message->from_email) ? route($routes.'messages.contact', [$mailbox, $message]) : null,
             'folders' => $tree->for($mailbox),
             'history' => $this->history($message),
             'imageOrigin' => $request->getSchemeAndHttpHost(),

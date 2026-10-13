@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Actions\ArchiveMessages;
 use J87NL\Mailbox\Actions\DeleteMessages;
 use J87NL\Mailbox\Actions\MarkMessages;
+use J87NL\Mailbox\Actions\MoveMessages;
 use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\Mailbox\Support\DisplayTime;
@@ -81,6 +82,8 @@ final class MessagesTable extends AbstractTable
             ->column('has_attachments', __('mailbox::mailbox.attachments'), boolean: true, alignment: 'center')
             ->column('sent_at', __('mailbox::mailbox.received'), sortable: true, as: fn (mixed $value, MailboxMessage $message): string => $this->received($message))
             ->rowLink(fn (MailboxMessage $message): string => route(config('vue-mailbox.routes.name').'messages.show', [$this->folder->mailbox, $message]))
+            ->rowClass(fn (MailboxMessage $message): string => $message->is_seen ? '' : 'font-semibold')
+            ->poll((int) config('vue-mailbox.poll_seconds', 30))
             ->emptyState(title: __('mailbox::mailbox.empty'))
             ->paginate(config('vue-mailbox.per_page'));
 
@@ -98,7 +101,31 @@ final class MessagesTable extends AbstractTable
             })
             ->bulkAction(__('mailbox::mailbox.mark_unread'), before: function (array $ids): void {
                 app(MarkMessages::class)->unread($this->messages($ids), auth()->user());
-            });
+            })
+            ->bulkAction(
+                __('mailbox::mailbox.move_to_folder'),
+                before: fn (array $ids, ?string $choice): int => app(MoveMessages::class)->handle(
+                    $this->messages($ids),
+                    $mailbox->folders()->findOrFail((int) $choice),
+                    auth()->user(),
+                ),
+                choices: $this->moveChoices(),
+                choicesLabel: __('mailbox::mailbox.folder'),
+            );
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function moveChoices(): array
+    {
+        return $this->folder->mailbox->folders()
+            ->where('selectable', true)
+            ->whereKeyNot($this->folder->id)
+            ->get()
+            ->sortBy(fn (MailboxFolder $folder): string => sprintf('%d-%s', $folder->role->sortOrder(), mb_strtolower($folder->path)))
+            ->mapWithKeys(fn (MailboxFolder $folder): array => [$folder->id => $folder->role->label() ?? $folder->name])
+            ->all();
     }
 
     /**

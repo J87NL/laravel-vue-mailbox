@@ -5,6 +5,7 @@ import Form from '@form-builder/components/Form.vue'
 import type { FormSchema } from '@form-builder/types/form-builder'
 import TableBuilder from '@table-builder/components/TableBuilder.vue'
 import type { TableData } from '@table-builder/types/table-builder'
+import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
 const props = defineProps<{
@@ -16,11 +17,12 @@ const props = defineProps<{
     title: string
 }>()
 
+const { t } = useMailboxTranslations()
 const page = usePage()
 const accessError = computed(() => (page.props.errors as Record<string, string> | undefined)?.accessor ?? null)
 
 function destroy(): void {
-    if (!props.destroyUrl || !confirm('Deze mailbox en alle gesynchroniseerde berichten verwijderen? De mail op de server blijft staan.')) {
+    if (!props.destroyUrl || !confirm(t('mailbox_delete_confirm'))) {
         return
     }
 
@@ -35,8 +37,8 @@ function destroy(): void {
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-semibold">{{ title }}</h1>
             <div :class="ui.toolbar">
-                <button v-if="destroyUrl" type="button" :class="ui.dangerButton" @click="destroy">Verwijderen</button>
-                <Link :href="backUrl" :class="ui.button">Terug</Link>
+                <button v-if="destroyUrl" type="button" :class="ui.dangerButton" @click="destroy">{{ t('delete') }}</button>
+                <Link :href="backUrl" :class="ui.button">{{ t('back') }}</Link>
             </div>
         </div>
 
@@ -45,10 +47,8 @@ function destroy(): void {
         </section>
 
         <section v-if="accessTable && accessForm" :class="ui.panel">
-            <h2 class="mb-1 text-lg font-semibold">Toegang</h2>
-            <p :class="[ui.muted, 'mb-4']">
-                Lezen: berichten bekijken. Lezen en werken: ook versturen, verplaatsen, archiveren en verwijderen. Beheren: ook deze instellingen en toegang.
-            </p>
+            <h2 class="mb-1 text-lg font-semibold">{{ t('access') }}</h2>
+            <p :class="[ui.muted, 'mb-4']">{{ t('access_help') }}</p>
             <p v-if="accessError" class="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{{ accessError }}</p>
             <TableBuilder :table="accessTable" />
             <div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">

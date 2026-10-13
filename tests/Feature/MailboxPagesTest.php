@@ -90,7 +90,7 @@ it('prefills a reply with recipient, subject and quote', function (): void {
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->component('Mailbox/Compose')
             ->where('mode', 'reply')
-            ->where('form.defaults.to', 'sender@example.org')
+            ->where('form.defaults.to', ['sender@example.org'])
             ->where('form.defaults.subject', 'Re: Question')
             ->where('form.defaults.reply_to_message', $message->id)
             ->where('form.defaults.body', fn (string $body): bool => str_contains($body, 'Sender &lt;sender@example.org&gt;') && str_contains($body, 'Original &lt;text&gt;')));
@@ -129,7 +129,7 @@ it('rejects invalid recipients', function (): void {
             'subject' => 'Hi',
             'to' => 'valid@example.org, not-an-address',
         ])
-        ->assertSessionHasErrors('to');
+        ->assertSessionHasErrors('to.1');
 
     expect($this->connector->transport->sent)->toBe([]);
 });
@@ -277,8 +277,8 @@ it('replies to the Reply-To address and leaves it out of the copies', function (
     $this->actingAs(member($mailbox, AccessLevel::Write))
         ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $message->id, 'mode' => 'reply_all']))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->where('form.defaults.to', 'support@example.org')
-            ->where('form.defaults.cc', 'colleague@example.org'));
+            ->where('form.defaults.to', ['support@example.org'])
+            ->where('form.defaults.cc', ['colleague@example.org']));
 });
 
 it('passes the app origin for the image policy of the message frame', function (): void {
@@ -332,7 +332,7 @@ it('shows a synchronising state when the folder list cannot be fetched yet', fun
     Bus::assertDispatched(SyncMailboxJob::class);
 });
 
-it('replies to the original recipients when the message was sent by the mailbox itself', function (string $mode, string $to, string $cc): void {
+it('replies to the original recipients when the message was sent by the mailbox itself', function (string $mode, array $to, array $cc): void {
     $mailbox = mailbox();
     $message = storedMessage(folder($mailbox, 'Sent', FolderRole::Sent), 1, [
         'cc' => [['email' => 'copy@example.org', 'name' => ''], ['email' => 'TEAM@example.com', 'name' => '']],
@@ -346,8 +346,8 @@ it('replies to the original recipients when the message was sent by the mailbox 
             ->where('form.defaults.to', $to)
             ->where('form.defaults.cc', $cc));
 })->with([
-    'reply' => ['reply', 'customer@example.org, second@example.org', ''],
-    'reply all' => ['reply_all', 'customer@example.org, second@example.org', 'copy@example.org'],
+    'reply' => ['reply', ['customer@example.org', 'second@example.org'], []],
+    'reply all' => ['reply_all', ['customer@example.org', 'second@example.org'], ['copy@example.org']],
 ]);
 
 it('formats dates for display in the display timezone', function (): void {

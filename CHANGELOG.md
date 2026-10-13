@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0 - 2026-10-13
+
+- Requires `j87nl/laravel-mailbox` ^0.2, `tranquil-tools/laravel-vue-form-builder` ^1.10 and `tranquil-tools/laravel-vue-table-builder` ^1.9.
+- Message list polls every 30 s (`vue-mailbox.poll_seconds`), marks unread rows bold on the server and has a "Move to folder" bulk action.
+- Recipient chips with suggestions from the new `mailbox.addresses` endpoint.
+- Forward with the original attachments, each removable.
+- Address book pages and routes (`mailbox.contacts.*`) and "Add to address book" on the message view (`mailbox.messages.contact`).
+- Signature in new messages, replies and forwards, above the quote.
+- Default pages are fully translated through the shared `vue_mailbox_translations` prop.
+- `mailbox:install` publishes config and migrations and adds the `@mailbox` alias and tsconfig paths (`--pages` copies the pages).
+- Page contract changes: see the README table (`contactsUrl`, `contactUrl`, `:only="['table']"`, no `row-class`, recipients as lists).
+
 ## 0.1.2 - 2026-10-13
 
 - Show a "being synchronised" state instead of a 404 before the first sync.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use J87NL\VueMailbox\Http\Controllers\AttachmentController;
 use J87NL\VueMailbox\Http\Controllers\ComposeController;
+use J87NL\VueMailbox\Http\Controllers\ContactController;
 use J87NL\VueMailbox\Http\Controllers\FolderController;
 use J87NL\VueMailbox\Http\Controllers\MessageActionController;
 use J87NL\VueMailbox\Http\Controllers\MessageController;
@@ -48,6 +49,7 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                 ->group(function (): void {
                     Route::get('folders/{folder?}', [FolderController::class, 'show'])->name('folders.show');
                     Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
+                    Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');
                     Route::get('messages/{message}/attachments/{index}', [AttachmentController::class, 'download'])
                         ->whereNumber('index')
                         ->name('attachments.download');
@@ -56,6 +58,13 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                         Route::post('folders', [FolderController::class, 'store'])->name('folders.store');
                         Route::post('messages/actions', MessageActionController::class)->name('messages.actions');
                         Route::get('compose', [ComposeController::class, 'create'])->name('compose.create');
+                        Route::get('addresses', [ComposeController::class, 'addresses'])->name('addresses');
+                        Route::get('contacts/create', [ContactController::class, 'create'])->name('contacts.create');
+                        Route::post('contacts', [ContactController::class, 'store'])->name('contacts.store');
+                        Route::get('contacts/{contact}/edit', [ContactController::class, 'edit'])->name('contacts.edit');
+                        Route::put('contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
+                        Route::delete('contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+                        Route::post('messages/{message}/contact', [ContactController::class, 'fromMessage'])->name('messages.contact');
                         Route::post('compose', [ComposeController::class, 'store'])->name('compose.store');
                     });
                 });

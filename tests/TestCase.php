@@ -17,6 +17,7 @@ use J87NL\VueMailbox\VueMailboxServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use TranquilTools\FormBuilder\FormBuilderServiceProvider;
 use TranquilTools\TableBuilder\TableBuilderServiceProvider;
+use TranquilTools\VueTableBuilder\VueTableBuilderServiceProvider;
 
 abstract class TestCase extends Orchestra
 {
@@ -42,6 +43,7 @@ abstract class TestCase extends Orchestra
             InertiaServiceProvider::class,
             FormBuilderServiceProvider::class,
             TableBuilderServiceProvider::class,
+            VueTableBuilderServiceProvider::class,
             MailboxServiceProvider::class,
             VueMailboxServiceProvider::class,
         ];
@@ -72,5 +74,7 @@ abstract class TestCase extends Orchestra
         });
 
         (include __DIR__.'/../vendor/j87nl/laravel-mailbox/database/migrations/create_mailbox_tables.php.stub')->up();
+        (include __DIR__.'/../vendor/j87nl/laravel-mailbox/database/migrations/add_signature_to_mailboxes_table.php.stub')->up();
+        (include __DIR__.'/../vendor/j87nl/laravel-mailbox/database/migrations/create_mailbox_contacts_table.php.stub')->up();
     }
 }

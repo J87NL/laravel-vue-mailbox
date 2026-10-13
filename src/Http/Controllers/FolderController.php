@@ -20,6 +20,7 @@ use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Sync\SyncFolders;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Tables\MessagesTable;
+use TranquilTools\FormBuilder\FormConfig;
 
 class FolderController extends Controller
 {
@@ -86,20 +87,21 @@ class FolderController extends Controller
 
         return Inertia::render(config('vue-mailbox.pages.index'), [
             'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
+            'contactsUrl' => route($routes.'contacts.index', $mailbox),
             'folder' => is_null($folder) ? null : [
                 'id' => $folder->id,
                 'label' => $folder->role->label() ?? $folder->name,
                 'name' => $folder->name,
                 'role' => $folder->role->value,
             ],
-            'folderForm' => $canWork ? FolderForm::make($mailbox, route($routes.'folders.store', $mailbox)) : null,
-            'folders' => $this->tree->for($mailbox),
+            'folderForm' => fn (): ?FormConfig => $canWork ? FolderForm::make($mailbox, route($routes.'folders.store', $mailbox)) : null,
+            'folders' => fn (): array => $this->tree->for($mailbox),
             'mailbox' => [
                 'email' => $mailbox->email,
                 'id' => $mailbox->id,
                 'name' => $mailbox->name,
             ],
-            'mailboxes' => $this->tree->mailboxes(),
+            'mailboxes' => fn (): array => $this->tree->mailboxes(),
             'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
             'syncing' => is_null($folder) ? __('mailbox::mailbox.syncing') : null,
             'table' => is_null($folder) ? null : MessagesTable::build($folder),
