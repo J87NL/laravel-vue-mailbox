@@ -58,18 +58,6 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../laravel-mailbox",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "j87nl/laravel-mailbox": "0.1.0"
-                }
-            }
-        }
-    ],
     "scripts": {
         "analyse": "vendor/bin/phpstan analyse --memory-limit=1G",
         "format": "vendor/bin/pint",
