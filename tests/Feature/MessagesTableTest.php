@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\MailboxMessage;
@@ -30,8 +32,16 @@ it('only lets writers run bulk actions on the message table', function (AccessLe
     expect(MailboxMessage::query()
         ->count())->toBe($remaining);
 })->with([
-    'reader' => [AccessLevel::Read, 403, 1],
-    'writer' => [AccessLevel::Write, 200, 0],
+    'reader' => [
+        AccessLevel::Read,
+        403,
+        1,
+    ],
+    'writer' => [
+        AccessLevel::Write,
+        200,
+        0,
+    ],
 ]);
 
 it('moves selected messages to a chosen folder of the same mailbox', function (): void {
@@ -50,20 +60,34 @@ it('moves selected messages to a chosen folder of the same mailbox', function ()
         'action' => base64_encode('4'),
     ]);
 
-    foreach ([$foreign->id, $folder->id, 'nonsense'] as $invalid) {
+    foreach ([
+        $foreign->id,
+        $folder->id,
+        'nonsense',
+    ] as $invalid) {
         $this->actingAs($writer)
-            ->postJson($url, ['choice' => (string) $invalid, 'ids' => [$message->id]])
+            ->postJson($url, [
+                'choice' => (string) $invalid,
+                'ids' => [$message->id],
+            ])
             ->assertStatus(422);
     }
 
     $this->actingAs($writer)
-        ->postJson($url, ['choice' => (string) $target->id, 'ids' => [$message->id]])
+        ->postJson($url, [
+            'choice' => (string) $target->id,
+            'ids' => [$message->id],
+        ])
         ->assertOk();
 
     expect(MailboxMessage::query()
         ->count())->toBe(0)
         ->and($this->connector->remote($mailbox)->folder('INBOX')->operations)->toBe([
-            ['target' => 'Projects', 'type' => 'move', 'uids' => [1]],
+            [
+                'target' => 'Projects',
+                'type' => 'move',
+                'uids' => [1],
+            ],
         ]);
 });
 
@@ -77,5 +101,31 @@ it('marks unread rows bold and polls for new mail', function (): void {
     $classes = collect($table['data'])->mapWithKeys(fn (array $row): array => [$row['uid'] => $row['__class'] ?? null])->all();
 
     expect($table['poll'])->toBe(30)
-        ->and($classes)->toBe([2 => null, 1 => 'font-semibold']);
+        ->and($classes)->toBe([
+            2 => null,
+            1 => 'font-semibold',
+        ]);
+});
+
+it('queries the folders of the mailbox once per page view', function (): void {
+    $mailbox = mailbox();
+    $folder = folder($mailbox);
+    folder($mailbox, 'Projects', FolderRole::Custom);
+    $writer = member($mailbox, AccessLevel::Write);
+    $queries = 0;
+
+    DB::listen(function (QueryExecuted $query) use (&$queries): void {
+        if (str_contains($query->sql, 'from "mailbox_folders"') && ! str_contains($query->sql, '"id" = ?')) {
+            $queries++;
+        }
+    });
+
+    $this->actingAs($writer)
+        ->get(route('mailbox.folders.show', [
+            $mailbox,
+            $folder,
+        ]))
+        ->assertOk();
+
+    expect($queries)->toBe(1);
 });

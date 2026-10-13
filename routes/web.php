@@ -11,9 +11,11 @@ use J87NL\VueMailbox\Http\Controllers\MessageActionController;
 use J87NL\VueMailbox\Http\Controllers\MessageController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxAccessController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxSettingsController;
+use J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations;
 
 Route::prefix(config('vue-mailbox.routes.prefix'))
     ->name(config('vue-mailbox.routes.name'))
+    ->middleware(ShareMailboxTranslations::class)
     ->group(function (): void {
         Route::get('inline/{message}/{cid}', [AttachmentController::class, 'inline'])
             ->middleware([

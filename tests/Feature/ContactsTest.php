@@ -70,7 +70,10 @@ it('does not resolve a contact of another mailbox', function (): void {
 
 it('adds the sender of a message to the address book once', function (): void {
     $mailbox = mailbox();
-    $message = storedMessage(folder($mailbox), 1, ['from_email' => 'Sender@Example.org', 'from_name' => 'Sender']);
+    $message = storedMessage(folder($mailbox), 1, [
+        'from_email' => 'Sender@Example.org',
+        'from_name' => 'Sender',
+    ]);
     $writer = member($mailbox, AccessLevel::Write);
 
     $this->actingAs($writer)
@@ -82,12 +85,41 @@ it('adds the sender of a message to the address book once', function (): void {
     $this->actingAs($writer)->post(route('mailbox.messages.contact', [$mailbox, $message]))->assertRedirect();
 
     expect(MailboxContact::query()
-        ->get(['email', 'name'])
+        ->get([
+            'email',
+            'name',
+        ])
         ->toArray())->toBe([
-            ['email' => 'sender@example.org', 'name' => 'Sender'],
+            [
+                'email' => 'sender@example.org',
+                'name' => 'Sender',
+            ],
         ]);
 
     $this->actingAs(member($mailbox, AccessLevel::Read))
         ->get(route('mailbox.messages.show', [$mailbox, $message]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page->where('contactUrl', null));
 });
+
+it('rejects arrays in the contact fields', function (string $field): void {
+    $mailbox = mailbox();
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.contacts.store', $mailbox), [
+            'email' => 'anna@example.org',
+            ...[
+                $field => [
+                    'x',
+                ],
+            ],
+        ])
+        ->assertSessionHasErrors($field);
+
+    expect(MailboxContact::query()
+        ->count())->toBe(0);
+})->with([
+    'name',
+    'organisation',
+    'notes',
+    'email',
+]);

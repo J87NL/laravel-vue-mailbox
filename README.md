@@ -43,7 +43,7 @@ Then follow the core package README for admins, the sync schedule, the queue wor
 
 ## Pages and props
 
-The default pages read their texts from the shared Inertia prop `vue_mailbox_translations` (the core `mailbox::mailbox` file, nl and en) through `useMailboxTranslations()` from `@mailbox/translations`.
+The default pages read their texts from the Inertia prop `vue_mailbox_translations` (the core `mailbox::mailbox` file, nl and en) through `useMailboxTranslations()` from `@mailbox/translations`. The prop is shared only on the mailbox routes; a host page outside them that needs it adds the `J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations` middleware.
 
 | Page (`vue-mailbox.pages.*`) | Props |
 |---|---|

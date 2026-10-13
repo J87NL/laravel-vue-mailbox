@@ -104,7 +104,7 @@ class FolderController extends Controller
             'mailboxes' => fn (): array => $this->tree->mailboxes(),
             'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
             'syncing' => is_null($folder) ? __('mailbox::mailbox.syncing') : null,
-            'table' => is_null($folder) ? null : MessagesTable::build($folder),
+            'table' => is_null($folder) ? null : MessagesTable::build($folder->setRelation('mailbox', $mailbox)),
         ]);
     }
 }

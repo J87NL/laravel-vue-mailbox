@@ -33,28 +33,94 @@ function endpoint(string $name, Mailbox $mailbox): array
         ->where('mailbox_id', $mailbox->id)->firstOrFail();
 
     return match ($name) {
-        'folders.show' => ['get', route('mailbox.folders.show', [$mailbox, $folder])],
-        'messages.show' => ['get', route('mailbox.messages.show', [$mailbox, $message])],
-        'attachments.download' => ['get', route('mailbox.attachments.download', [$mailbox, $message, 0])],
-        'folders.store' => ['post', route('mailbox.folders.store', $mailbox)],
-        'messages.actions' => ['post', route('mailbox.messages.actions', $mailbox)],
-        'compose.create' => ['get', route('mailbox.compose.create', $mailbox)],
-        'compose.store' => ['post', route('mailbox.compose.store', $mailbox)],
-        'addresses' => ['get', route('mailbox.addresses', $mailbox)],
-        'contacts.index' => ['get', route('mailbox.contacts.index', $mailbox)],
-        'contacts.create' => ['get', route('mailbox.contacts.create', $mailbox)],
-        'contacts.store' => ['post', route('mailbox.contacts.store', $mailbox)],
-        'contacts.edit' => ['get', route('mailbox.contacts.edit', [$mailbox, $contact])],
-        'contacts.update' => ['put', route('mailbox.contacts.update', [$mailbox, $contact])],
-        'contacts.destroy' => ['delete', route('mailbox.contacts.destroy', [$mailbox, $contact])],
-        'messages.contact' => ['post', route('mailbox.messages.contact', [$mailbox, $message])],
-        'settings.edit' => ['get', route('mailbox.settings.edit', $mailbox)],
-        'settings.update' => ['put', route('mailbox.settings.update', $mailbox)],
-        'settings.access.store' => ['post', route('mailbox.settings.access.store', $mailbox)],
-        'settings.access.destroy' => ['delete', route('mailbox.settings.access.destroy', [$mailbox, $access])],
-        'settings.create' => ['get', route('mailbox.settings.create')],
-        'settings.store' => ['post', route('mailbox.settings.store')],
-        'settings.destroy' => ['delete', route('mailbox.settings.destroy', $mailbox)],
+        'folders.show' => [
+            'get',
+            route('mailbox.folders.show', [$mailbox, $folder]),
+        ],
+        'messages.show' => [
+            'get',
+            route('mailbox.messages.show', [$mailbox, $message]),
+        ],
+        'attachments.download' => [
+            'get',
+            route('mailbox.attachments.download', [$mailbox, $message, 0]),
+        ],
+        'folders.store' => [
+            'post',
+            route('mailbox.folders.store', $mailbox),
+        ],
+        'messages.actions' => [
+            'post',
+            route('mailbox.messages.actions', $mailbox),
+        ],
+        'compose.create' => [
+            'get',
+            route('mailbox.compose.create', $mailbox),
+        ],
+        'compose.store' => [
+            'post',
+            route('mailbox.compose.store', $mailbox),
+        ],
+        'addresses' => [
+            'get',
+            route('mailbox.addresses', $mailbox),
+        ],
+        'contacts.index' => [
+            'get',
+            route('mailbox.contacts.index', $mailbox),
+        ],
+        'contacts.create' => [
+            'get',
+            route('mailbox.contacts.create', $mailbox),
+        ],
+        'contacts.store' => [
+            'post',
+            route('mailbox.contacts.store', $mailbox),
+        ],
+        'contacts.edit' => [
+            'get',
+            route('mailbox.contacts.edit', [$mailbox, $contact]),
+        ],
+        'contacts.update' => [
+            'put',
+            route('mailbox.contacts.update', [$mailbox, $contact]),
+        ],
+        'contacts.destroy' => [
+            'delete',
+            route('mailbox.contacts.destroy', [$mailbox, $contact]),
+        ],
+        'messages.contact' => [
+            'post',
+            route('mailbox.messages.contact', [$mailbox, $message]),
+        ],
+        'settings.edit' => [
+            'get',
+            route('mailbox.settings.edit', $mailbox),
+        ],
+        'settings.update' => [
+            'put',
+            route('mailbox.settings.update', $mailbox),
+        ],
+        'settings.access.store' => [
+            'post',
+            route('mailbox.settings.access.store', $mailbox),
+        ],
+        'settings.access.destroy' => [
+            'delete',
+            route('mailbox.settings.access.destroy', [$mailbox, $access]),
+        ],
+        'settings.create' => [
+            'get',
+            route('mailbox.settings.create'),
+        ],
+        'settings.store' => [
+            'post',
+            route('mailbox.settings.store'),
+        ],
+        'settings.destroy' => [
+            'delete',
+            route('mailbox.settings.destroy', $mailbox),
+        ],
     };
 }
 
@@ -139,7 +205,11 @@ it('allows each route group only from its minimum level', function (string $rout
         return;
     }
 
-    expect($response->status())->not->toBeIn([401, 403, 500]);
+    expect($response->status())->not->toBeIn([
+        401,
+        403,
+        500,
+    ]);
 })->with(routeMatrix());
 
 it('does not resolve a message through another mailbox', function (): void {

@@ -109,7 +109,10 @@ class ComposeDefaults
             ...$recipients,
         ]);
 
-        return collect([...($source->to ?? []), ...($source->cc ?? [])])
+        return collect([
+            ...($source->to ?? []),
+            ...($source->cc ?? []),
+        ])
             ->pluck('email')
             ->filter()
             ->reject(fn (string $email): bool => in_array(Str::lower($email), $excluded, true))

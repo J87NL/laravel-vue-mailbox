@@ -19,7 +19,11 @@ class InstallCommand extends Command
 
     public function handle(): int
     {
-        foreach (['mailbox-config', 'mailbox-migrations', 'vue-mailbox-config'] as $tag) {
+        foreach ([
+            'mailbox-config',
+            'mailbox-migrations',
+            'vue-mailbox-config',
+        ] as $tag) {
             $this->callSilently('vendor:publish', [
                 '--tag' => $tag,
             ]);

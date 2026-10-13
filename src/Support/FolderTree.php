@@ -14,9 +14,8 @@ class FolderTree
     {
         $routeName = config('vue-mailbox.routes.name').'folders.show';
 
-        return $mailbox->folders()
+        return $mailbox->loadMissing('folders')->folders
             ->where('selectable', true)
-            ->get()
             ->sortBy(fn (MailboxFolder $folder): string => $folder->role->sortOrder().'-'.mb_strtolower($folder->path))
             ->map(fn (MailboxFolder $folder): array => [
                 'depth' => $folder->depth(),

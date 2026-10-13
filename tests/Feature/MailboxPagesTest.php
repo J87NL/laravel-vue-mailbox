@@ -36,8 +36,14 @@ it('only queues a folder sync when the folder was not synced in the last minute'
         : Bus::assertNotDispatched(SyncFolderJob::class);
 })->with([
     'never synced' => [null, true],
-    'synced long ago' => ['-5 minutes', true],
-    'synced just now' => ['-10 seconds', false],
+    'synced long ago' => [
+        '-5 minutes',
+        true,
+    ],
+    'synced just now' => [
+        '-10 seconds',
+        false,
+    ],
 ]);
 
 it('blocks remote images unless the user asks for them', function (): void {
@@ -57,7 +63,11 @@ it('blocks remote images unless the user asks for them', function (): void {
             ->where('actionsUrl', null));
 
     $this->actingAs($user)
-        ->get(route('mailbox.messages.show', [$mailbox, $message, 'images' => 1]))
+        ->get(route('mailbox.messages.show', [
+            $mailbox,
+            $message,
+            'images' => 1,
+        ]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('remoteImages', true)
             ->where('hasRemoteImages', false)
@@ -86,7 +96,10 @@ it('prefills a reply with recipient, subject and quote', function (): void {
     ]);
 
     $this->actingAs(member($mailbox, AccessLevel::Write))
-        ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $message->id]))
+        ->get(route('mailbox.compose.create', [
+            $mailbox,
+            'reply' => $message->id,
+        ]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->component('Mailbox/Compose')
             ->where('mode', 'reply')
@@ -228,7 +241,11 @@ it('answers 404 for attachments of a vanished message', function (): void {
     $message = storedMessage(folder($mailbox), 1);
 
     $this->actingAs(member($mailbox, AccessLevel::Read))
-        ->get(route('mailbox.attachments.download', [$mailbox, $message, 0]))
+        ->get(route('mailbox.attachments.download', [
+            $mailbox,
+            $message,
+            0,
+        ]))
         ->assertNotFound();
 });
 
@@ -257,7 +274,11 @@ it('strips path separators from attachment filenames', function (): void {
     ]);
 
     $response = $this->actingAs(member($mailbox, AccessLevel::Read))
-        ->get(route('mailbox.attachments.download', [$mailbox, $message, 0]))
+        ->get(route('mailbox.attachments.download', [
+            $mailbox,
+            $message,
+            0,
+        ]))
         ->assertOk();
 
     expect($response->headers->get('Content-Disposition'))->toContain('evil-report.pdf')
@@ -271,11 +292,24 @@ it('replies to the Reply-To address and leaves it out of the copies', function (
     $message = storedMessage(folder($mailbox), 1, [
         'cc' => [['email' => 'colleague@example.org', 'name' => '']],
         'reply_to' => [['email' => 'support@example.org', 'name' => 'Support']],
-        'to' => [['email' => 'team@example.com', 'name' => ''], ['email' => 'support@example.org', 'name' => '']],
+        'to' => [
+            [
+                'email' => 'team@example.com',
+                'name' => '',
+            ],
+            [
+                'email' => 'support@example.org',
+                'name' => '',
+            ],
+        ],
     ]);
 
     $this->actingAs(member($mailbox, AccessLevel::Write))
-        ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $message->id, 'mode' => 'reply_all']))
+        ->get(route('mailbox.compose.create', [
+            $mailbox,
+            'reply' => $message->id,
+            'mode' => 'reply_all',
+        ]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('form.defaults.to', ['support@example.org'])
             ->where('form.defaults.cc', ['colleague@example.org']));
@@ -335,19 +369,59 @@ it('shows a synchronising state when the folder list cannot be fetched yet', fun
 it('replies to the original recipients when the message was sent by the mailbox itself', function (string $mode, array $to, array $cc): void {
     $mailbox = mailbox();
     $message = storedMessage(folder($mailbox, 'Sent', FolderRole::Sent), 1, [
-        'cc' => [['email' => 'copy@example.org', 'name' => ''], ['email' => 'TEAM@example.com', 'name' => '']],
+        'cc' => [
+            [
+                'email' => 'copy@example.org',
+                'name' => '',
+            ],
+            [
+                'email' => 'TEAM@example.com',
+                'name' => '',
+            ],
+        ],
         'from_email' => 'Team@Example.com',
-        'to' => [['email' => 'customer@example.org', 'name' => ''], ['email' => 'second@example.org', 'name' => ''], ['email' => 'Customer@Example.org', 'name' => '']],
+        'to' => [
+            [
+                'email' => 'customer@example.org',
+                'name' => '',
+            ],
+            [
+                'email' => 'second@example.org',
+                'name' => '',
+            ],
+            [
+                'email' => 'Customer@Example.org',
+                'name' => '',
+            ],
+        ],
     ]);
 
     $this->actingAs(member($mailbox, AccessLevel::Write))
-        ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $message->id, 'mode' => $mode]))
+        ->get(route('mailbox.compose.create', [
+            $mailbox,
+            'reply' => $message->id,
+            'mode' => $mode,
+        ]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('form.defaults.to', $to)
             ->where('form.defaults.cc', $cc));
 })->with([
-    'reply' => ['reply', ['customer@example.org', 'second@example.org'], []],
-    'reply all' => ['reply_all', ['customer@example.org', 'second@example.org'], ['copy@example.org']],
+    'reply' => [
+        'reply',
+        [
+            'customer@example.org',
+            'second@example.org',
+        ],
+        [],
+    ],
+    'reply all' => [
+        'reply_all',
+        [
+            'customer@example.org',
+            'second@example.org',
+        ],
+        ['copy@example.org'],
+    ],
 ]);
 
 it('formats dates for display in the display timezone', function (): void {
@@ -361,7 +435,10 @@ it('formats dates for display in the display timezone', function (): void {
     ]);
 
     $this->actingAs(member($mailbox, AccessLevel::Write))
-        ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $message->id]))
+        ->get(route('mailbox.compose.create', [
+            $mailbox,
+            'reply' => $message->id,
+        ]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('form.defaults.body', fn (string $body): bool => str_contains($body, '02-10-2026 00:30')));
 
@@ -378,5 +455,9 @@ it('labels folders by role and keeps custom folder names', function (): void {
         ->get(route('mailbox.folders.show', [$mailbox, $inbox]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('folder.label', 'Inbox')
-            ->where('folders', fn (mixed $folders): bool => collect($folders)->pluck('label')->all() === ['Inbox', 'Sent', 'Projecten']));
+            ->where('folders', fn (mixed $folders): bool => collect($folders)->pluck('label')->all() === [
+                'Inbox',
+                'Sent',
+                'Projecten',
+            ]));
 });

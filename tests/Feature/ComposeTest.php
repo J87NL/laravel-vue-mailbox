@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Route;
+use Inertia\Response;
 use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Models\MailboxContact;
@@ -46,19 +48,31 @@ it('suggests addresses only to writers, filtered and limited', function (): void
             'mailbox_id' => $mailbox->id,
             'name' => 'Anna',
         ]);
-    storedMessage(folder($mailbox), 1, ['from_email' => 'bob@example.org', 'from_name' => 'Bob']);
+    storedMessage(folder($mailbox), 1, [
+        'from_email' => 'bob@example.org',
+        'from_name' => 'Bob',
+    ]);
 
     $this->actingAs(member($mailbox, AccessLevel::Read))
-        ->getJson(route('mailbox.addresses', [$mailbox, 'q' => 'an']))
+        ->getJson(route('mailbox.addresses', [
+            $mailbox,
+            'q' => 'an',
+        ]))
         ->assertForbidden();
 
     $writer = member($mailbox, AccessLevel::Write);
 
     $this->actingAs($writer)
-        ->getJson(route('mailbox.addresses', [$mailbox, 'q' => 'ann']))
+        ->getJson(route('mailbox.addresses', [
+            $mailbox,
+            'q' => 'ann',
+        ]))
         ->assertOk()
         ->assertExactJson([
-            ['label' => 'Anna <anna@example.org>', 'value' => 'anna@example.org'],
+            [
+                'label' => 'Anna <anna@example.org>',
+                'value' => 'anna@example.org',
+            ],
         ]);
 
     $this->actingAs($writer)
@@ -72,8 +86,18 @@ it('offers the original attachments when forwarding and sends the kept ones', fu
     $mailbox = mailbox(['append_sent' => false]);
     $source = storedMessage(folder($mailbox), 1, [
         'attachments' => [
-            ['content_id' => null, 'content_type' => 'application/pdf', 'filename' => 'offer.pdf', 'inline' => false],
-            ['content_id' => null, 'content_type' => 'text/plain', 'filename' => 'terms.txt', 'inline' => false],
+            [
+                'content_id' => null,
+                'content_type' => 'application/pdf',
+                'filename' => 'offer.pdf',
+                'inline' => false,
+            ],
+            [
+                'content_id' => null,
+                'content_type' => 'text/plain',
+                'filename' => 'terms.txt',
+                'inline' => false,
+            ],
         ],
     ]);
     $this->connector->remote($mailbox)->folder('INBOX')->setMessages([
@@ -82,7 +106,11 @@ it('offers the original attachments when forwarding and sends the kept ones', fu
     $writer = member($mailbox, AccessLevel::Write);
 
     $this->actingAs($writer)
-        ->get(route('mailbox.compose.create', [$mailbox, 'reply' => $source->id, 'mode' => 'forward']))
+        ->get(route('mailbox.compose.create', [
+            $mailbox,
+            'reply' => $source->id,
+            'mode' => 'forward',
+        ]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('form.defaults.forward_message', $source->id)
             ->where('form.fields', fn (mixed $fields): bool => collect($fields)->firstWhere('name', 'attachments')['currentFiles'][1]['name'] === 'terms.txt'));
@@ -110,7 +138,12 @@ it('rejects removal keys that are not attachments of the forwarded message', fun
     $mailbox = mailbox();
     $source = storedMessage(folder($mailbox), 1, [
         'attachments' => [
-            ['content_id' => null, 'content_type' => 'application/pdf', 'filename' => 'offer.pdf', 'inline' => false],
+            [
+                'content_id' => null,
+                'content_type' => 'application/pdf',
+                'filename' => 'offer.pdf',
+                'inline' => false,
+            ],
         ],
     ]);
 
@@ -130,7 +163,11 @@ it('rejects removal keys that are not attachments of the forwarded message', fun
 it('puts the mailbox signature above the quote', function (string $mode): void {
     $mailbox = mailbox(['signature' => '<p>Regards, Team</p>']);
     $source = storedMessage(folder($mailbox), 1, ['body_text' => 'Original text']);
-    $parameters = $mode === 'new' ? [$mailbox] : [$mailbox, 'reply' => $source->id, 'mode' => $mode];
+    $parameters = $mode === 'new' ? [$mailbox] : [
+        $mailbox,
+        'reply' => $source->id,
+        'mode' => $mode,
+    ];
 
     $this->actingAs(member($mailbox, AccessLevel::Write))
         ->get(route('mailbox.compose.create', $parameters))
@@ -158,4 +195,50 @@ it('shares the mailbox translations with every page', function (): void {
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('vue_mailbox_translations.reply', 'Reply')
             ->where('vue_mailbox_translations.contacts', 'Address book'));
+});
+
+it('does not share the mailbox translations outside the mailbox routes', function (): void {
+    Route::middleware('web')->get('elsewhere', fn (): Response => Inertia\Inertia::render('Elsewhere'));
+
+    $this->actingAs(user())
+        ->get('elsewhere')
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->component('Elsewhere')
+            ->missing('vue_mailbox_translations'));
+});
+
+it('reloads pruned attachment metadata before forwarding the originals', function (): void {
+    Bus::fake();
+    $mailbox = mailbox([
+        'append_sent' => false,
+    ]);
+    $source = storedMessage(folder($mailbox), 1, [
+        'attachments' => null,
+        'body_fetched_at' => null,
+        'body_html' => null,
+        'has_attachments' => true,
+    ]);
+    $this->connector->remote($mailbox)->folder('INBOX')->setMessages([
+        new FakeMessage(1, [], forwardSource()),
+    ]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.compose.store', $mailbox), [
+            'body' => '<p>See below</p>',
+            'forward_message' => $source->id,
+            'remove_attachments' => [
+                '0',
+            ],
+            'subject' => 'Fwd: Offer',
+            'to' => [
+                'colleague@example.org',
+            ],
+        ])
+        ->assertSessionHasNoErrors();
+
+    $sent = $this->connector->transport->sent[0];
+
+    expect(array_map(fn (DataPart $part): string => (string) $part->getFilename(), $sent->getAttachments()))->toBe([
+        'terms.txt',
+    ]);
 });

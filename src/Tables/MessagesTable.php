@@ -119,10 +119,9 @@ final class MessagesTable extends AbstractTable
      */
     private function moveChoices(): array
     {
-        return $this->folder->mailbox->folders()
+        return $this->folder->mailbox->loadMissing('folders')->folders
             ->where('selectable', true)
-            ->whereKeyNot($this->folder->id)
-            ->get()
+            ->reject(fn (MailboxFolder $folder): bool => $folder->id === $this->folder->id)
             ->sortBy(fn (MailboxFolder $folder): string => sprintf('%d-%s', $folder->role->sortOrder(), mb_strtolower($folder->path)))
             ->mapWithKeys(fn (MailboxFolder $folder): array => [$folder->id => $folder->role->label() ?? $folder->name])
             ->all();

@@ -94,8 +94,14 @@ class ContactController extends Controller
 
     private function normalised(Request $request): Request
     {
+        $email = $request->input('email');
+
+        if (! is_string($email)) {
+            return $request;
+        }
+
         $request->merge([
-            'email' => Str::lower(trim($request->string('email')->value())),
+            'email' => Str::lower(trim($email)),
         ]);
 
         return $request;

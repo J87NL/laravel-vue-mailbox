@@ -20,6 +20,10 @@ class ForwardedAttachments
      */
     public function describe(Mailbox $mailbox, MailboxMessage $source): array
     {
+        if (is_null($source->attachments) && $source->has_attachments) {
+            $this->loader->load($source);
+        }
+
         return collect($source->attachments ?? [])
             ->map(fn (array $attachment, int $index): array => [
                 ...$attachment,
@@ -29,7 +33,11 @@ class ForwardedAttachments
             ->map(fn (array $attachment): array => [
                 'key' => (string) $attachment['index'],
                 'name' => (string) ($attachment['filename'] ?: __('mailbox::mailbox.attachment')),
-                'url' => route(config('vue-mailbox.routes.name').'attachments.download', [$mailbox, $source, $attachment['index']]),
+                'url' => route(config('vue-mailbox.routes.name').'attachments.download', [
+                    $mailbox,
+                    $source,
+                    $attachment['index'],
+                ]),
             ])
             ->values()
             ->all();
