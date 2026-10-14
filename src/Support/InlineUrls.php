@@ -58,6 +58,11 @@ class InlineUrls implements ResolvesInlineImageUrls
         ];
     }
 
+    public function urlPrefix(): ?string
+    {
+        return url(sprintf('%s/inline/', trim((string) config('vue-mailbox.routes.prefix'), '/')));
+    }
+
     private function routeName(): string
     {
         return sprintf('%sinline', config('vue-mailbox.routes.name'));

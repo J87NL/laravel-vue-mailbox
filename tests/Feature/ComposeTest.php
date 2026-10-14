@@ -313,3 +313,26 @@ it('forwards quoted inline images as embedded parts and drops removed or foreign
         ->and((string) $sent->getHtmlBody())->toContain(sprintf('cid:%s', $inline[0]->getName()))
         ->not->toContain('/mailbox/inline/');
 });
+
+it('strips signed inline urls the user pasted into a new message', function (): void {
+    $mailbox = mailbox([
+        'append_sent' => false,
+    ]);
+    $message = storedMessage(folder($mailbox), 1);
+    $signed = app(InlineUrls::class)->for($message)('logo');
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.compose.store', $mailbox), [
+            'body' => sprintf('<p>Look: %s</p><img src="%s"><a href="%s">x</a>', e($signed), e($signed), e($signed)),
+            'subject' => 'Hi',
+            'to' => [
+                'colleague@example.org',
+            ],
+        ])
+        ->assertSessionHasNoErrors();
+
+    $sent = $this->connector->transport->sent[0];
+
+    expect((string) $sent->getHtmlBody())->not->toContain('/mailbox/inline/')
+        ->and((string) $sent->getTextBody())->not->toContain('/mailbox/inline/');
+});
