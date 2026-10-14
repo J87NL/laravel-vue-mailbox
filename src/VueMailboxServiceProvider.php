@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace J87NL\VueMailbox;
 
+use J87NL\Mailbox\Contracts\ResolvesInlineImageUrls;
 use J87NL\VueMailbox\Commands\InstallCommand;
+use J87NL\VueMailbox\Support\InlineUrls;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -17,6 +19,11 @@ class VueMailboxServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasRoute('web')
             ->hasCommand(InstallCommand::class);
+    }
+
+    public function packageRegistered(): void
+    {
+        $this->app->bind(ResolvesInlineImageUrls::class, InlineUrls::class);
     }
 
     public function packageBooted(): void

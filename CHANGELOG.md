@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 - 2026-10-14
+
+- Reply, reply all and forward quote the original HTML like Gmail: "On … wrote:" above a bordered blockquote, or a "Forwarded message" header block with From, Date, Subject, To and Cc. Inline images show in the editor and are sent as embedded parts.
+- `InlineUrls` signs and parses the inline image URLs and implements the core `ResolvesInlineImageUrls`.
+- Inline SVG images are served with `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` and `nosniff`.
+- After sending a reply or forward the app returns to the folder of the original message.
+- Requires `j87nl/laravel-mailbox` ^0.3.
+
 ## 0.2.0 - 2026-10-13
 
 - Requires `j87nl/laravel-mailbox` ^0.2, `tranquil-tools/laravel-vue-form-builder` ^1.10 and `tranquil-tools/laravel-vue-table-builder` ^1.9.

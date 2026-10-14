@@ -69,10 +69,16 @@ class ComposeController extends Controller
             ? $this->forwarded->resolve($forwardOf, $form->keptForwardedAttachments($request))
             : [];
 
-        $send->handle($mailbox, $data, $request->user(), $this->message($mailbox, (int) ($data['reply_to_message'] ?? 0)));
+        $replyTo = $this->message($mailbox, (int) ($data['reply_to_message'] ?? 0));
+        $data['quote_source'] = $forwardOf ?? $replyTo;
+
+        $send->handle($mailbox, $data, $request->user(), $replyTo);
 
         return redirect()
-            ->route(config('vue-mailbox.routes.name').'folders.show', $mailbox)
+            ->route(config('vue-mailbox.routes.name').'folders.show', array_filter([
+                $mailbox,
+                $data['quote_source']?->folder,
+            ]))
             ->with('success', __('mailbox::mailbox.sent'));
     }
 

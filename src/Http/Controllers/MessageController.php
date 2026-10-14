@@ -8,7 +8,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 use J87NL\Mailbox\Actions\MarkMessages;
@@ -17,12 +16,14 @@ use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAuditEntry;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\VueMailbox\Support\FolderTree;
+use J87NL\VueMailbox\Support\InlineUrls;
 use J87NL\VueMailbox\Support\MessageBodyLoader;
 
 class MessageController extends Controller
 {
     public function __construct(
         private readonly MessageHtml $html,
+        private readonly InlineUrls $inlineUrls,
     ) {}
 
     public function show(
@@ -81,15 +82,13 @@ class MessageController extends Controller
     private function body(MailboxMessage $message, bool $showImages): array
     {
         $remoteImages = $this->html->remoteImagesAllowed($showImages);
-        $inlineRoute = config('vue-mailbox.routes.name').'inline';
-        $expires = now()->addMinutes((int) config('vue-mailbox.signed_url_minutes'));
 
         return [
             'hasRemoteImages' => ! $remoteImages && $this->html->hasRemoteImages($message->body_html),
             'html' => $this->html->render(
                 $message->body_html,
                 $message->body_text,
-                fn (string $cid): string => URL::temporarySignedRoute($inlineRoute, $expires, [$message, $cid]),
+                $this->inlineUrls->for($message),
                 $remoteImages,
             ),
             'remoteImages' => $remoteImages,

@@ -7,10 +7,13 @@ namespace J87NL\VueMailbox\Support;
 use Illuminate\Support\Str;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
-use J87NL\Mailbox\Support\DisplayTime;
 
 class ComposeDefaults
 {
+    public function __construct(
+        private readonly QuoteBuilder $quotes,
+    ) {}
+
     private const FORWARD_PREFIXES = [
         'fw:',
         'fwd:',
@@ -28,11 +31,10 @@ class ComposeDefaults
         }
 
         $subject = (string) $source->subject;
-        $body = $this->body($mailbox, $this->quote($source));
 
         if ($mode === 'forward') {
             return [
-                'body' => $body,
+                'body' => $this->body($mailbox, $this->quotes->forward($source)),
                 'forward_message' => $source->id,
                 'subject' => Str::startsWith(Str::lower($subject), self::FORWARD_PREFIXES) ? $subject : sprintf('Fwd: %s', $subject),
             ];
@@ -41,7 +43,7 @@ class ComposeDefaults
         $recipients = $this->replyRecipients($mailbox, $source);
 
         return [
-            'body' => $body,
+            'body' => $this->body($mailbox, $this->quotes->reply($source)),
             'cc' => $mode === 'reply_all' ? $this->others($mailbox, $source, $recipients) : [],
             'reply_to_message' => $source->id,
             'subject' => Str::startsWith(Str::lower($subject), 're:') ? $subject : sprintf('Re: %s', $subject),
@@ -119,18 +121,5 @@ class ComposeDefaults
             ->unique(fn (string $email): string => Str::lower($email))
             ->values()
             ->all();
-    }
-
-    private function quote(MailboxMessage $source): string
-    {
-        $sender = trim(sprintf('%s <%s>', (string) $source->from_name, (string) $source->from_email));
-        $body = $source->body_text ? nl2br(e($source->body_text)) : e(strip_tags((string) $source->body_html));
-
-        return sprintf(
-            '<p>%s — %s</p><blockquote>%s</blockquote>',
-            e($sender),
-            e(DisplayTime::format($source->sent_at, 'd-m-Y H:i')),
-            $body,
-        );
     }
 }

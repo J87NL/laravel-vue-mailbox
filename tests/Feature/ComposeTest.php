@@ -9,6 +9,7 @@ use Inertia\Response;
 use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Models\MailboxContact;
+use J87NL\VueMailbox\Support\InlineUrls;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\DataPart;
@@ -162,7 +163,9 @@ it('rejects removal keys that are not attachments of the forwarded message', fun
 
 it('puts the mailbox signature above the quote', function (string $mode): void {
     $mailbox = mailbox(['signature' => '<p>Regards, Team</p>']);
-    $source = storedMessage(folder($mailbox), 1, ['body_text' => 'Original text']);
+    $source = storedMessage(folder($mailbox), 1, [
+        'body_html' => '<p>Original text</p>',
+    ]);
     $parameters = $mode === 'new' ? [$mailbox] : [
         $mailbox,
         'reply' => $source->id,
@@ -241,4 +244,72 @@ it('reloads pruned attachment metadata before forwarding the originals', functio
     expect(array_map(fn (DataPart $part): string => (string) $part->getFilename(), $sent->getAttachments()))->toBe([
         'terms.txt',
     ]);
+});
+
+it('forwards quoted inline images as embedded parts and drops removed or foreign ones', function (): void {
+    Bus::fake();
+    $mailbox = mailbox([
+        'append_sent' => false,
+    ]);
+    $inbox = folder($mailbox);
+    $raw = (new Email)
+        ->from('Sender <sender@example.org>')
+        ->to('team@example.com')
+        ->subject('Newsletter')
+        ->html('<p>News</p><img src="cid:logo"><img src="cid:banner">')
+        ->embed('LOGO', 'logo', 'image/png')
+        ->embed('BANNER', 'banner', 'image/png')
+        ->toString();
+    $remote = new FakeMessage(1, [], $raw);
+    $this->connector->remote($mailbox)->folder('INBOX')->setMessages([
+        $remote,
+    ]);
+    $source = storedMessage($inbox, 1, [
+        'body_html' => $remote->html(),
+    ]);
+    $other = storedMessage($inbox, 2);
+    $writer = member($mailbox, AccessLevel::Write);
+    $body = '';
+
+    $this->actingAs($writer)
+        ->get(route('mailbox.compose.create', [
+            $mailbox,
+            'reply' => $source->id,
+            'mode' => 'forward',
+        ]))
+        ->assertInertia(function (AssertableInertia $page) use (&$body): AssertableInertia {
+            $body = (string) $page->toArray()['props']['form']['defaults']['body'];
+
+            return $page;
+        });
+
+    preg_match_all('/<img[^>]*>/', $body, $images);
+    $foreign = app(InlineUrls::class)->for($other)('banner');
+
+    expect($body)->toContain('Forwarded message')
+        ->toContain('data-mailbox-cid=')
+        ->and($images[0])->toHaveCount(2);
+
+    $this->actingAs($writer)
+        ->post(route('mailbox.compose.store', $mailbox), [
+            'body' => implode('', [
+                '<p>FYI</p>',
+                $images[0][0],
+                sprintf('<img src="%s">', e($foreign)),
+            ]),
+            'forward_message' => $source->id,
+            'subject' => 'Fwd: Newsletter',
+            'to' => [
+                'colleague@example.org',
+            ],
+        ])
+        ->assertSessionHasNoErrors();
+
+    $sent = $this->connector->transport->sent[0];
+    $inline = array_values(array_filter($sent->getAttachments(), fn (DataPart $part): bool => $part->getDisposition() === 'inline'));
+
+    expect($inline)->toHaveCount(1)
+        ->and($inline[0]->getBody())->toBe('LOGO')
+        ->and((string) $sent->getHtmlBody())->toContain(sprintf('cid:%s', $inline[0]->getName()))
+        ->not->toContain('/mailbox/inline/');
 });

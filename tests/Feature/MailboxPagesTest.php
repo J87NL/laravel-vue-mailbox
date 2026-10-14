@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use DirectoryTree\ImapEngine\Attachment;
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
@@ -13,7 +14,10 @@ use J87NL\Mailbox\Jobs\SyncMailboxJob;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAccess;
 use J87NL\Mailbox\Models\MailboxMessage;
+use J87NL\Mailbox\Testing\RecordingFolder;
+use J87NL\VueMailbox\Support\InlineUrls;
 use J87NL\VueMailbox\Tables\MessagesTable;
+use Symfony\Component\Mime\Email;
 
 beforeEach(function (): void {
     Bus::fake([SyncFolderJob::class]);
@@ -90,6 +94,7 @@ it('marks a message read when a writer opens it but not when a reader does', fun
 it('prefills a reply with recipient, subject and quote', function (): void {
     $mailbox = mailbox();
     $message = storedMessage(folder($mailbox), 1, [
+        'body_html' => null,
         'body_text' => 'Original <text>',
         'from_name' => 'Sender',
         'subject' => 'Question',
@@ -123,7 +128,10 @@ it('sends a reply through the compose form', function (): void {
             'subject' => 'Re: Question',
             'to' => 'sender@example.org',
         ])
-        ->assertRedirect(route('mailbox.folders.show', $mailbox))
+        ->assertRedirect(route('mailbox.folders.show', [
+            $mailbox,
+            $message->folder,
+        ]))
         ->assertSessionHasNoErrors();
 
     $sent = $this->connector->transport->sent[0];
@@ -460,4 +468,63 @@ it('labels folders by role and keeps custom folder names', function (): void {
                 'Sent',
                 'Projecten',
             ]));
+});
+
+it('serves inline svg images locked down and other inline types plainly', function (): void {
+    $mailbox = mailbox();
+    $message = storedMessage(folder($mailbox), 1);
+    $raw = (new Email)
+        ->from('sender@example.org')
+        ->to('team@example.com')
+        ->html('<img src="cid:icon"><img src="cid:logo">')
+        ->embed('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>', 'icon', 'image/svg+xml')
+        ->embed('PNG', 'logo', 'image/png')
+        ->toString();
+    $remote = new FakeMessage(1, [], $raw);
+    $this->connector->remote($mailbox)->folder('INBOX')->setMessages([
+        $remote,
+    ]);
+    $contentIds = array_map(
+        fn (Attachment $attachment): string => trim((string) $attachment->contentId(), '<>'),
+        $remote->attachments(),
+    );
+    $inline = app(InlineUrls::class)->for($message);
+
+    $svg = $this->get($inline($contentIds[0]))->assertOk();
+
+    expect($svg->headers->get('Content-Type'))->toStartWith('image/svg+xml')
+        ->and($svg->headers->get('Content-Security-Policy'))->toBe("default-src 'none'; style-src 'unsafe-inline'; sandbox")
+        ->and($svg->headers->get('X-Content-Type-Options'))->toBe('nosniff');
+
+    $png = $this->get($inline($contentIds[1]))->assertOk();
+
+    expect($png->headers->get('Content-Type'))->toStartWith('image/png')
+        ->and($png->headers->has('Content-Security-Policy'))->toBeFalse();
+});
+
+it('returns to the folder of the source message after replying', function (): void {
+    $mailbox = mailbox([
+        'append_sent' => false,
+    ]);
+    folder($mailbox);
+    $archive = folder($mailbox, 'Archive', FolderRole::Archive);
+    $source = storedMessage($archive, 1, [
+        'body_html' => null,
+    ]);
+    $this->connector->remote($mailbox)->addFolder(new RecordingFolder('Archive'));
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.compose.store', $mailbox), [
+            'body' => '<p>Answer</p>',
+            'reply_to_message' => $source->id,
+            'subject' => 'Re: x',
+            'to' => [
+                'sender@example.org',
+            ],
+        ])
+        ->assertRedirect(route('mailbox.folders.show', [
+            $mailbox,
+            $archive,
+        ]))
+        ->assertSessionHas('success');
 });

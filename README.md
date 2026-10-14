@@ -54,6 +54,8 @@ The default pages read their texts from the Inertia prop `vue_mailbox_translatio
 | `Mailbox/Contacts/Edit` | `backUrl`, `destroyUrl`, `form`, `mailbox`, `title` |
 | `Mailbox/Settings/Index`, `Mailbox/Settings/Edit` | unchanged |
 
+Reply, reply all and forward put the original HTML in the compose body (Gmail-style header or "On … wrote:" blockquote). Its inline images use signed inline URLs with `data-mailbox-cid`; keep that attribute in your editor (the default HugeRTE options do). Inline SVG images are served with a locked-down CSP. After sending a reply or forward the app returns to the folder of the original message.
+
 The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['table']"` to `TableBuilder` so a tick reloads only the table. Unread rows get `font-semibold` from the server.
 
 ## Routes
