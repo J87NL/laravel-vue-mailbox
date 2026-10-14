@@ -38,9 +38,15 @@ class InlineUrls implements ResolvesInlineImageUrls
             return null;
         }
 
-        $route = Router::getRoutes()->getByName($this->routeName());
+        $named = Router::getRoutes()->getByName($this->routeName());
 
-        if (is_null($route) || ! $route->matches($request)) {
+        if (is_null($named)) {
+            return null;
+        }
+
+        $route = clone $named;
+
+        if (! $route->matches($request)) {
             return null;
         }
 

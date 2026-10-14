@@ -7,6 +7,7 @@
 - Inline SVG images are served with `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` and `nosniff`.
 - After sending a reply or forward the app returns to the folder of the original message.
 - Requires `j87nl/laravel-mailbox` ^0.3.
+- `InlineUrls` parses with a copy of the inline route, so it never changes the route the app is handling.
 
 ## 0.2.0 - 2026-10-13
 

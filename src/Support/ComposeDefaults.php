@@ -10,14 +10,14 @@ use J87NL\Mailbox\Models\MailboxMessage;
 
 class ComposeDefaults
 {
-    public function __construct(
-        private readonly QuoteBuilder $quotes,
-    ) {}
-
     private const FORWARD_PREFIXES = [
         'fw:',
         'fwd:',
     ];
+
+    public function __construct(
+        private readonly QuoteBuilder $quotes,
+    ) {}
 
     /**
      * @return array<string, mixed>
