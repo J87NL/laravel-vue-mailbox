@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 - 2026-10-19
+
+- Requires `j87nl/laravel-mailbox` ^0.3.2, which no longer allows vulnerable versions of `directorytree/imapengine`, `symfony/html-sanitizer` and `symfony/mailer`.
+
 ## 0.3.0 - 2026-10-14
 
 - Reply, reply all and forward quote the original HTML like Gmail: "On … wrote:" above a bordered blockquote, or a "Forwarded message" header block with From, Date, Subject, To and Cc. Inline images show in the editor and are sent as embedded parts.
