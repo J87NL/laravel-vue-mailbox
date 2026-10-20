@@ -5,16 +5,11 @@ and their names start with `config('vue-mailbox.routes.name')` (default `mailbox
 
 ## Abilities
 
-Every route checks one of the Gate abilities the core package defines. Which users pass them depends on the access
-mode, administrators and per-mailbox access levels of `j87nl/laravel-mailbox`.
-
-| Ability | Argument | Meaning |
-|---|---|---|
-| `accessAnyMailbox` | - | The user can open at least one mailbox |
-| `accessMailbox` | `Mailbox` | Read access to the mailbox |
-| `workInMailbox` | `Mailbox` | Write access: send, move, delete, manage contacts |
-| `manageMailbox` | `Mailbox` | Manage access: edit the mailbox settings and its access list |
-| `manageMailboxes` | - | Mailbox administrator: create and delete mailboxes |
+Every route except the signed inline image route and the settings list checks one of the Gate abilities the core
+package defines: `accessAnyMailbox`, `accessMailbox` (read), `workInMailbox` (write), `manageMailbox` (manage) and
+`manageMailboxes` (admin). What each level means, and how the access mode, admins and access rows decide who passes, is
+documented in the core [access control](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md) docs. The
+tables below show which route needs which ability.
 
 The pages hide controls the user cannot use. The controllers pass `null` for a URL the user is not allowed to call,
 for example `composeUrl` for a reader.
@@ -34,8 +29,8 @@ In a Vue page with an ability helper, use `$can('accessAnyMailbox')` in the same
 ## Mailbox routes
 
 All routes below run behind `config('vue-mailbox.routes.middleware')` (default `web`, `auth`). In this group the
-`{mailbox}` parameter only matches numbers. Nested models (`{folder}`, `{message}`, `{contact}`) are scoped to the mailbox, so a
-message of another mailbox answers `404`.
+`{mailbox}` parameter only matches numbers. Nested models (`{folder}`, `{message}`, `{contact}`) are scoped to the
+mailbox, so a message of another mailbox answers `404`.
 
 | Method | URI | Name | Ability |
 |---|---|---|---|

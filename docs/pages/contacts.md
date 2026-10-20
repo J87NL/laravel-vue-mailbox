@@ -31,8 +31,8 @@ default `Mailbox/Contacts/Edit`.
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
 | `title` | `string` | The contact's label, or "New contact" |
 
-The `ContactForm` has the fields `name`, `email`, `organisation` and `notes`. The email address is required and unique
-within the mailbox. Before validation the controller trims the address and turns it into lower case.
+The form is the core [`ContactForm`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/forms.md#contactform).
+Before validation the controller trims the address and turns it into lower case.
 
 `store`, `update` and `destroy` redirect to the address book with a `success` flash message.
 

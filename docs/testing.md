@@ -17,7 +17,8 @@ beforeEach(function (): void {
 });
 ```
 
-How the fake works is documented in the `j87nl/laravel-mailbox` docs.
+How the fake works is documented in the core
+[testing](https://github.com/J87NL/laravel-mailbox/blob/main/docs/testing.md) docs.
 
 The page props are plain Inertia props, so you can check them with Inertia's testing helpers:
 

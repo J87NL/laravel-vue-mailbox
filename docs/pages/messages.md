@@ -5,8 +5,9 @@ Route `mailbox.messages.show` (`GET {mailbox}/messages/{message}`) renders the `
 
 ## Loading the body
 
-The controller loads the message body from the server through the core package when it is not cached. When the
-message no longer exists on the server (moved or deleted in another mail client), the controller forgets the stored
+The controller loads the message body from the server through the core package when it is not cached, see
+[reading a message](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md#reading-a-message). When
+the message no longer exists on the server (moved or deleted in another mail client), the controller forgets the stored
 message and redirects to its folder with an `error` flash message.
 
 When a user with `workInMailbox` opens an unread message, it is marked as read. A reader with only `accessMailbox`
@@ -34,9 +35,10 @@ leaves the read state alone.
 
 ## Remote images
 
-Whether remote images are blocked is set in the core config. While they are blocked and the message has any,
-`hasRemoteImages` is `true` and the default page shows a notice with a link to `?images=1`. That query parameter
-renders the message once with remote images allowed.
+Whether remote images are blocked is set in the core config, see
+[HTML rendering](https://github.com/J87NL/laravel-mailbox/blob/main/docs/html.md#remote-images). While they are blocked
+and the message has any, `hasRemoteImages` is `true` and the default page shows a notice with a link to `?images=1`.
+That query parameter renders the message once with remote images allowed.
 
 ## The message frame
 
@@ -63,12 +65,14 @@ itself through [Inline images](../inline-images.md).
 
 ## History
 
-Entries are matched on the RFC `Message-ID` header across the whole mailbox, so they follow the message through
-moves. A message without a `Message-ID` has an empty history.
+Entries come from the core [audit trail](https://github.com/J87NL/laravel-mailbox/blob/main/docs/audit-trail.md),
+matched on the `Message-ID` across the whole mailbox, so they follow the message through moves. A message without a
+`Message-ID` has an empty history.
 
-Each `history` entry has `action` (an audit action value of the core package), `at` (ISO 8601), `target` (a folder
-path, for moves) and `user` (the user's `name`, or `null` for the system). The default page shows them with the
-`audit_*` translations.
+Each `history` entry has `action` (an
+[audit action](https://github.com/J87NL/laravel-mailbox/blob/main/docs/audit-trail.md#actions) value), `at` (ISO 8601),
+`target` (a folder path, for moves) and `user` (the user's `name`, or `null` for the system). The default page shows
+them with the `audit_*` translations.
 
 ## Toolbar
 

@@ -19,7 +19,8 @@ route, so they show in the message view and in the editor of a reply or forward.
 ## InlineUrls
 
 `J87NL\VueMailbox\Support\InlineUrls` makes and reads these URLs. The service provider binds it to the core contract
-`J87NL\Mailbox\Contracts\ResolvesInlineImageUrls`, which replaces the core's default that knows no inline URLs.
+[`J87NL\Mailbox\Contracts\ResolvesInlineImageUrls`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/extension-points.md#resolvesinlineimageurls),
+which replaces the core's default that knows no inline URLs.
 
 | Method | Description |
 |---|---|
@@ -34,8 +35,8 @@ route, so it never changes the route of the current request.
 ## Message view
 
 The message controller passes `for($message)` to the core HTML renderer, which rewrites `cid:` references to signed
-URLs. `MessageFrame` allows images from `imageOrigin`, the scheme, host and port of the current request, so these URLs load
-while remote images stay blocked.
+URLs. `MessageFrame` allows images from `imageOrigin`, the scheme, host and port of the current request, so these URLs
+load while remote images stay blocked.
 
 ## Replies and forwards
 
@@ -43,7 +44,9 @@ The reply and forward quotes also use signed inline URLs, so the images show in 
 with a `data-mailbox-cid` attribute. Your WYSIWYG editor must keep that attribute; the default HugeRTE options in the
 core config do.
 
-When the message is sent, the core uses `parse()` and `urlPrefix()` to:
+When the message is sent, the core uses `parse()` and `urlPrefix()` (see
+[quoting and inline images](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sending.md#quoting-and-inline-images))
+to:
 
 - turn images of the quoted message back into embedded parts,
 - drop quoted images that were removed or that belong to another message,

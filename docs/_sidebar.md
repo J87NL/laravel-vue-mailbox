@@ -17,3 +17,5 @@
 - [Artisan commands](artisan-commands.md)
 - [Security](security.md)
 - [Testing and development](testing.md)
+- Related packages
+    - [Core (laravel-mailbox)](https://github.com/J87NL/laravel-mailbox/blob/main/docs/index.md)

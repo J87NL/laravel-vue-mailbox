@@ -35,11 +35,12 @@ const { t } = useMailboxTranslations();
 </template>
 ```
 
-`t(key, replacements)` replaces `:name` placeholders. A missing key returns its last dot segment. The module also exports the
-prop name as `MAILBOX_TRANSLATIONS`.
+`t(key, replacements)` replaces `:name` placeholders. A missing key returns its last dot segment. The module also
+exports the prop name as `MAILBOX_TRANSLATIONS`.
 
 ## Changing texts
 
 The texts belong to `j87nl/laravel-mailbox`. Override them the Laravel way for package translations, in
-`lang/vendor/mailbox/{locale}/mailbox.php`. The PHP side (flash messages, table labels, form labels) and the Vue pages
-then use the same text.
+`lang/vendor/mailbox/{locale}/mailbox.php`, or publish them with the `mailbox-translations` tag, see the core
+[installation](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md#publish-config-and-migrations)
+docs. The PHP side (flash messages, table labels, form labels) and the Vue pages then use the same text.

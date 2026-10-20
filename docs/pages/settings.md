@@ -27,12 +27,11 @@ Routes `mailbox.settings.create` (`manageMailboxes`) and `mailbox.settings.edit`
 | `form` | `FormSchema` | The core `MailboxForm` |
 | `title` | `string` | The mailbox name, or "New mailbox" |
 
-The form and saving are handled by the core `MailboxForm` and `SaveMailbox`. `SaveMailbox` returns validation errors,
-and saves nothing, when:
-
-- the connection test fails (errors on `imap_host` or `smtp_host`);
-- the server, port, encryption or username of an existing mailbox changes while its password field is left empty;
-- a user without `manageMailboxes` changes the server or username of an OAuth mailbox.
+The form and saving are handled by the core
+[`MailboxForm`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/forms.md#mailboxform) and
+[`SaveMailbox`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md#saving-a-mailbox). It tests
+the connection and guards the stored passwords; when it refuses, the page shows the validation errors and nothing is
+saved.
 
 - `store` redirects to the edit page of the new mailbox with a `success` flash message.
 - `update` redirects back with a `success` flash message.
@@ -47,9 +46,10 @@ need `manageMailbox`.
 
 | Field | Description |
 |---|---|
-| `accessor` | An assignable user or group, as `type:id`, from the core accessor resolver |
+| `accessor` | An assignable user or group, as `type:id`, from the core [accessor resolver](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md#users-and-groups) |
 | `level` | `read`, `write` or `manage` |
 
 `DELETE settings/{mailbox}/access/{access}` (`mailbox.settings.access.destroy`) revokes one row. Both go through the
-core `GrantAccess` action and redirect back. When the core refuses a change, for example revoking the last manager,
-the error is set on `accessor`. The default page shows that error above the access table.
+core [`GrantAccess`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md#granting-and-revoking) action and
+redirect back. When the core refuses a change, for example revoking the last manager, the error is set on `accessor`.
+The default page shows that error above the access table.

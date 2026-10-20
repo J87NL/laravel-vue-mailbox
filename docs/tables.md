@@ -38,7 +38,8 @@ Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk act
 | Mark as unread | core `MarkMessages::unread()` |
 | Move to folder | core `MoveMessages`, with a choice of the other selectable folders of the mailbox |
 
-Bulk actions only touch messages of the table's folder.
+Bulk actions only touch messages of the table's folder. What each core action does on the server is documented in the
+core [message actions](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md) docs.
 
 ## ContactsTable
 

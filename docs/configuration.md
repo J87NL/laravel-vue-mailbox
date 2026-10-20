@@ -9,7 +9,8 @@ php artisan vendor:publish --tag="vue-mailbox-config"
 This creates `config/vue-mailbox.php`. None of its keys read an environment variable.
 
 The core settings (access mode, administrators, display timezone, compose editor, remote images, sync) live in
-`config/mailbox.php` and are documented in the `j87nl/laravel-mailbox` docs.
+`config/mailbox.php` and are documented in the core
+[configuration](https://github.com/J87NL/laravel-mailbox/blob/main/docs/configuration.md) docs.
 
 ## Routes
 

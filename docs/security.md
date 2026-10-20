@@ -22,7 +22,8 @@ Two routes work differently:
 
 ## Message HTML
 
-- The core package sanitizes the HTML before the controller sends it as the `html` prop.
+- The core package sanitizes the HTML before the controller sends it as the `html` prop. See the core
+  [security](https://github.com/J87NL/laravel-mailbox/blob/main/docs/security.md#html-mail) docs for what it removes.
 - `MessageFrame` renders it in an `<iframe srcdoc>` without `allow-scripts`, with a Content Security Policy of
   `default-src 'none'`, and with `referrerpolicy="no-referrer"`.
 - Images from other origins are blocked while the core blocks remote images, until the user asks for them with

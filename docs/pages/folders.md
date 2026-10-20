@@ -10,8 +10,8 @@ Route `mailbox.folders.show` (`GET {mailbox}/folders/{folder?}`) renders the `vu
 
 Without a `{folder}`, the page opens the folder with the inbox role. When the mailbox has no inbox yet, the controller
 fetches the folder list from the server once and tries again. If there is still no inbox, it queues a
-`SyncMailboxJob` and renders the page with `folder` and `table` set to `null` and a `syncing` message, instead of
-answering `404`.
+[`SyncMailboxJob`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md) and renders the page with `folder`
+and `table` set to `null` and a `syncing` message, instead of answering `404`.
 
 When the opened folder was not synced in the last 60 seconds, the controller queues a `SyncFolderJob` for it. The page
 renders the messages already stored; the table picks up new mail on its next poll.
@@ -64,14 +64,17 @@ Columns, bulk actions and row styling are described in [Tables](../tables.md#mes
 
 ## Adding a folder
 
-`folderForm` posts to `mailbox.folders.store`. It uses the core `FolderForm`: a `name` and an optional `parent_id`.
-A parent folder of another mailbox answers `404`. The folder is created on the IMAP server through the core
-`CreateFolder` action, and the user lands on the new folder.
+`folderForm` posts to `mailbox.folders.store`. It uses the core
+[`FolderForm`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/forms.md#folderform): a `name` and an optional
+`parent_id`. A parent folder of another mailbox answers `404`. The folder is created on the IMAP server through the core
+[`CreateFolder`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md#creating-folders) action,
+and the user lands on the new folder.
 
 ## Message actions
 
 `POST {mailbox}/messages/actions` (`mailbox.messages.actions`, `workInMailbox`) runs an action on messages of the
-mailbox. The message view uses it for its buttons; you can use it from your own pages.
+mailbox. The message view uses it for its buttons; you can use it from your own pages. Each action calls the matching
+core action, see [message actions](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md).
 
 | Field | Rules |
 |---|---|

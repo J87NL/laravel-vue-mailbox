@@ -17,7 +17,14 @@ this package.
 composer require j87nl/laravel-vue-mailbox
 ```
 
-The service provider `J87NL\VueMailbox\VueMailboxServiceProvider` is auto-discovered.
+This package is the user interface. It pulls in
+[`j87nl/laravel-mailbox`](https://github.com/J87NL/laravel-mailbox), the core that holds the models, migrations,
+config, IMAP sync, sending, access abilities and audit trail, as a dependency. A single `require` is all you need. Both
+service providers, `J87NL\VueMailbox\VueMailboxServiceProvider` and `J87NL\Mailbox\MailboxServiceProvider`, are
+auto-discovered.
+
+The UI only calls the core. The core steps in [step 7](#7-set-up-the-core-package) are therefore required, not
+optional.
 
 ## 2. Run the installer
 
@@ -133,5 +140,24 @@ npm run build
 
 ## 7. Set up the core package
 
-Mailbox administrators, the sync schedule (`mailbox:sync`, `mailbox:prune-bodies`), the queue worker and the core
-configuration keys are documented in the `j87nl/laravel-mailbox` docs.
+The UI shows and changes what the core stores, so the core has to be set up. The steps are documented in the
+[core installation guide](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md); this is what the UI
+needs from it:
+
+- **Migrations.** `mailbox:install` publishes them; run `php artisan migrate`. Every page reads the core tables.
+- **[Admins](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md#bootstrap-an-admin)**
+  (`MAILBOX_ADMINS`). Creating a mailbox on the [settings page](pages/settings.md) needs `manageMailboxes`, which only
+  admins pass unless your app defines that ability itself. `php artisan mailbox:add` always works.
+- **[User model](https://github.com/J87NL/laravel-mailbox/blob/main/docs/configuration.md#user-model)**
+  (`MAILBOX_USER_MODEL`), when your user model is not `App\Models\User`. The access form and the message history use it.
+- **[Access mode and groups](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md).** They decide who
+  passes the abilities the routes check, and which users and groups the access form offers.
+- **[Sync schedule](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md#schedule-the-sync)**
+  (`mailbox:sync`) **and a queue worker.** The message list shows what the sync stored. The folder page also queues
+  `SyncMailboxJob` and `SyncFolderJob` itself, and saving a mailbox queues a sync.
+- **[Body cache pruning](https://github.com/J87NL/laravel-mailbox/blob/main/docs/artisan-commands.md#mailboxprune-bodies)**
+  (`mailbox:prune-bodies`). Recommended: opened bodies stay cached until it runs.
+- **[OAuth token provider](https://github.com/J87NL/laravel-mailbox/blob/main/docs/extension-points.md#providesaccesstoken)**,
+  only for mailboxes with OAuth authentication. The settings form offers OAuth, but the core fetches no tokens itself.
+
+Access levels are granted on the [settings page](pages/settings.md#access) or with `php artisan mailbox:grant`.

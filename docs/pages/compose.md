@@ -31,15 +31,13 @@ longer exists on the server, the user is sent back to its folder with an `error`
 
 ## The form
 
-The form is the core `ComposeForm`. Its fields:
+The form is the core [`ComposeForm`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/forms.md#composeform); its
+fields and rules are documented there. This package fills it in:
 
-| Field | Description |
-|---|---|
-| `to`, `cc`, `bcc` | Email address chips, at most 100 each, with suggestions from `mailbox.addresses`. `to` is required |
-| `subject` | Required, at most 250 characters |
-| `body` | Required, edited with the WYSIWYG editor set in the core config |
-| `attachments` | Uploaded files. When forwarding, also the original attachments, each removable |
-| `reply_to_message`, `forward_message` | Hidden ids of the source message |
+- the address chips (`to`, `cc`, `bcc`) ask `mailbox.addresses` for suggestions;
+- `body` uses the WYSIWYG editor set in the core config;
+- when forwarding, `attachments` also lists the original attachments, each removable;
+- the hidden `reply_to_message` and `forward_message` fields carry the id of the source message.
 
 ## Prefilled values
 
@@ -70,16 +68,19 @@ addresses are used as they are, without removing duplicates.
 - **Attachments**: the original attachments that are not inline images, each with a download link and removable.
   When the attachment metadata of the source was pruned, it is fetched from the server again first.
 
-Dates in the quote use the format `d-m-Y H:i` in the display timezone of the core package. The texts come from the
-core translation file (`quote_wrote`, `quote_forwarded`, `from`, `date`, ...).
+Dates in the quote use the format `d-m-Y H:i` in the
+[display timezone](https://github.com/J87NL/laravel-mailbox/blob/main/docs/configuration.md#display-timezone) of the
+core package. The texts come from the core translation file (`quote_wrote`, `quote_forwarded`, `from`, `date`, ...).
 
 Inline images of the original message show in the editor through signed URLs and are sent as embedded parts. See
 [Inline images](../inline-images.md).
 
 ## Sending
 
-`POST {mailbox}/compose` validates the `ComposeForm` and sends the message through the core `SendMessage` action, with
-the uploaded files, the kept forwarded attachments and the reply source.
+`POST {mailbox}/compose` validates the `ComposeForm` and sends the message through the core
+[`SendMessage`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sending.md) action, with the uploaded files, the
+kept forwarded attachments and the reply source. What happens on the SMTP and IMAP side (headers, the copy in Sent, the
+audit entry) is documented there.
 
 - A removal key that is not an attachment of the forwarded message fails validation, and nothing is sent.
 - When a kept forwarded attachment can no longer be fetched from the server, the form fails with an error on
@@ -98,5 +99,6 @@ use, as JSON:
 ]
 ```
 
-The query is cut to 100 characters. The suggestions come from the core `SuggestAddresses` action: the address book of
-the mailbox, configured contact providers and addresses seen in the mailbox, at most 10, without duplicates.
+The query is cut to 100 characters. The suggestions come from the core `SuggestAddresses` action, at most 10. Its
+sources are documented in the core
+[recipient suggestions](https://github.com/J87NL/laravel-mailbox/blob/main/docs/contacts.md#recipient-suggestions) docs.
