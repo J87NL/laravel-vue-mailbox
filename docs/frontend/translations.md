@@ -1,0 +1,45 @@
+# Translations
+
+The default pages are fully translated. They read their texts from the core translation file `mailbox::mailbox`,
+which ships in Dutch (`nl`) and English (`en`). The locale is the app locale.
+
+## The shared prop
+
+`J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations` shares the whole `mailbox::mailbox` file as the Inertia prop
+`vue_mailbox_translations` (`ShareMailboxTranslations::PROP`). The package adds this middleware to its own routes only,
+so other pages of your app do not carry the prop.
+
+A page outside the mailbox routes that needs the texts adds the middleware to its route:
+
+```php
+use J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations;
+
+Route::get('dashboard', DashboardController::class)
+    ->middleware(ShareMailboxTranslations::class);
+```
+
+## In Vue
+
+`useMailboxTranslations()` from `@mailbox/translations` reads the prop. It wraps `useTranslations()` of the
+TableBuilder with the `mailbox` group.
+
+```vue
+<script setup lang="ts">
+import { useMailboxTranslations } from '@mailbox/translations';
+
+const { t } = useMailboxTranslations();
+</script>
+
+<template>
+    <p>{{ t('sent_from', { email: 'team@example.com' }) }}</p>
+</template>
+```
+
+`t(key, replacements)` replaces `:name` placeholders. A missing key returns its last dot segment. The module also exports the
+prop name as `MAILBOX_TRANSLATIONS`.
+
+## Changing texts
+
+The texts belong to `j87nl/laravel-mailbox`. Override them the Laravel way for package translations, in
+`lang/vendor/mailbox/{locale}/mailbox.php`. The PHP side (flash messages, table labels, form labels) and the Vue pages
+then use the same text.
