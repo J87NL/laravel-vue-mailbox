@@ -17,6 +17,8 @@ php artisan migrate
 
 `mailbox:install` publishes the core and Vue config and the migrations, adds the `@mailbox` Vite alias (`./vendor/j87nl/laravel-vue-mailbox/resources/js`) and the `@mailbox/*` tsconfig path, and with `--pages` copies the default pages to `resources/js/pages/Mailbox` for customising. Running it again changes nothing that is already there.
 
+The controllers render the pages by name (`Mailbox/Index`, `Mailbox/Show`, …) and the package registers no Inertia page resolver of its own. Your app's resolver must find every `Mailbox/*` page: either publish the pages with `--pages` so they live in `resources/js/pages/Mailbox`, or let the resolver also look in `vendor/j87nl/laravel-vue-mailbox/resources/js/pages` for names that start with `Mailbox/`. See [Installation](docs/installation.md).
+
 The compose editor defaults to HugeRTE:
 
 ```bash
@@ -60,7 +62,7 @@ The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['ta
 
 ## Routes
 
-All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`) with the `web` and `auth` middleware. Menu links: `route('mailbox.index')` (show it with `@can('accessAnyMailbox')` / `$can('accessAnyMailbox')`) and `route('mailbox.settings.index')`. Every route is gated with the core abilities (`accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`); the pages hide controls the user cannot use.
+All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`) with the `web` and `auth` middleware. Menu links: `route('mailbox.index')` (show it with `@can('accessAnyMailbox')` / `$can('accessAnyMailbox')`) and `route('mailbox.settings.index')` (show it with `@can('manageAnyMailbox')`). Every route except the signed inline image route is gated with the core abilities (`accessAnyMailbox`, `accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`) or `manageAnyMailbox`, which this package defines unless the app already has it: `manageMailboxes`, or `manageMailbox` on at least one mailbox. The pages hide controls the user cannot use.
 
 | Route | Ability |
 |---|---|

@@ -75,7 +75,8 @@ MailboxesTable::build();
 | Per page | 25 |
 | Row link | `mailbox.settings.edit` |
 
-Any logged-in user may load the table. It only contains mailboxes for which the user passes `manageMailbox`.
+Only a user who passes `manageAnyMailbox` may load the table. It only contains mailboxes for which the user passes
+`manageMailbox`.
 
 ## MailboxAccessTable
 

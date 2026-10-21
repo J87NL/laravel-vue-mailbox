@@ -336,3 +336,23 @@ it('strips signed inline urls the user pasted into a new message', function (): 
     expect((string) $sent->getHtmlBody())->not->toContain('/mailbox/inline/')
         ->and((string) $sent->getTextBody())->not->toContain('/mailbox/inline/');
 });
+
+it('refuses an unknown compose mode', function (string $mode): void {
+    $mailbox = mailbox();
+    $message = storedMessage(folder($mailbox), 1);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->get(route('mailbox.compose.create', [
+            $mailbox,
+            'mode' => $mode,
+            'reply' => $message->id,
+        ]))
+        ->assertNotFound();
+})->with([
+    'unknown' => ['bogus'],
+    'new with a source' => ['new'],
+]);
+
+it('ends the inline image url prefix with a slash', function (): void {
+    expect(app(InlineUrls::class)->urlPrefix())->toBe(url('mailbox/inline').'/');
+});

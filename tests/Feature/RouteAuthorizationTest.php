@@ -3,10 +3,13 @@
 declare(strict_types=1);
 
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAccess;
+use J87NL\VueMailbox\Tables\MailboxesTable;
 use J87NL\VueMailbox\Tests\Support\User;
 
 const LEVELS = [
@@ -93,6 +96,10 @@ function endpoint(string $name, Mailbox $mailbox): array
             'post',
             route('mailbox.messages.contact', [$mailbox, $message]),
         ],
+        'settings.index' => [
+            'get',
+            route('mailbox.settings.index'),
+        ],
         'settings.edit' => [
             'get',
             route('mailbox.settings.edit', $mailbox),
@@ -155,6 +162,7 @@ function routeMatrix(): array
         'contacts.update' => 'write',
         'contacts.destroy' => 'write',
         'messages.contact' => 'write',
+        'settings.index' => 'manage',
         'settings.edit' => 'manage',
         'settings.update' => 'manage',
         'settings.access.store' => 'manage',
@@ -220,4 +228,23 @@ it('does not resolve a message through another mailbox', function (): void {
     $this->actingAs(member($mine, AccessLevel::Manage))
         ->get(route('mailbox.messages.show', [$mine, $message]))
         ->assertNotFound();
+});
+
+it('lets a host gate its settings link on managing any mailbox', function (): void {
+    config()->set('mailbox.access.admins', ['admin@example.com']);
+    $mailbox = mailbox();
+
+    expect(Gate::forUser(member($mailbox, AccessLevel::Write))->allows('manageAnyMailbox'))->toBeFalse()
+        ->and(Gate::forUser(member($mailbox, AccessLevel::Manage))->allows('manageAnyMailbox'))->toBeTrue()
+        ->and(Gate::forUser(user(['email' => 'admin@example.com']))->allows('manageAnyMailbox'))->toBeTrue()
+        ->and(Gate::forUser(user())->allows('manageAnyMailbox'))->toBeFalse();
+});
+
+it('only authorizes the mailboxes table for users who manage a mailbox', function (): void {
+    $mailbox = mailbox();
+    $request = fn (?User $user): Request => tap(Request::create('/'), fn (Request $request) => $request->setUserResolver(fn (): ?User => $user));
+
+    expect((new MailboxesTable)->authorize($request(null)))->toBeFalse()
+        ->and((new MailboxesTable)->authorize($request(member($mailbox, AccessLevel::Write))))->toBeFalse()
+        ->and((new MailboxesTable)->authorize($request(member($mailbox, AccessLevel::Manage))))->toBeTrue();
 });

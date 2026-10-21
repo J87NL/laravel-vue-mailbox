@@ -16,7 +16,13 @@ class MailboxesTable extends AbstractTable
 {
     public function authorize(Request $request): bool
     {
-        return ! is_null($request->user());
+        $user = $request->user();
+
+        if (is_null($user)) {
+            return false;
+        }
+
+        return Gate::forUser($user)->allows('manageAnyMailbox');
     }
 
     public function for(): Builder
