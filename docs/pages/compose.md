@@ -13,8 +13,8 @@ Route `mailbox.compose.create` (`GET {mailbox}/compose`) renders the `vue-mailbo
 | `compose?reply={id}&mode=reply_all` | `reply_all` |
 | `compose?reply={id}&mode=forward` | `forward` |
 
-With a source message, the `mode` prop is the `?mode=` value as given. Any value other than `forward` prefills a
-reply, and only `reply_all` adds the Cc addresses. The default page uses the mode as a translation key for its title.
+With a source message, `?mode=` must be `reply`, `reply_all` or `forward`; any other value, or a value that is not a string, gives a 404. Only
+`reply_all` adds the Cc addresses. The default page uses the mode as a translation key for its title.
 
 `reply` must be the id of a message in the same mailbox. An unknown id opens a new message. When the source message no
 longer exists on the server, the user is sent back to its folder with an `error` flash message.
@@ -27,7 +27,7 @@ longer exists on the server, the user is sent back to its folder with an `error`
 | `folders` | `MailboxFolder[]` | Folder list, see [Folders and message list](folders.md#folder-list) |
 | `form` | `FormSchema` | The core `ComposeForm`, prefilled for the mode |
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
-| `mode` | `string` | `new` without a source message, otherwise the raw `?mode=` value (default `reply`) |
+| `mode` | `string` | `new` without a source message, otherwise `reply`, `reply_all` or `forward` (default `reply`) |
 
 ## The form
 

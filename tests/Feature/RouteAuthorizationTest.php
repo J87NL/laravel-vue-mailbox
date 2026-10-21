@@ -3,11 +3,18 @@
 declare(strict_types=1);
 
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
+use Illuminate\Auth\Access\Gate as AccessGate;
+use Illuminate\Contracts\Auth\Access\Gate as GateContract;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Enums\AccessLevel;
+use J87NL\Mailbox\MailboxServiceProvider;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAccess;
+use J87NL\VueMailbox\Tables\MailboxesTable;
 use J87NL\VueMailbox\Tests\Support\User;
+use J87NL\VueMailbox\VueMailboxServiceProvider;
 
 const LEVELS = [
     'guest' => 0,
@@ -93,6 +100,10 @@ function endpoint(string $name, Mailbox $mailbox): array
             'post',
             route('mailbox.messages.contact', [$mailbox, $message]),
         ],
+        'settings.index' => [
+            'get',
+            route('mailbox.settings.index'),
+        ],
         'settings.edit' => [
             'get',
             route('mailbox.settings.edit', $mailbox),
@@ -155,6 +166,7 @@ function routeMatrix(): array
         'contacts.update' => 'write',
         'contacts.destroy' => 'write',
         'messages.contact' => 'write',
+        'settings.index' => 'manage',
         'settings.edit' => 'manage',
         'settings.update' => 'manage',
         'settings.access.store' => 'manage',
@@ -220,4 +232,51 @@ it('does not resolve a message through another mailbox', function (): void {
     $this->actingAs(member($mine, AccessLevel::Manage))
         ->get(route('mailbox.messages.show', [$mine, $message]))
         ->assertNotFound();
+});
+
+it('lets a host gate its settings link on managing any mailbox', function (): void {
+    config()->set('mailbox.access.admins', ['admin@example.com']);
+    $mailbox = mailbox();
+
+    expect(Gate::forUser(member($mailbox, AccessLevel::Write))->allows('manageAnyMailbox'))->toBeFalse()
+        ->and(Gate::forUser(member($mailbox, AccessLevel::Manage))->allows('manageAnyMailbox'))->toBeTrue()
+        ->and(Gate::forUser(user(['email' => 'admin@example.com']))->allows('manageAnyMailbox'))->toBeTrue()
+        ->and(Gate::forUser(user())->allows('manageAnyMailbox'))->toBeFalse();
+});
+
+it('only authorizes the mailboxes table for users who manage a mailbox', function (): void {
+    $mailbox = mailbox();
+    $request = fn (?User $user): Request => tap(Request::create('/'), fn (Request $request) => $request->setUserResolver(fn (): ?User => $user));
+
+    expect((new MailboxesTable)->authorize($request(null)))->toBeFalse()
+        ->and((new MailboxesTable)->authorize($request(member($mailbox, AccessLevel::Write))))->toBeFalse()
+        ->and((new MailboxesTable)->authorize($request(member($mailbox, AccessLevel::Manage))))->toBeTrue();
+});
+
+it('follows a host definition of manageMailbox', function (): void {
+    mailbox();
+    Gate::define('manageMailbox', fn (User $user, Mailbox $mailbox): bool => true);
+
+    expect(Gate::forUser(user())->allows('manageAnyMailbox'))->toBeTrue();
+});
+
+it('leaves a host definition of manageAnyMailbox alone', function (): void {
+    $this->app->instance(GateContract::class, new AccessGate($this->app, fn (): ?User => null));
+    Gate::clearResolvedInstance(GateContract::class);
+    Gate::define('manageAnyMailbox', fn (User $user): bool => $user->email === 'host@example.com');
+
+    VueMailboxServiceProvider::defineAbilities();
+
+    expect(Gate::forUser(user(['email' => 'host@example.com']))->allows('manageAnyMailbox'))->toBeTrue()
+        ->and(Gate::forUser(member(mailbox(), AccessLevel::Manage))->allows('manageAnyMailbox'))->toBeFalse();
+});
+
+it('defines manageAnyMailbox when the host has not', function (): void {
+    $this->app->instance(GateContract::class, new AccessGate($this->app, fn (): ?User => null));
+    Gate::clearResolvedInstance(GateContract::class);
+    MailboxServiceProvider::defineAbilities();
+
+    VueMailboxServiceProvider::defineAbilities();
+
+    expect(Gate::forUser(member(mailbox(), AccessLevel::Manage))->allows('manageAnyMailbox'))->toBeTrue();
 });

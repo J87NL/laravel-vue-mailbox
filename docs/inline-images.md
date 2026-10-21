@@ -26,7 +26,7 @@ which replaces the core's default that knows no inline URLs.
 |---|---|
 | `for(MailboxMessage $message): Closure` | Returns a closure that turns a content id into a temporary signed URL, valid for `vue-mailbox.signed_url_minutes` (default 30) |
 | `parse(string $url): ?array` | Returns `['content_id' => string, 'message_id' => int]` for a correctly signed inline URL, even if it has expired, otherwise `null` |
-| `urlPrefix(): ?string` | The absolute URL prefix of the inline route, such as `https://example.com/mailbox/inline` |
+| `urlPrefix(): ?string` | The absolute URL prefix of the inline route, with a trailing slash, such as `https://example.com/mailbox/inline/` |
 
 `parse()` checks the signature with `URL::hasCorrectSignature()`, which ignores the expiry. That is why quoted images
 in an older reply or forward still embed after the URL has expired. It matches the URL against a copy of the inline

@@ -14,9 +14,8 @@
 - Controllers pass `null` for URLs the user may not call. Hiding a button is a convenience; the route check is the
   guard.
 
-Two routes work differently:
+One route works differently:
 
-- `mailbox.settings.index` only needs the route middleware. Its table lists only mailboxes the user can manage.
 - `mailbox.inline` checks no ability and does not use the configured middleware. It only answers a valid signed URL.
   Anyone who holds such a URL can load that image until it expires (`vue-mailbox.signed_url_minutes`, default 30).
 

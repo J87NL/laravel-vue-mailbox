@@ -5,9 +5,11 @@ and their names start with `config('vue-mailbox.routes.name')` (default `mailbox
 
 ## Abilities
 
-Every route except the signed inline image route and the settings list checks one of the Gate abilities the core
-package defines: `accessAnyMailbox`, `accessMailbox` (read), `workInMailbox` (write), `manageMailbox` (manage) and
-`manageMailboxes` (admin). What each level means, and how the access mode, admins and access rows decide who passes, is
+Every route except the signed inline image route checks a Gate ability. The core package defines
+`accessAnyMailbox`, `accessMailbox` (read), `workInMailbox` (write), `manageMailbox` (manage) and `manageMailboxes`
+(admin). This package adds `manageAnyMailbox` for the settings list: it passes with `manageMailboxes`, or with
+`manageMailbox` on at least one mailbox. Like the core abilities it is only defined when your app has not defined it
+itself, and it follows your own `manageMailboxes` and `manageMailbox` definitions. What each level means, and how the access mode, admins and access rows decide who passes, is
 documented in the core [access control](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md) docs. The
 tables below show which route needs which ability.
 
@@ -21,10 +23,12 @@ for example `composeUrl` for a reader.
     <a href="{{ route('mailbox.index') }}">Mailbox</a>
 @endcan
 
-<a href="{{ route('mailbox.settings.index') }}">Mailbox settings</a>
+@can('manageAnyMailbox')
+    <a href="{{ route('mailbox.settings.index') }}">Mailbox settings</a>
+@endcan
 ```
 
-In a Vue page with an ability helper, use `$can('accessAnyMailbox')` in the same way.
+In a Vue page with an ability helper, use `$can('accessAnyMailbox')` and `$can('manageAnyMailbox')` in the same way.
 
 ## Mailbox routes
 
@@ -60,7 +64,7 @@ mailbox, so a message of another mailbox answers `404`.
 
 | Method | URI | Name | Ability |
 |---|---|---|---|
-| GET | `settings` | `mailbox.settings.index` | none, only the route middleware |
+| GET | `settings` | `mailbox.settings.index` | `manageAnyMailbox` |
 | GET | `settings/create` | `mailbox.settings.create` | `manageMailboxes` |
 | POST | `settings` | `mailbox.settings.store` | `manageMailboxes` |
 | DELETE | `settings/{mailbox}` | `mailbox.settings.destroy` | `manageMailboxes` |
@@ -69,7 +73,8 @@ mailbox, so a message of another mailbox answers `404`.
 | POST | `settings/{mailbox}/access` | `mailbox.settings.access.store` | `manageMailbox` |
 | DELETE | `settings/{mailbox}/access/{access}` | `mailbox.settings.access.destroy` | `manageMailbox` |
 
-`mailbox.settings.index` is open to every logged-in user. Its table only lists the mailboxes the user can manage. See
+`mailbox.settings.index` needs `manageAnyMailbox`; other users get a 403. Its table only lists the mailboxes the user
+can manage. See
 [Mailbox settings](pages/settings.md).
 
 ## Inline image route

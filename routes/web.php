@@ -31,7 +31,7 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                 ->name('index');
 
             Route::prefix('settings')->name('settings.')->group(function (): void {
-                Route::get('/', [MailboxSettingsController::class, 'index'])->name('index');
+                Route::get('/', [MailboxSettingsController::class, 'index'])->middleware('can:manageAnyMailbox')->name('index');
                 Route::get('create', [MailboxSettingsController::class, 'create'])->middleware('can:manageMailboxes')->name('create');
                 Route::post('/', [MailboxSettingsController::class, 'store'])->middleware('can:manageMailboxes')->name('store');
                 Route::delete('{mailbox}', [MailboxSettingsController::class, 'destroy'])->middleware('can:manageMailboxes')->name('destroy');

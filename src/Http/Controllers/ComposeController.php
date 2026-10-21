@@ -22,6 +22,12 @@ use J87NL\VueMailbox\Support\MessageBodyLoader;
 
 class ComposeController extends Controller
 {
+    private const array SOURCE_MODES = [
+        'forward',
+        'reply',
+        'reply_all',
+    ];
+
     public function __construct(
         private readonly ForwardedAttachments $forwarded,
     ) {}
@@ -32,7 +38,10 @@ class ComposeController extends Controller
         $source = $request->integer('reply')
             ? $mailbox->messages()->with('folder')->find($request->integer('reply'))
             : null;
-        $mode = $source ? $request->string('mode', 'reply')->value() : 'new';
+        $mode = $source ? $request->query('mode', 'reply') : 'new';
+
+        abort_unless(is_string($mode), 404);
+        abort_if($source && ! in_array($mode, self::SOURCE_MODES, true), 404);
 
         if ($source && is_null($loader->load($source))) {
             return $loader->backToFolder($source);

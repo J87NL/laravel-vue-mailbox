@@ -5,8 +5,9 @@ The settings pages list the mailboxes, create and edit them, and manage who has 
 ## Mailbox list
 
 Route `mailbox.settings.index` (`GET settings`) renders the `vue-mailbox.pages.settings_index` page, default
-`Mailbox/Settings/Index`. Every logged-in user can open it; the table only lists the mailboxes the user can manage
-(`manageMailbox`).
+`Mailbox/Settings/Index`. It needs `manageAnyMailbox`: `manageMailboxes`, or `manageMailbox` on at least one mailbox.
+Other users get a 403, so gate your menu link on the same ability. The table only lists the mailboxes the user can
+manage (`manageMailbox`).
 
 | Prop | Type | Description |
 |---|---|---|

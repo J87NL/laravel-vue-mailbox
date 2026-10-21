@@ -33,8 +33,8 @@ the [laravel-mailbox docs](https://github.com/J87NL/laravel-mailbox/blob/main/do
 1. Install the package and run `php artisan mailbox:install`. It publishes the config and migrations and adds the
    `@mailbox` Vite alias.
 2. The package registers its routes under `/mailbox`, behind `web` and `auth`. Every route except the signed inline
-   image route and the settings list is gated with an ability the core package defines (`accessAnyMailbox`,
-   `accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`), see
+   image route is gated with an ability the core package defines (`accessAnyMailbox`, `accessMailbox`,
+   `workInMailbox`, `manageMailbox`, `manageMailboxes`), or with `manageAnyMailbox` for the settings list, see
    [core access control](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md).
 3. The controllers render Inertia pages (`Mailbox/Index`, `Mailbox/Show`, `Mailbox/Compose`, ...). The package
    registers no page resolver, so publish the default pages or let your own resolver find them; you can also point
@@ -51,7 +51,7 @@ Link to the mailbox from your menu, for users who can open at least one mailbox:
 ```
 
 `mailbox.index` redirects to the first mailbox the user can open. Mailbox administrators and managers reach the
-settings through `route('mailbox.settings.index')`.
+settings through `route('mailbox.settings.index')`; show that link with `@can('manageAnyMailbox')`.
 
 To change a page, publish the defaults and edit them in your app:
 
