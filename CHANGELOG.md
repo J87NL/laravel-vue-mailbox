@@ -2,9 +2,9 @@
 
 ## [Unreleased]
 
-- `mailbox.settings.index` needs the new ability `manageAnyMailbox` (`manageMailboxes`, or `manageMailbox` on at least one mailbox). It is only defined when the host has not defined it, and follows the host's own `manageMailboxes` and `manageMailbox`. Gate the host's settings menu link on it. `MailboxesTable::authorize()` checks the same ability.
+- **Breaking:** `mailbox.settings.index` needs the new ability `manageAnyMailbox` (`manageMailboxes`, or `manageMailbox` on at least one mailbox). It is only defined when the host has not defined it, and follows the host's own `manageMailboxes` and `manageMailbox`. Gate the host's settings menu link on it. `MailboxesTable::authorize()` checks the same ability. Upgrade: users who manage no mailbox now get a 403 instead of an empty list, so show the host's settings link only with `@can('manageAnyMailbox')`. A host that already shows it only for `manageMailboxes` (such as Trefpunt) needs no change.
 - `InlineUrls::urlPrefix()` ends with a slash again, so it no longer matches URLs that merely start with the same path.
-- Compose with a source message refuses an unknown `?mode=` with a 404 instead of treating it as a reply.
+- Compose with a source message refuses an unknown `?mode=` with a 404 instead of treating it as a reply; a non-string `mode` (such as `mode[]=`) also gives a 404 instead of a 500.
 - The README says the host's Inertia page resolver must find the `Mailbox/*` pages.
 
 ## 0.3.1 - 2026-10-19

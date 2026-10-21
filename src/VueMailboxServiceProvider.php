@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace J87NL\VueMailbox;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Access\MailboxAccessResolver;
 use J87NL\Mailbox\Contracts\ResolvesInlineImageUrls;
@@ -32,7 +33,9 @@ class VueMailboxServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
-        $this->defineManageAnyMailbox();
+        $this->app->booted(function (): void {
+            self::defineAbilities();
+        });
 
         if (! $this->app->runningInConsole()) {
             return;
@@ -43,7 +46,7 @@ class VueMailboxServiceProvider extends PackageServiceProvider
         ], 'vue-mailbox-pages');
     }
 
-    private function defineManageAnyMailbox(): void
+    public static function defineAbilities(): void
     {
         if (Gate::has('manageAnyMailbox')) {
             return;
@@ -58,12 +61,18 @@ class VueMailboxServiceProvider extends PackageServiceProvider
                 return true;
             }
 
-            $mailboxes = Mailbox::query()
-                ->get();
+            $managesOne = false;
 
-            app(MailboxAccessResolver::class)->preload($user, $mailboxes->modelKeys());
+            Mailbox::query()
+                ->chunkById(50, function (Collection $mailboxes) use ($user, &$managesOne): bool {
+                    app(MailboxAccessResolver::class)->preload($user, $mailboxes->modelKeys());
 
-            return $mailboxes->contains(fn (Mailbox $mailbox): bool => Gate::forUser($user)->allows('manageMailbox', $mailbox));
+                    $managesOne = $mailboxes->contains(fn (Mailbox $mailbox): bool => Gate::forUser($user)->allows('manageMailbox', $mailbox));
+
+                    return ! $managesOne;
+                });
+
+            return $managesOne;
         });
     }
 }

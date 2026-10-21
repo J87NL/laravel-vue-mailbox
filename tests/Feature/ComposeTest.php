@@ -337,7 +337,7 @@ it('strips signed inline urls the user pasted into a new message', function (): 
         ->and((string) $sent->getTextBody())->not->toContain('/mailbox/inline/');
 });
 
-it('refuses an unknown compose mode', function (string $mode): void {
+it('refuses an unknown compose mode', function (string|array $mode): void {
     $mailbox = mailbox();
     $message = storedMessage(folder($mailbox), 1);
 
@@ -351,8 +351,31 @@ it('refuses an unknown compose mode', function (string $mode): void {
 })->with([
     'unknown' => ['bogus'],
     'new with a source' => ['new'],
+    'an array' => [['reply']],
 ]);
 
 it('ends the inline image url prefix with a slash', function (): void {
     expect(app(InlineUrls::class)->urlPrefix())->toBe(url('mailbox/inline').'/');
+});
+
+it('keeps links that only start with the inline image path', function (): void {
+    $mailbox = mailbox([
+        'append_sent' => false,
+    ]);
+    $help = url('mailbox/inline-help');
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.compose.store', $mailbox), [
+            'body' => sprintf('<p><a href="%s">%s</a></p>', e($help), e($help)),
+            'subject' => 'Hi',
+            'to' => [
+                'colleague@example.org',
+            ],
+        ])
+        ->assertSessionHasNoErrors();
+
+    $sent = $this->connector->transport->sent[0];
+
+    expect((string) $sent->getHtmlBody())->toContain(sprintf('href="%s"', $help))
+        ->and((string) $sent->getTextBody())->toContain($help);
 });

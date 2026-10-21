@@ -3,14 +3,18 @@
 declare(strict_types=1);
 
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
+use Illuminate\Auth\Access\Gate as AccessGate;
+use Illuminate\Contracts\Auth\Access\Gate as GateContract;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Enums\AccessLevel;
+use J87NL\Mailbox\MailboxServiceProvider;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAccess;
 use J87NL\VueMailbox\Tables\MailboxesTable;
 use J87NL\VueMailbox\Tests\Support\User;
+use J87NL\VueMailbox\VueMailboxServiceProvider;
 
 const LEVELS = [
     'guest' => 0,
@@ -247,4 +251,32 @@ it('only authorizes the mailboxes table for users who manage a mailbox', functio
     expect((new MailboxesTable)->authorize($request(null)))->toBeFalse()
         ->and((new MailboxesTable)->authorize($request(member($mailbox, AccessLevel::Write))))->toBeFalse()
         ->and((new MailboxesTable)->authorize($request(member($mailbox, AccessLevel::Manage))))->toBeTrue();
+});
+
+it('follows a host definition of manageMailbox', function (): void {
+    mailbox();
+    Gate::define('manageMailbox', fn (User $user, Mailbox $mailbox): bool => true);
+
+    expect(Gate::forUser(user())->allows('manageAnyMailbox'))->toBeTrue();
+});
+
+it('leaves a host definition of manageAnyMailbox alone', function (): void {
+    $this->app->instance(GateContract::class, new AccessGate($this->app, fn (): ?User => null));
+    Gate::clearResolvedInstance(GateContract::class);
+    Gate::define('manageAnyMailbox', fn (User $user): bool => $user->email === 'host@example.com');
+
+    VueMailboxServiceProvider::defineAbilities();
+
+    expect(Gate::forUser(user(['email' => 'host@example.com']))->allows('manageAnyMailbox'))->toBeTrue()
+        ->and(Gate::forUser(member(mailbox(), AccessLevel::Manage))->allows('manageAnyMailbox'))->toBeFalse();
+});
+
+it('defines manageAnyMailbox when the host has not', function (): void {
+    $this->app->instance(GateContract::class, new AccessGate($this->app, fn (): ?User => null));
+    Gate::clearResolvedInstance(GateContract::class);
+    MailboxServiceProvider::defineAbilities();
+
+    VueMailboxServiceProvider::defineAbilities();
+
+    expect(Gate::forUser(member(mailbox(), AccessLevel::Manage))->allows('manageAnyMailbox'))->toBeTrue();
 });
