@@ -23,10 +23,12 @@ The Vue pages stay in the package, like those of `j87nl/laravel-vue-cms`. The co
 
 ```ts
 // resources/js/app.ts
-const appPages = import.meta.glob<DefineComponent>('./pages/**/*.vue');
-const mailboxPages = import.meta.glob<DefineComponent>('@mailbox/pages/**/*.vue');
+type PageModule = { default: DefineComponent };
 
-function findPage(pages: Record<string, () => Promise<DefineComponent>>, name: string) {
+const appPages = import.meta.glob<PageModule>('./pages/**/*.vue');
+const mailboxPages = import.meta.glob<PageModule>('@mailbox/pages/**/*.vue');
+
+function findPage(pages: Record<string, () => Promise<PageModule>>, name: string) {
     const key = Object.keys(pages).find((path) => path.endsWith(`/pages/${name}.vue`));
 
     return key === undefined ? undefined : pages[key];
@@ -40,6 +42,8 @@ resolve: async (name) => {
     return (await page!()).default;
 },
 ```
+
+An app on the `@inertiajs/vite` plugin without a `resolve` of its own adds this one (the plugin then leaves it alone), and an app with SSR uses the same resolver in `resources/js/ssr.ts`.
 
 To replace one page, point its key in `config/vue-mailbox.php` (`vue-mailbox.pages.*`) at a page of your own. To copy every page into your app instead, run `php artisan mailbox:install --pages`: it copies them to `resources/js/pages/Mailbox` and points the default names in `config/vue-mailbox.php` at the copies (`Mailbox/Index`, ...). See [Installation](docs/installation.md), [Customizing pages](docs/frontend/customizing-pages.md) and, when you update from 0.4, [Upgrading](docs/upgrading.md).
 
@@ -62,7 +66,7 @@ registerWysiwygEditor('hugerte', HugeRteEditor)
 The pages use plain Tailwind utility classes and no host UI kit. Let Tailwind scan the package so those classes are generated, e.g. in Tailwind 4:
 
 ```css
-@source '../../vendor/j87nl/laravel-vue-mailbox/resources/js/**/*.vue';
+@source '../../vendor/j87nl/laravel-vue-mailbox/resources/js';
 ```
 
 Then follow the core package README for admins, the sync schedule, the queue worker and the configuration keys (`MAILBOX_DISPLAY_TIMEZONE`, `MAILBOX_CONNECTION_TIMEOUT`, …).

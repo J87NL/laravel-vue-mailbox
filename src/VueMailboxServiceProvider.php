@@ -29,6 +29,16 @@ class VueMailboxServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         $this->app->bind(ResolvesInlineImageUrls::class, InlineUrls::class);
+
+        $this->mergePageDefaults();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function defaultPages(): array
+    {
+        return (require __DIR__.'/../config/vue-mailbox.php')['pages'];
     }
 
     public function packageBooted(): void
@@ -44,6 +54,16 @@ class VueMailboxServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__.'/../resources/js/pages' => resource_path('js/pages/Mailbox'),
         ], 'vue-mailbox-pages');
+    }
+
+    private function mergePageDefaults(): void
+    {
+        $config = $this->app->make('config');
+
+        $config->set('vue-mailbox.pages', [
+            ...self::defaultPages(),
+            ...$config->get('vue-mailbox.pages', []),
+        ]);
     }
 
     public static function defineAbilities(): void

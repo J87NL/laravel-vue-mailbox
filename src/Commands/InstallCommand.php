@@ -7,6 +7,7 @@ namespace J87NL\VueMailbox\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use J87NL\VueMailbox\VueMailboxServiceProvider;
 use TranquilTools\VueFormBuilder\Support\Installer\InstallsFrontendAliases;
 
 class InstallCommand extends Command
@@ -43,21 +44,23 @@ class InstallCommand extends Command
             '@mailbox/*' => sprintf('%s/*', self::SOURCE),
         ]);
 
-        if ($this->option('pages')) {
-            $this->publishPages();
-        }
+        $this->installPages();
 
-        if (! $this->option('pages')) {
-            $this->components->info('The pages stay in the package: let your Inertia page resolver load mailbox/* pages from @mailbox/pages.');
-        }
+        $this->warnAboutUnusedCopies();
 
         $this->components->info('Run php artisan migrate, schedule mailbox:sync and mailbox:prune-bodies, and let Tailwind scan the package.');
 
         return self::SUCCESS;
     }
 
-    private function publishPages(): void
+    private function installPages(): void
     {
+        if (! $this->option('pages')) {
+            $this->components->info('The pages stay in the package: let your Inertia page resolver load mailbox/* pages from @mailbox/pages.');
+
+            return;
+        }
+
         $this->callSilently('vendor:publish', [
             '--tag' => 'vue-mailbox-pages',
         ]);
@@ -94,15 +97,45 @@ class InstallCommand extends Command
         $this->components->info('Pointed the page names in config/vue-mailbox.php at the published pages.');
     }
 
+    private function warnAboutUnusedCopies(): void
+    {
+        if (! File::exists(resource_path('js/pages/Mailbox/Index.vue'))) {
+            return;
+        }
+
+        $index = $this->publishedPages()['index'];
+
+        if (! str_starts_with($index, self::PAGE_PREFIX)) {
+            return;
+        }
+
+        $this->components->warn(sprintf(
+            'resources/js/pages/Mailbox has copies of the pages, but the page name "index" is %s, so the app still renders the package pages. Point the page names in config/vue-mailbox.php at the copies (Mailbox/...), or delete the copies.',
+            $index,
+        ));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function publishedPages(): array
+    {
+        $configPath = config_path('vue-mailbox.php');
+        $published = File::exists($configPath) ? require $configPath : [];
+
+        return [
+            ...VueMailboxServiceProvider::defaultPages(),
+            ...($published['pages'] ?? []),
+        ];
+    }
+
     /**
      * @return array<int, string>
      */
     private function packagePageNames(): array
     {
-        $defaults = require __DIR__.'/../../config/vue-mailbox.php';
-
         return array_values(array_filter(
-            $defaults['pages'],
+            VueMailboxServiceProvider::defaultPages(),
             fn (string $name): bool => str_starts_with($name, self::PAGE_PREFIX),
         ));
     }

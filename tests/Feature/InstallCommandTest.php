@@ -108,3 +108,79 @@ it('leaves page names that the app chose itself alone when publishing the pages'
         'compose' => 'Inbox/mailbox/Compose',
     ]);
 });
+
+it('points double-quoted default page names at the published pages', function (): void {
+    File::put(config_path('vue-mailbox.php'), implode("\n", [
+        '<?php',
+        '',
+        'return [',
+        '    "pages" => [',
+        '        "index" => "mailbox/Index",',
+        '        "show" => "mailbox/Show",',
+        '    ],',
+        '];',
+        '',
+    ]));
+
+    $this->artisan('mailbox:install', ['--pages' => true])
+        ->doesntExpectOutputToContain('still renders the package pages')
+        ->assertSuccessful();
+
+    expect((require config_path('vue-mailbox.php'))['pages'])->toBe([
+        'index' => 'Mailbox/Index',
+        'show' => 'Mailbox/Show',
+    ]);
+});
+
+it('leaves a config that already names the copies alone', function (): void {
+    $config = implode("\n", [
+        '<?php',
+        '',
+        'return [',
+        "    'pages' => [",
+        "        'index' => 'Mailbox/Index',",
+        "        'show' => 'Mailbox/Show',",
+        '    ],',
+        '];',
+        '',
+    ]);
+    File::put(config_path('vue-mailbox.php'), $config);
+
+    $this->artisan('mailbox:install', ['--pages' => true])
+        ->doesntExpectOutputToContain('still renders the package pages')
+        ->doesntExpectOutputToContain('Pointed the page names')
+        ->assertSuccessful();
+
+    expect(File::get(config_path('vue-mailbox.php')))->toBe($config);
+});
+
+it('warns when the pages are published but the config has no page names to point at them', function (): void {
+    File::put(config_path('vue-mailbox.php'), implode("\n", [
+        '<?php',
+        '',
+        'return [',
+        "    'per_page' => 50,",
+        '];',
+        '',
+    ]));
+
+    $this->artisan('mailbox:install', ['--pages' => true])
+        ->expectsOutputToContain('still renders the package pages')
+        ->assertSuccessful();
+});
+
+it('warns when the app has copies of the pages but the config names the package pages', function (): void {
+    File::ensureDirectoryExists(resource_path('js/pages/Mailbox'));
+    File::put(resource_path('js/pages/Mailbox/Index.vue'), '<template><div /></template>');
+
+    $this->artisan('mailbox:install')
+        ->expectsOutputToContain('still renders the package pages')
+        ->assertSuccessful();
+});
+
+it('does not warn about copies when there are none', function (): void {
+    $this->artisan('mailbox:install')
+        ->doesntExpectOutputToContain('still renders the package pages')
+        ->expectsOutputToContain('let your Inertia page resolver load mailbox/* pages')
+        ->assertSuccessful();
+});

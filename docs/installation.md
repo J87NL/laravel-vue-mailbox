@@ -77,20 +77,20 @@ resolver load names that start with `mailbox/` from `@mailbox/pages`, in `resour
 import { createInertiaApp } from '@inertiajs/vue3';
 import type { DefineComponent } from 'vue';
 
-const appPages = import.meta.glob<DefineComponent>('./pages/**/*.vue');
-const mailboxPages = import.meta.glob<DefineComponent>('@mailbox/pages/**/*.vue');
+type PageModule = { default: DefineComponent };
+type PageLoader = () => Promise<PageModule>;
 
-function findPage(
-    pages: Record<string, () => Promise<DefineComponent>>,
-    name: string,
-): (() => Promise<DefineComponent>) | undefined {
+const appPages = import.meta.glob<PageModule>('./pages/**/*.vue');
+const mailboxPages = import.meta.glob<PageModule>('@mailbox/pages/**/*.vue');
+
+function findPage(pages: Record<string, PageLoader>, name: string): PageLoader | undefined {
     const suffix = `/pages/${name}.vue`;
     const key = Object.keys(pages).find((path) => path.endsWith(suffix));
 
     return key === undefined ? undefined : pages[key];
 }
 
-function pageFor(name: string): (() => Promise<DefineComponent>) | undefined {
+function pageFor(name: string): PageLoader | undefined {
     if (name.startsWith('mailbox/')) {
         return findPage(mailboxPages, name.slice('mailbox/'.length));
     }
@@ -106,9 +106,7 @@ createInertiaApp({
             throw new Error(`Page not found: ${name}`);
         }
 
-        const module = await page();
-
-        return module.default ?? module;
+        return (await page()).default;
     },
     // ...
 });
@@ -117,6 +115,12 @@ createInertiaApp({
 This is the same pattern as `@cms/pages` of `j87nl/laravel-vue-cms`; an app that already has a `findPage` helper only
 adds the `mailbox/` branch. Package updates then change the pages too. The glob needs the `@mailbox` Vite alias from
 step 2.
+
+- **No `resolve` of your own yet?** Apps on the `@inertiajs/vite` plugin (such as the Laravel 13 starter kits) often
+  call `createInertiaApp()` without `resolve` or `pages`; the plugin then adds a resolver that only knows
+  `./pages`. Add the `resolve` above: the plugin leaves a `createInertiaApp()` that has one alone.
+- **SSR:** `resources/js/ssr.ts` resolves pages on its own. Give it the same resolver, for example by moving the globs
+  and `pageFor()` to `resources/js/lib/pages.ts` and importing that in both `app.ts` and `ssr.ts`.
 
 The names are lowercase `mailbox/`, so they never collide with an app page in `resources/js/pages/Mailbox`. To replace
 one page, point its key in `config/vue-mailbox.php` at a page of your own; to copy all of them, see
@@ -151,10 +155,11 @@ The pages use plain Tailwind utility classes and no host UI kit. Let Tailwind sc
 Tailwind 4 in `resources/css/app.css`:
 
 ```css
-@source '../../vendor/j87nl/laravel-vue-mailbox/resources/js/**/*.vue';
+@source '../../vendor/j87nl/laravel-vue-mailbox/resources/js';
 ```
 
-Without it, the pages load from the package but the classes only they use are missing from your CSS.
+Scan the whole `resources/js` folder, not only the `.vue` files: `ui.ts` holds the shared button classes. Without it,
+the pages load from the package but the classes only they use are missing from your CSS.
 
 ## 6. Build assets
 

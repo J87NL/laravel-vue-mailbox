@@ -18,8 +18,8 @@ The pages now live in the package by default, like the pages of `j87nl/laravel-v
   and now also points the page names in `config/vue-mailbox.php` at the copies.
 
 What you do depends on how your app gets its pages today. Your published `config/vue-mailbox.php` decides which names
-the controllers render. Laravel merges a package config one level deep, so a `pages` array in your file replaces the
-package's `pages` array as a whole: the new defaults never reach an app that has its own `pages` array.
+the controllers render: every key in its `pages` array wins, and only a key that is missing falls back to the new
+`mailbox/...` default.
 
 ### Your app has its own copies of the pages
 
@@ -27,8 +27,9 @@ Your `config/vue-mailbox.php` names your copies (`Mailbox/Index`, or names of yo
 `resources/js/pages`. **Nothing changes.** The controllers render the names from your config, the props are the same,
 and your copies keep importing `@mailbox/components/...` and `@mailbox/types`, which did not move.
 
-This holds as long as your `config/vue-mailbox.php` has a `pages` array with all seven keys, as the one
-`mailbox:install` published does. To move a page back to the package later, see below.
+This holds as long as your `pages` array has all seven keys, as the one `mailbox:install` published does. A missing
+key now renders the package page under its `mailbox/...` name, which your resolver does not know. `mailbox:install`
+warns when `resources/js/pages/Mailbox/Index.vue` exists while the `index` page name starts with `mailbox/`.
 
 ### Your app loaded `Mailbox/*` pages from the vendor directory
 
@@ -39,12 +40,13 @@ longer finds the file. Switch to the package names:
    the defaults.
 2. Load names that start with `mailbox/` from `@mailbox/pages`, as shown in
    [Installation](installation.md#3-load-the-pages-from-the-package).
-3. Let Tailwind scan `vendor/j87nl/laravel-vue-mailbox/resources/js/**/*.vue`.
+3. Let Tailwind scan `vendor/j87nl/laravel-vue-mailbox/resources/js` (the whole folder, `ui.ts` included).
 4. Run `npm run build`.
 
-### Your app has no `config/vue-mailbox.php`
+### Your app has no `config/vue-mailbox.php`, or no `pages` in it
 
-The controllers now render `mailbox/...`. Add the resolver branch from
+The controllers now render `mailbox/...`. If you have copies in `resources/js/pages/Mailbox`, they are no longer used
+and the page fails to load until you act. Add the resolver branch from
 [Installation](installation.md#3-load-the-pages-from-the-package), or run `php artisan mailbox:install --pages` to copy
 the pages and publish a config that names the copies.
 

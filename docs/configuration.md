@@ -48,7 +48,7 @@ The inline image route always uses `['web', 'signed']`, whatever `middleware` ho
 The Inertia component each controller renders. The defaults start with `mailbox/` and name the pages inside the package
 (`mailbox/Index` is `resources/js/pages/Index.vue` of the package); your page resolver loads them from `@mailbox/pages`,
 see [Installation](installation.md#3-load-the-pages-from-the-package). Point a key at your own page to replace that one
-page. Your page receives the props listed on the page's docs. See [Customizing pages](frontend/customizing-pages.md).
+page; a key you leave out keeps its default. Your page receives the props listed on the page's docs. See [Customizing pages](frontend/customizing-pages.md).
 
 `mailbox:install --pages` copies the pages to `resources/js/pages/Mailbox` and changes every default name in this file
 to the copy (`mailbox/Index` becomes `Mailbox/Index`). A name you changed yourself is left alone.

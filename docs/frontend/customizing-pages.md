@@ -20,24 +20,18 @@ There are three ways to change a page. Pick the smallest one that does the job.
 
 ## Replace one page
 
-Each controller renders the page named in `config('vue-mailbox.pages')`. Point a key at a page of your own and keep the
-other keys on the package pages:
+Each controller renders the page named in `config('vue-mailbox.pages')`. Point a key at a page of your own; the other keys
+keep the package pages:
 
 ```php
 // config/vue-mailbox.php
 'pages' => [
-    'compose' => 'mailbox/Compose',
-    'contacts_edit' => 'mailbox/Contacts/Edit',
-    'contacts_index' => 'mailbox/Contacts/Index',
-    'index' => 'mailbox/Index',
-    'settings_edit' => 'mailbox/Settings/Edit',
-    'settings_index' => 'mailbox/Settings/Index',
     'show' => 'Inbox/Message',
 ],
 ```
 
-Keep all seven keys: your `pages` array replaces the package's `pages` array as a whole. `Inbox/Message` is then
-`resources/js/pages/Inbox/Message.vue` in your app. Your page receives the same props as the
+A key you leave out keeps its `mailbox/...` default, so `'pages' => ['show' => 'Inbox/Message']` is enough.
+`Inbox/Message` is then `resources/js/pages/Inbox/Message.vue` in your app. Your page receives the same props as the
 default page; they are listed on each page's docs. Start from a copy of the package file if you like.
 
 ## Copy all pages

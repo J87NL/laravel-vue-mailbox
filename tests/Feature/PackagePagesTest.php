@@ -4,49 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\File;
-use Inertia\Testing\AssertableInertia;
-use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Jobs\SyncFolderJob;
+use J87NL\VueMailbox\VueMailboxServiceProvider;
 use Symfony\Component\Finder\Finder;
 
 beforeEach(function (): void {
     Bus::fake([SyncFolderJob::class]);
 });
-
-/**
- * @return array<string, string>
- */
-function renderedPages(): array
-{
-    $mailbox = mailbox();
-    $message = storedMessage(folder($mailbox), 1);
-    $user = member($mailbox, AccessLevel::Manage);
-
-    $routes = [
-        'compose' => route('mailbox.compose.create', $mailbox),
-        'contacts_edit' => route('mailbox.contacts.create', $mailbox),
-        'contacts_index' => route('mailbox.contacts.index', $mailbox),
-        'index' => route('mailbox.folders.show', $mailbox),
-        'settings_edit' => route('mailbox.settings.edit', $mailbox),
-        'settings_index' => route('mailbox.settings.index'),
-        'show' => route('mailbox.messages.show', [$mailbox, $message]),
-    ];
-
-    $components = [];
-
-    foreach ($routes as $key => $url) {
-        test()->actingAs($user)
-            ->get($url)
-            ->assertOk()
-            ->assertInertia(function (AssertableInertia $page) use ($key, &$components): AssertableInertia {
-                $components[$key] = $page->toArray()['component'];
-
-                return $page;
-            });
-    }
-
-    return $components;
-}
 
 it('renders the package-owned pages by default', function (): void {
     expect(renderedPages())->toBe([
@@ -87,8 +51,26 @@ it('keeps rendering the pages of an app that copied and renamed them', function 
     ]);
 });
 
+it('fills the page names an app left out with the package defaults', function (): void {
+    config()->set('vue-mailbox.pages', [
+        'show' => 'Inbox/Message',
+    ]);
+
+    $this->app->register(VueMailboxServiceProvider::class, true);
+
+    expect(renderedPages())->toBe([
+        'compose' => 'mailbox/Compose',
+        'contacts_edit' => 'mailbox/Contacts/Edit',
+        'contacts_index' => 'mailbox/Contacts/Index',
+        'index' => 'mailbox/Index',
+        'settings_edit' => 'mailbox/Settings/Edit',
+        'settings_index' => 'mailbox/Settings/Index',
+        'show' => 'Inbox/Message',
+    ]);
+});
+
 it('only imports through aliases from the pages, so a published copy still builds', function (string $path): void {
-    expect(File::get($path))->not->toMatch('/from\s+[\'"]\.{1,2}\//');
+    expect(File::get($path))->not->toMatch('/(from\s+|import\s*\(?\s*)[\'"]\.{1,2}\//');
 })->with(fn (): array => array_values(array_map(
     fn (SplFileInfo $file): string => $file->getPathname(),
     iterator_to_array(Finder::create()->files()->in(__DIR__.'/../../resources/js/pages')->name('*.vue')),
