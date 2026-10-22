@@ -42,7 +42,7 @@ class VueMailboxServiceProvider extends PackageServiceProvider
         }
 
         $this->publishes([
-            __DIR__.'/../resources/js/pages/Mailbox' => resource_path('js/pages/Mailbox'),
+            __DIR__.'/../resources/js/pages' => resource_path('js/pages/Mailbox'),
         ], 'vue-mailbox-pages');
     }
 

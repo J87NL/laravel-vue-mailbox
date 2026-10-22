@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- **Breaking:** the Vue pages stay in the package by default (decision D13, like `j87nl/laravel-vue-cms`). The default page names in `vue-mailbox.pages.*` start with `mailbox/` (`mailbox/Index`, `mailbox/Show`, `mailbox/Compose`, `mailbox/Contacts/Index`, `mailbox/Contacts/Edit`, `mailbox/Settings/Index`, `mailbox/Settings/Edit`), and the files moved inside the package from `resources/js/pages/Mailbox/*` to `resources/js/pages/*`. The host's Inertia resolver loads names that start with `mailbox/` from `@mailbox/pages`. The components, `types.ts`, `translations.ts` and `ui.ts` did not move. Upgrade: an app with its own copies and a published `config/vue-mailbox.php` with a `pages` array (such as Trefpunt) needs no change; an app that loaded `Mailbox/*` from the vendor directory or has no published config switches to the `mailbox/` names and adds the resolver branch. See `docs/upgrading.md`.
+- `mailbox:install --pages` still copies the pages to `resources/js/pages/Mailbox` with the same file names as before, and now also changes every default page name in `config/vue-mailbox.php` to its copy (`mailbox/Index` becomes `Mailbox/Index`). Names the app changed itself are left alone. Without `--pages` the command reminds you to add the resolver branch.
+- The docs describe the resolver, the Tailwind source `vendor/j87nl/laravel-vue-mailbox/resources/js/**/*.vue` and an upgrade page.
+
 ## 0.4.0 - 2026-10-21
 
 - **Breaking:** `mailbox.settings.index` needs the new ability `manageAnyMailbox` (`manageMailboxes`, or `manageMailbox` on at least one mailbox). It is only defined when the host has not defined it, and follows the host's own `manageMailboxes` and `manageMailbox`. Gate the host's settings menu link on it. `MailboxesTable::authorize()` checks the same ability. Upgrade: users who manage no mailbox now get a 403 instead of an empty list, so show the host's settings link only with `@can('manageAnyMailbox')`. A host that already shows it only for `manageMailboxes` (such as Trefpunt) needs no change.

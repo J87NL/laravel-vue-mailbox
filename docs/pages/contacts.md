@@ -8,7 +8,7 @@ Readers (`accessMailbox`) can view the list. Writers (`workInMailbox`) can add, 
 ## List
 
 Route `mailbox.contacts.index` (`GET {mailbox}/contacts`) renders the `vue-mailbox.pages.contacts_index` page, default
-`Mailbox/Contacts/Index`.
+`mailbox/Contacts/Index`.
 
 | Prop | Type | Description |
 |---|---|---|
@@ -21,7 +21,7 @@ Route `mailbox.contacts.index` (`GET {mailbox}/contacts`) renders the `vue-mailb
 ## Create and edit
 
 Routes `mailbox.contacts.create` and `mailbox.contacts.edit` render the `vue-mailbox.pages.contacts_edit` page,
-default `Mailbox/Contacts/Edit`.
+default `mailbox/Contacts/Edit`.
 
 | Prop | Type | Description |
 |---|---|---|

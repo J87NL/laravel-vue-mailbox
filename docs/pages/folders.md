@@ -1,7 +1,7 @@
 # Folders and message list
 
 Route `mailbox.folders.show` (`GET {mailbox}/folders/{folder?}`) renders the `vue-mailbox.pages.index` page, default
-`Mailbox/Index`. It shows the folders of the mailbox and the messages of one folder.
+`mailbox/Index`. It shows the folders of the mailbox and the messages of one folder.
 
 ## Opening a mailbox
 

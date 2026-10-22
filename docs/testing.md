@@ -28,7 +28,7 @@ use Inertia\Testing\AssertableInertia;
 $this->actingAs($user)
     ->get(route('mailbox.folders.show', [$mailbox, $folder]))
     ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-        ->component('Mailbox/Index')
+        ->component('mailbox/Index')
         ->has('table')
         ->where('vue_mailbox_translations.reply', 'Reply'));
 ```
