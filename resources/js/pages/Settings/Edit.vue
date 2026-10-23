@@ -6,6 +6,7 @@ import type { FormSchema } from '@form-builder/types/form-builder'
 import TableBuilder from '@table-builder/components/TableBuilder.vue'
 import type { TableData } from '@table-builder/types/table-builder'
 import { useMailboxConfirm } from '@mailbox/confirm'
+import { useMailboxPagePadding } from '@mailbox/padding'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
@@ -20,6 +21,7 @@ const props = defineProps<{
 
 const { t } = useMailboxTranslations()
 const confirm = useMailboxConfirm()
+const padded = useMailboxPagePadding()
 const page = usePage()
 const accessError = computed(() => (page.props.errors as Record<string, string> | undefined)?.accessor ?? null)
 
@@ -35,7 +37,7 @@ async function destroy(): Promise<void> {
 <template>
     <Head :title="title" />
 
-    <div class="flex h-full flex-1 flex-col gap-4 p-4">
+    <div class="flex h-full flex-1 flex-col gap-4" :class="{ 'p-4': padded }">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-semibold">{{ title }}</h1>
             <div :class="ui.toolbar">

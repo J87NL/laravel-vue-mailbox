@@ -2,6 +2,9 @@
 
 The settings pages list the mailboxes, create and edit them, and manage who has access to each mailbox.
 
+Inside a host layout that pads its content itself, the pages can drop their own padding. See
+[Padding inside your own layout](../frontend/components.md#padding-inside-your-own-layout).
+
 ## Mailbox list
 
 Route `mailbox.settings.index` (`GET settings`) renders the `vue-mailbox.pages.settings_index` page, default

@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- The mailbox settings pages drop their `p-4` padding when a layout provides `pagePadding` as `false` (`useMailboxPagePadding()` from `@mailbox/padding`), so a host can render them inside a settings layout that pads its content itself. Without a provider nothing changes.
+
 ## 0.5.3 - 2026-10-23
 
 - Bulk actions and row actions in the message list, the contacts list, the mailbox settings list and the access table ask through the app's `confirm` function (the same one the message view uses) instead of the browser's `window.confirm`.
