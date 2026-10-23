@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## 0.5.0 - 2026-10-23
 
 - **Breaking:** the Vue pages stay in the package by default (like `j87nl/laravel-vue-cms`). The default page names in `vue-mailbox.pages.*` start with `mailbox/` (`mailbox/Index`, `mailbox/Show`, `mailbox/Compose`, `mailbox/Contacts/Index`, `mailbox/Contacts/Edit`, `mailbox/Settings/Index`, `mailbox/Settings/Edit`), and the files moved inside the package from `resources/js/pages/Mailbox/*` to `resources/js/pages/*`. The host's Inertia resolver loads names that start with `mailbox/` from `@mailbox/pages` (also in `ssr.ts`). The components, `types.ts`, `translations.ts` and `ui.ts` did not move.
 - **Upgrade:** compatibility runs only through the config. An app whose published `config/vue-mailbox.php` names its own copies for every key (such as Trefpunt) needs no app change. These apps break at runtime ("page not found") until they act: an app with copies in `resources/js/pages/Mailbox` but no published config or no `pages` in it, and an app that loaded `Mailbox/*` from the vendor directory as the 0.4 docs suggested. They point the names at their copies, or switch to `mailbox/` and add the resolver branch. See `docs/upgrading.md`.
