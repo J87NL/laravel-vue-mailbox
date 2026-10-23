@@ -32,7 +32,8 @@ leaves the read state alone.
 | `message` | `object` | `id`, `subject`, `from_email`, `from_name`, `to`, `cc`, `sent_at`, `is_flagged`, `is_answered` |
 | `remoteImages` | `boolean` | Remote images are allowed in this render |
 
-`to` and `cc` are lists of `{ email, name }`.
+`to` and `cc` are lists of `{ email, name }`. A flagged message shows a flag before its subject, labelled with the
+`flagged` translation.
 
 ## Remote images
 

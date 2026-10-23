@@ -12,6 +12,9 @@
 - The shared `vue_mailbox_translations` prop also holds this package's own `vue-mailbox::mailbox` keys (`close`, `conversation`, `has_attachments`, `open_fullscreen`, `refresh`, `refreshing`, `switch_mailbox`).
 - The compose body sanitises the mailbox signature again with the core `MessageHtml::sanitizeSignature()`, so a signature stored outside `SaveMailbox` cannot bring active content into the editor.
 - Opening a message whose remote copy is gone (moved or relabelled in another client) is no longer reported as an error: `MessageBodyLoader` writes an info line to the log, forgets the row and returns to the folder with the "no longer on the server" message.
+- New `configureMailboxUi()` in `@mailbox/ui`: an app replaces the button, select, panel and text classes of the default pages with its own (for example its button variants and theme colours) once in its entrypoint. `ui` is now typed as `MailboxUi`. Without a call nothing changes.
+- The message view shows a flag before the subject of a flagged message (new translation `flagged`, nl and en).
+- Creating a mailbox grants the creator `Manage` on it when they could not manage it otherwise, for apps that let non-admins pass `manageMailboxes`. Before, such a creator was sent to the edit page of the new mailbox and got a 403. Admins (`MAILBOX_ADMINS`) get no row, as before.
 
 ## 0.5.3 - 2026-10-23
 

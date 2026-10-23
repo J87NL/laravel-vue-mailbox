@@ -34,7 +34,9 @@ The form and saving are handled by the core
 the connection and guards the stored passwords; when it refuses, the page shows the validation errors and nothing is
 saved.
 
-- `store` redirects to the edit page of the new mailbox with a `success` flash message.
+- `store` redirects to the edit page of the new mailbox with a `success` flash message. When the creator could not
+  manage the new mailbox otherwise (an app that lets non-admins pass `manageMailboxes`), `store` grants them `Manage`
+  on it with the core `GrantAccess`, so they land on its edit page instead of a 403 and can share it from there.
 - `update` redirects back with a `success` flash message.
 - `destroy` (`manageMailboxes`) deletes the mailbox and redirects to the mailbox list.
 

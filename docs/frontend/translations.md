@@ -2,7 +2,7 @@
 
 The default pages are fully translated. They read their texts from the core translation file `mailbox::mailbox` and
 this package's own file `vue-mailbox::mailbox` (for texts that only the UI uses, such as `refresh`, `open_fullscreen`,
-`close`, `conversation`, `switch_mailbox` and `has_attachments`). Both ship in Dutch (`nl`) and English (`en`). The
+`close`, `conversation`, `flagged`, `switch_mailbox` and `has_attachments`). Both ship in Dutch (`nl`) and English (`en`). The
 locale is the app locale.
 
 ## The shared prop
