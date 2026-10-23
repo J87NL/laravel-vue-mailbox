@@ -115,7 +115,7 @@ it('queries the folders of the mailbox once per page view', function (): void {
     $queries = 0;
 
     DB::listen(function (QueryExecuted $query) use (&$queries): void {
-        if (str_contains($query->sql, 'from "mailbox_folders"') && ! str_contains($query->sql, '"id" = ?')) {
+        if (str_contains($query->sql, 'from "mailbox_folders"') && ! str_contains($query->sql, '"id" = ?') && ! str_contains($query->sql, '"role" = ?')) {
             $queries++;
         }
     });

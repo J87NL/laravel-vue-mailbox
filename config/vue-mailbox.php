@@ -21,6 +21,8 @@ return [
         'show' => 'mailbox/Show',
     ],
 
+    'mailbox_switcher' => true,
+
     'per_page' => 50,
 
     'poll_seconds' => 30,

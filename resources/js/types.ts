@@ -15,6 +15,8 @@ export interface MailboxSummary {
     email: string
     url?: string
     synced_at?: string | null
+    unseen?: number
+    active_path?: string
 }
 
 export interface MailAddress {

@@ -110,7 +110,7 @@ class FolderController extends Controller
                 'id' => $mailbox->id,
                 'name' => $mailbox->name,
             ],
-            'mailboxes' => fn (): array => $this->tree->mailboxes(),
+            'mailboxes' => fn (): array => config('vue-mailbox.mailbox_switcher', true) ? $this->tree->mailboxes() : [],
             'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
             'syncing' => is_null($folder) ? __('mailbox::mailbox.syncing') : null,
             'table' => is_null($folder) ? null : MessagesTable::build($folder->setRelation('mailbox', $mailbox)),

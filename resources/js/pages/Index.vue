@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, router } from '@inertiajs/vue3'
 import Form from '@form-builder/components/Form.vue'
 import type { FormSchema } from '@form-builder/types/form-builder'
 import TableBuilder from '@table-builder/components/TableBuilder.vue'
@@ -12,7 +12,7 @@ import { ui } from '@mailbox/ui'
 
 const confirm = useMailboxConfirm()
 
-defineProps<{
+const props = defineProps<{
     composeUrl: string | null
     contactsUrl: string
     folder: { id: number; label: string; name: string; role: string } | null
@@ -26,6 +26,15 @@ defineProps<{
 }>()
 
 const { t } = useMailboxTranslations()
+
+function switchMailbox(event: Event): void {
+    const id = Number((event.target as HTMLSelectElement).value)
+    const target = props.mailboxes.find((item) => item.id === id)
+
+    if (target?.url) {
+        router.visit(target.url)
+    }
+}
 </script>
 
 <template>
@@ -34,18 +43,6 @@ const { t } = useMailboxTranslations()
     <div class="flex h-full flex-1 gap-4 p-4">
         <aside class="hidden w-60 shrink-0 flex-col gap-4 md:flex">
             <Link v-if="composeUrl" :href="composeUrl" :class="[ui.primaryButton, 'w-full']">{{ t('compose') }}</Link>
-
-            <div v-if="mailboxes.length > 1" class="flex flex-col gap-1 text-sm">
-                <Link
-                    v-for="item in mailboxes"
-                    :key="item.id"
-                    :href="item.url!"
-                    class="truncate rounded-md px-2 py-1 text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-                    :class="{ 'font-semibold': item.id === mailbox.id }"
-                >
-                    {{ item.name }}
-                </Link>
-            </div>
 
             <FolderList :folders="folders" :active-id="folder?.id" />
 
@@ -68,6 +65,17 @@ const { t } = useMailboxTranslations()
                     <p :class="ui.muted">{{ mailbox.email }}</p>
                 </div>
                 <div :class="ui.toolbar">
+                    <select
+                        v-if="mailboxes.length > 1"
+                        :value="mailbox.id"
+                        :class="ui.select"
+                        :aria-label="t('switch_mailbox')"
+                        @change="switchMailbox"
+                    >
+                        <option v-for="item in mailboxes" :key="item.id" :value="item.id">
+                            {{ item.unseen ? `${item.name} (${item.unseen})` : item.name }}
+                        </option>
+                    </select>
                     <Link :href="contactsUrl" :class="[ui.button, 'md:hidden']">{{ t('contacts') }}</Link>
                     <Link v-if="settingsUrl" :href="settingsUrl" :class="ui.button">{{ t('settings') }}</Link>
                     <Link v-if="composeUrl" :href="composeUrl" :class="[ui.primaryButton, 'md:hidden']">{{ t('new') }}</Link>

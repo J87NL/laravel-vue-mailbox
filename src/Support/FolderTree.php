@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace J87NL\VueMailbox\Support;
 
-use J87NL\Mailbox\Access\MailboxAccessResolver;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxFolder;
 
@@ -31,39 +30,11 @@ class FolderTree
             ->all();
     }
 
+    /**
+     * @return list<array{active_path: string, email: string, id: int, name: string, synced_at: string|null, unseen: int, url: string}>
+     */
     public function mailboxes(): array
     {
-        $mailboxes = Mailbox::query()
-            ->where('active', true)
-            ->orderBy('name')
-            ->get();
-
-        $this->preloadAccess($mailboxes->modelKeys());
-
-        return $mailboxes
-            ->filter(fn (Mailbox $mailbox): bool => auth()->user()?->can('accessMailbox', $mailbox) ?? false)
-            ->map(fn (Mailbox $mailbox): array => [
-                'email' => $mailbox->email,
-                'id' => $mailbox->id,
-                'name' => $mailbox->name,
-                'synced_at' => $mailbox->synced_at?->toIso8601String(),
-                'url' => route(config('vue-mailbox.routes.name').'folders.show', $mailbox),
-            ])
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @param  array<int, int>  $mailboxIds
-     */
-    private function preloadAccess(array $mailboxIds): void
-    {
-        $user = auth()->user();
-
-        if (is_null($user)) {
-            return;
-        }
-
-        app(MailboxAccessResolver::class)->preload($user, $mailboxIds);
+        return app(MailboxNavigation::class)->for(auth()->user());
     }
 }
