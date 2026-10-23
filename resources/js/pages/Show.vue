@@ -41,6 +41,23 @@ const dialog = ref<HTMLElement | null>(null)
 const fullscreen = ref(false)
 
 let opener: HTMLElement | null = null
+let inerted: HTMLElement[] = []
+
+function inertOutside(overlay: HTMLElement): void {
+    inerted = Array.from(document.body.children)
+        .filter((element): element is HTMLElement => element instanceof HTMLElement && element !== overlay && !element.inert)
+
+    inerted.forEach((element) => {
+        element.inert = true
+    })
+}
+
+function releaseOutside(): void {
+    inerted.forEach((element) => {
+        element.inert = false
+    })
+    inerted = []
+}
 
 async function openFullscreen(event: MouseEvent): Promise<void> {
     opener = event.currentTarget as HTMLElement
@@ -49,7 +66,10 @@ async function openFullscreen(event: MouseEvent): Promise<void> {
 
     await nextTick()
 
-    dialog.value?.focus()
+    if (dialog.value) {
+        inertOutside(dialog.value)
+        dialog.value.focus()
+    }
 }
 
 function closeFullscreen(): void {
@@ -59,12 +79,14 @@ function closeFullscreen(): void {
 
     fullscreen.value = false
     document.body.style.overflow = ''
+    releaseOutside()
     opener?.focus()
 }
 
 onBeforeUnmount(() => {
     if (fullscreen.value) {
         document.body.style.overflow = ''
+        releaseOutside()
     }
 })
 

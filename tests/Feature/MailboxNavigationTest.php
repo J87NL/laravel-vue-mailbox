@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia;
+use J87NL\Mailbox\Access\MailboxAccessResolver;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\VueMailbox\Http\Middleware\ShareMailboxNavigation;
@@ -128,3 +130,34 @@ it('offers a mailbox switcher on the folder page unless the host turns it off', 
         0,
     ],
 ]);
+
+it('needs the same number of queries for one mailbox as for many', function (): void {
+    $queriesFor = function (int $mailboxes): int {
+        $user = user();
+
+        foreach (range(1, $mailboxes) as $number) {
+            $mailbox = mailbox([
+                'email' => sprintf('box-%d-%d@example.com', $mailboxes, $number),
+                'name' => sprintf('Box %d', $number),
+            ]);
+            folder($mailbox, 'INBOX', FolderRole::Inbox, [
+                'unseen_count' => $number,
+            ]);
+            $mailbox->accesses()->create([
+                'accessor_id' => $user->id,
+                'accessor_type' => $user->getMorphClass(),
+                'level' => AccessLevel::Read,
+            ]);
+        }
+
+        app(MailboxAccessResolver::class)->flush();
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        app(MailboxNavigation::class)->for($user);
+        DB::disableQueryLog();
+
+        return count(DB::getQueryLog());
+    };
+
+    expect($queriesFor(1))->toBe($queriesFor(6));
+});

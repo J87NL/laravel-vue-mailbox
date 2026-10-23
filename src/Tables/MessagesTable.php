@@ -22,6 +22,8 @@ use TranquilTools\TableBuilder\TableBuilder;
 
 final class MessagesTable extends AbstractTable
 {
+    private const NAME = 'messages';
+
     public function __construct(
         private readonly MailboxFolder $folder,
     ) {}
@@ -69,7 +71,7 @@ final class MessagesTable extends AbstractTable
             ])
             ->whereBelongsTo($this->folder, 'folder');
 
-        if (! $this->conversations()) {
+        if (! $this->conversations() || $this->filtering()) {
             return $query;
         }
 
@@ -108,7 +110,7 @@ final class MessagesTable extends AbstractTable
     public function configure(TableBuilder $table): void
     {
         $table
-            ->name('messages')
+            ->name(self::NAME)
             ->defaultSortDesc('sent_at')
             ->withGlobalSearch(columns: [
                 'subject',
@@ -190,6 +192,19 @@ final class MessagesTable extends AbstractTable
             })
             ->with('folder')
             ->get();
+    }
+
+    private function filtering(): bool
+    {
+        $filters = request()->query(sprintf('%s_filter', self::NAME));
+
+        if (! is_array($filters)) {
+            return false;
+        }
+
+        return collect($filters)
+            ->flatten()
+            ->contains(fn (mixed $value): bool => is_scalar($value) && trim((string) $value) !== '');
     }
 
     private function conversations(): bool

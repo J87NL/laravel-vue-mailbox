@@ -58,13 +58,17 @@ load later. See [Components and helpers](../frontend/components.md#messageframe)
 The Full screen button opens the message in a full-screen dialog that the package renders itself (a `role="dialog"`
 overlay teleported to `<body>`, `z-40`), so it does not depend on a dialog component of the host. The reply, forward,
 archive, delete, flag, move and address book actions stay available in it. Esc (also inside the message) and the Close
-button close it, and focus returns to the button. The host's confirm dialog, which the delete action asks through
+button close it, and focus returns to the button. While it is open, every other element directly under `<body>` is
+`inert`, so keyboard focus and assistive technology stay inside the dialog; elements added later, such as the host's
+confirm dialog, are not affected. Flag, unflag and mark unread keep the dialog open (`preserveState`); archive, delete
+and move go to the folder. The host's confirm dialog, which the delete action asks through
 `confirm`, needs a higher z-index than `40` to show on top; the dialogs of shadcn-vue and reka-ui use `z-50`.
 
 ## Conversation
 
 When the mailbox has the conversation view on (core setting `conversation_view`), `conversation` lists up to 50
-messages of the mailbox with the same conversation key, across folders, oldest first. Each entry has `id`, `subject`,
+messages of the mailbox with the same conversation key, across folders, oldest first. For a longer conversation it is
+a window around the open message, so the open message is always in it. Each entry has `id`, `subject`,
 `from` (name or address), `folder` (translated role or name), `sent_at` (ISO 8601), `url` and `current`. The default
 page shows them above the message, with the open message marked. See the core
 [conversation docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md#conversations).

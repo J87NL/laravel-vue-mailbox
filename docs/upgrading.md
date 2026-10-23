@@ -3,7 +3,7 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
-## From 0.5 to the next release: conversations, navigation and full screen
+## From 0.5 to 0.6: conversations, navigation and full screen
 
 - Requires `j87nl/laravel-mailbox` ^0.4, which adds the migration `add_conversations_to_mailbox_tables`. Publish and
   run it (`php artisan vendor:publish --tag=mailbox-migrations` adds only the new one, then `php artisan migrate`) and

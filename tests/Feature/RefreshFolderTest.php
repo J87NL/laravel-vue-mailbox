@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Enums\FolderRole;
@@ -54,4 +55,25 @@ it('gives the folder page the refresh url', function (): void {
         ->get(route('mailbox.folders.show', [$mailbox, $folder]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('refreshUrl', route('mailbox.folders.refresh', [$mailbox, $folder])));
+});
+
+it('limits refreshes to twelve a minute per user with its own limiter', function (): void {
+    $mailbox = mailbox();
+    $folder = folder($mailbox);
+    $user = member($mailbox, AccessLevel::Read);
+    Route::middleware(['web', 'throttle:12,1'])->post('other-throttled', fn (): string => 'ok');
+
+    foreach (range(1, 5) as $attempt) {
+        $this->actingAs($user)->post('other-throttled')->assertOk();
+    }
+
+    foreach (range(1, 12) as $attempt) {
+        $this->actingAs($user)
+            ->post(route('mailbox.folders.refresh', [$mailbox, $folder]))
+            ->assertRedirect();
+    }
+
+    $this->actingAs($user)
+        ->post(route('mailbox.folders.refresh', [$mailbox, $folder]))
+        ->assertTooManyRequests();
 });

@@ -18,6 +18,8 @@ const frame = ref<HTMLIFrameElement | null>(null)
 const height = ref(400)
 
 let observer: ResizeObserver | null = null
+let measuredContent = 0
+let measuredFrame = 0
 
 const imageSources = computed(() => props.remoteImages ? '* data:' : `data: ${props.imageOrigin}`)
 
@@ -29,7 +31,7 @@ const srcdoc = computed(() => `<!doctype html>
 <base target="_blank">
 <style>body{margin:0;font-family:system-ui,sans-serif;font-size:14px;line-height:1.5;color:#111;word-wrap:break-word}img{max-width:100%;height:auto}</style>
 </head>
-<body>${props.html}</body>
+<body>${props.html}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body>
 </html>`)
 
 function availableHeight(): number {
@@ -42,14 +44,29 @@ function availableHeight(): number {
     return window.innerHeight - top - 24
 }
 
-function resize(): void {
+function resize(observed = false): void {
     const body = frame.value?.contentDocument?.body
 
     if (!body) {
         return
     }
 
-    height.value = Math.max(320, body.scrollHeight + 24, availableHeight())
+    const content = body.scrollHeight
+    const frameGrowth = height.value - measuredFrame
+    const followsFrame = observed && frameGrowth > 0 && Math.abs(content - measuredContent - frameGrowth) <= 2
+
+    measuredContent = content
+    measuredFrame = height.value
+
+    if (followsFrame) {
+        return
+    }
+
+    height.value = Math.max(320, content + 24, availableHeight())
+}
+
+function onWindowResize(): void {
+    resize()
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -75,16 +92,16 @@ function observe(): void {
         return
     }
 
-    observer = new ResizeObserver(() => resize())
+    observer = new ResizeObserver(() => resize(true))
     observer.observe(body)
 }
 
 onMounted(() => {
-    window.addEventListener('resize', resize)
+    window.addEventListener('resize', onWindowResize)
 })
 
 onBeforeUnmount(() => {
-    window.removeEventListener('resize', resize)
+    window.removeEventListener('resize', onWindowResize)
     observer?.disconnect()
 })
 </script>

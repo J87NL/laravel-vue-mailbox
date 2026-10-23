@@ -35,7 +35,8 @@ folder was not synced in the last 60 seconds. The default page reloads `table` a
 counts in the folder list follow.
 
 The Refresh button posts to `mailbox.folders.refresh` (`POST {mailbox}/folders/{folder}/refresh`, `accessMailbox`,
-at most 12 a minute per user). It queues a `SyncFolderJob` for the folder whether or not it was synced recently and
+at most 12 a minute per user through the package's own rate limiter `vue-mailbox-refresh`,
+`VueMailboxServiceProvider::REFRESH_LIMITER`, so it shares no counter with other throttled routes). It queues a `SyncFolderJob` for the folder whether or not it was synced recently and
 returns to the folder. With a `sync` queue the new mail shows right away; with a queue worker it shows on the next poll.
 The core job is unique per folder for 120 seconds, so repeated clicks do not stack syncs.
 
