@@ -12,6 +12,7 @@ use J87NL\VueMailbox\Http\Controllers\MessageController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxAccessController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxSettingsController;
 use J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations;
+use J87NL\VueMailbox\VueMailboxServiceProvider;
 
 Route::prefix(config('vue-mailbox.routes.prefix'))
     ->name(config('vue-mailbox.routes.name'))
@@ -51,7 +52,7 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                 ->group(function (): void {
                     Route::get('folders/{folder?}', [FolderController::class, 'show'])->name('folders.show');
                     Route::post('folders/{folder}/refresh', [FolderController::class, 'refresh'])
-                        ->middleware('throttle:12,1')
+                        ->middleware(sprintf('throttle:%s', VueMailboxServiceProvider::REFRESH_LIMITER))
                         ->name('folders.refresh');
                     Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
                     Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');

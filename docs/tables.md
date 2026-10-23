@@ -48,8 +48,9 @@ Bulk actions only touch messages of the table's folder.
 When the folder's mailbox has `conversation_view` on, the table shows one row per conversation: the latest message of
 each conversation key in the folder (by `sent_at`, then id), with the number of messages of that conversation in the
 folder after the subject (`Re: Question (3)`). Messages without a key (not yet threaded) show on their own. A bulk
-action on a conversation row runs on every message of that conversation in the folder. Search and sorting apply to the
-row that represents the conversation. How the keys are made is described in the core
+action on a row runs on every message of that conversation in the folder. While a search or filter is active, the
+table lists every matching message instead of conversations, so a conversation whose only match is an older message
+does not disappear. How the keys are made is described in the core
 [conversation docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md#conversations). What each core action does on the server is documented in the
 core [message actions](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md) docs.
 

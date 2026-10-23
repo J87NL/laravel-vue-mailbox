@@ -164,3 +164,54 @@ it('lists no conversation on the message page when the view is off', function ()
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('conversation', []));
 });
+
+it('lists every matching message instead of conversations while searching', function (): void {
+    [$inbox, $messages] = conversationFolder(true);
+    $messages['root']->update([
+        'subject' => 'Invoice 42',
+    ]);
+    $mailbox = $inbox->mailbox;
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.folders.show', [
+            $mailbox,
+            $inbox,
+            'messages_filter' => [
+                'global' => 'Invoice',
+            ],
+        ]))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->has('table.data', 1)
+            ->where('table.data.0.id', $messages['root']->id));
+});
+
+it('lists a window of the conversation that always holds the open message', function (): void {
+    $mailbox = mailbox([
+        'conversation_view' => true,
+    ]);
+    $inbox = folder($mailbox);
+    $messages = collect(range(1, 60))
+        ->map(fn (int $uid): MailboxMessage => storedMessage($inbox, $uid, [
+            'sent_at' => now()->subHours(100 - $uid),
+            'thread_key' => 'long@example.org',
+        ]));
+    $other = folder(mailbox([
+        'name' => 'Other',
+    ]));
+    storedMessage($other, 1, [
+        'sent_at' => now()->subHours(150),
+        'thread_key' => 'long@example.org',
+    ]);
+    $reader = member($mailbox, AccessLevel::Read);
+
+    foreach ([0, 30, 59] as $index) {
+        $open = $messages[$index];
+
+        $this->actingAs($reader)
+            ->get(route('mailbox.messages.show', [$mailbox, $open]))
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->has('conversation', 50)
+                ->where('conversation', fn ($entries): bool => collect($entries)->where('current', true)->pluck('id')->all() === [$open->id]
+                    && collect($entries)->every(fn (array $entry): bool => str_contains($entry['url'], sprintf('/mailbox/%d/', $mailbox->id)))));
+    }
+});

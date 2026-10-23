@@ -23,6 +23,8 @@ class MessageController extends Controller
 {
     private const CONVERSATION_LIMIT = 50;
 
+    private const CONVERSATION_SCAN = 1000;
+
     public function __construct(
         private readonly MessageHtml $html,
         private readonly InlineUrls $inlineUrls,
@@ -122,13 +124,21 @@ class MessageController extends Controller
             return [];
         }
 
-        $messages = MailboxMessage::query()
+        $ids = MailboxMessage::query()
             ->where('mailbox_id', $mailbox->id)
             ->where('thread_key', $message->thread_key)
+            ->orderBy('sent_at')
+            ->orderBy('id')
+            ->limit(self::CONVERSATION_SCAN)
+            ->pluck('id')
+            ->all();
+        $start = $this->windowStart(array_search($message->id, $ids, true), count($ids));
+
+        $messages = MailboxMessage::query()
+            ->whereKey(array_slice($ids, $start, self::CONVERSATION_LIMIT))
             ->with('folder')
             ->orderBy('sent_at')
             ->orderBy('id')
-            ->limit(self::CONVERSATION_LIMIT)
             ->get([
                 'id',
                 'mailbox_folder_id',
@@ -154,6 +164,17 @@ class MessageController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    private function windowStart(int|false $position, int $count): int
+    {
+        $last = max(0, $count - self::CONVERSATION_LIMIT);
+
+        if ($position === false) {
+            return $last;
+        }
+
+        return max(0, min($position - intdiv(self::CONVERSATION_LIMIT, 2), $last));
     }
 
     /**
