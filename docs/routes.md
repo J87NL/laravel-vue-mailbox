@@ -73,7 +73,7 @@ read the raw message the core cached on that first fetch (core `cache.raw_hours`
 | GET | `settings` | `mailbox.settings.index` | `manageAnyMailbox` |
 | GET | `settings/create` | `mailbox.settings.create` | `manageMailboxes` |
 | POST | `settings` | `mailbox.settings.store` | `manageMailboxes` |
-| DELETE | `settings/{mailbox}` | `mailbox.settings.destroy` | `manageMailboxes` |
+| DELETE | `settings/{mailbox}` | `mailbox.settings.destroy` | `manageMailboxes` and `manageMailbox` |
 | GET | `settings/{mailbox}` | `mailbox.settings.edit` | `manageMailbox` |
 | PUT | `settings/{mailbox}` | `mailbox.settings.update` | `manageMailbox` |
 | POST | `settings/{mailbox}/access` | `mailbox.settings.access.store` | `manageMailbox` |

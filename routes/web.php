@@ -35,7 +35,12 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                 Route::get('/', [MailboxSettingsController::class, 'index'])->middleware('can:manageAnyMailbox')->name('index');
                 Route::get('create', [MailboxSettingsController::class, 'create'])->middleware('can:manageMailboxes')->name('create');
                 Route::post('/', [MailboxSettingsController::class, 'store'])->middleware('can:manageMailboxes')->name('store');
-                Route::delete('{mailbox}', [MailboxSettingsController::class, 'destroy'])->middleware('can:manageMailboxes')->name('destroy');
+                Route::delete('{mailbox}', [MailboxSettingsController::class, 'destroy'])
+                    ->middleware([
+                        'can:manageMailboxes',
+                        'can:manageMailbox,mailbox',
+                    ])
+                    ->name('destroy');
 
                 Route::middleware('can:manageMailbox,mailbox')->scopeBindings()->group(function (): void {
                     Route::get('{mailbox}', [MailboxSettingsController::class, 'edit'])->name('edit');

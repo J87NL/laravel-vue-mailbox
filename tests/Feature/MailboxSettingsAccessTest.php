@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
+use J87NL\Mailbox\Actions\GrantAccess;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Jobs\SyncFolderJob;
 use J87NL\Mailbox\Jobs\SyncMailboxJob;
@@ -47,6 +48,45 @@ it('adds no access row for a creator who already manages every mailbox', functio
         ->count())->toBe(1)
         ->and(MailboxAccess::query()
             ->count())->toBe(0);
+});
+
+it('creates no mailbox when granting the creator access fails', function (): void {
+    Bus::fake([SyncMailboxJob::class, SyncFolderJob::class]);
+    Gate::define('manageMailboxes', fn (User $user): bool => true);
+    $this->mock(GrantAccess::class)
+        ->shouldReceive('handle')
+        ->andThrow(new RuntimeException('Access table unavailable'));
+
+    $this->withoutExceptionHandling();
+
+    expect(fn () => $this->actingAs(user(['email' => 'office-manager@example.com']))
+        ->post(route('mailbox.settings.store'), newMailboxForm()))
+        ->toThrow(RuntimeException::class);
+
+    expect(Mailbox::query()
+        ->count())->toBe(0);
+});
+
+it('lets only a user who also manages the mailbox delete it', function (): void {
+    Gate::define('manageMailboxes', fn (User $user): bool => true);
+    $mailbox = mailbox();
+    $outsider = user();
+
+    $this->actingAs($outsider)
+        ->delete(route('mailbox.settings.destroy', $mailbox))
+        ->assertForbidden();
+
+    expect(Mailbox::query()
+        ->whereKey($mailbox->id)
+        ->exists())->toBeTrue();
+
+    $this->actingAs(member($mailbox, AccessLevel::Manage))
+        ->delete(route('mailbox.settings.destroy', $mailbox))
+        ->assertRedirect(route('mailbox.settings.index'));
+
+    expect(Mailbox::query()
+        ->whereKey($mailbox->id)
+        ->exists())->toBeFalse();
 });
 
 /**

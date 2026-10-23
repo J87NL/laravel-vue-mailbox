@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -47,11 +48,16 @@ class MailboxSettingsController extends Controller
         $data = (new MailboxForm(''))->validate($request);
 
         $user = $request->user();
-        $mailbox = $save->handle(null, $data, $user);
 
-        if ($user instanceof Model && Gate::denies('manageMailbox', $mailbox)) {
-            $grant->handle($mailbox, $user->getMorphClass(), $user->getKey(), AccessLevel::Manage, $user);
-        }
+        $mailbox = DB::transaction(function () use ($data, $grant, $save, $user): Mailbox {
+            $mailbox = $save->handle(null, $data, $user);
+
+            if ($user instanceof Model && Gate::denies('manageMailbox', $mailbox)) {
+                $grant->handle($mailbox, $user->getMorphClass(), $user->getKey(), AccessLevel::Manage, $user);
+            }
+
+            return $mailbox;
+        });
 
         return redirect()
             ->route($this->routes().'settings.edit', $mailbox)
