@@ -3,14 +3,17 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Actions\GrantAccess;
+use J87NL\Mailbox\Actions\TestConnection;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Jobs\SyncFolderJob;
 use J87NL\Mailbox\Jobs\SyncMailboxJob;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAccess;
 use J87NL\VueMailbox\Tests\Support\User;
+use Mockery\MockInterface;
 
 it('gives the creator manage access to a new mailbox they could not open otherwise', function (): void {
     Bus::fake([SyncMailboxJob::class, SyncFolderJob::class]);
@@ -65,6 +68,29 @@ it('creates no mailbox when granting the creator access fails', function (): voi
 
     expect(Mailbox::query()
         ->count())->toBe(0);
+});
+
+it('tests the connection of a new mailbox outside a database transaction', function (): void {
+    Bus::fake([SyncMailboxJob::class, SyncFolderJob::class]);
+    Gate::define('manageMailboxes', fn (User $user): bool => true);
+    $levels = [];
+    $this->mock(TestConnection::class, function (MockInterface $mock) use (&$levels): void {
+        $mock->shouldReceive('handle')
+            ->andReturnUsing(function () use (&$levels): array {
+                $levels[] = DB::transactionLevel();
+
+                return [];
+            });
+        $mock->shouldReceive('passes')
+            ->andReturnTrue();
+    });
+    $baseline = DB::transactionLevel();
+
+    $this->actingAs(user(['email' => 'office-manager@example.com']))
+        ->post(route('mailbox.settings.store'), newMailboxForm())
+        ->assertRedirect();
+
+    expect($levels)->toBe([$baseline]);
 });
 
 it('lets only a user who also manages the mailbox delete it', function (): void {

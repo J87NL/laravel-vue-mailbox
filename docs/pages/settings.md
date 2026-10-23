@@ -37,9 +37,9 @@ saved.
 - `store` redirects to the edit page of the new mailbox with a `success` flash message. When the creator could not
   manage the new mailbox otherwise (an app that lets non-admins pass `manageMailboxes`), `store` grants them `Manage`
   on it with the core `GrantAccess`, so they land on its edit page instead of a 403 and can share it from there.
-  Saving and granting run in one database transaction. The core still lets only admins manage an **inactive**
-  mailbox, so a non-admin creator of an inactive mailbox gets the row but a 403 on the edit page, unless the app
-  defines `manageMailbox` itself.
+  When the grant fails, the new mailbox is deleted again. The connection test and the queued sync run outside any
+  database transaction. The core still lets only admins manage an **inactive** mailbox, so a non-admin creator of an
+  inactive mailbox gets the row but a 403 on the edit page, unless the app defines `manageMailbox` itself.
 - `update` redirects back with a `success` flash message.
 - `destroy` (`manageMailboxes` and `manageMailbox` on that mailbox) deletes the mailbox and redirects to the mailbox list.
 
