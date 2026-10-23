@@ -122,7 +122,7 @@ configureMailboxUi({
 });
 ```
 
-Keys you leave out keep their default. The classes you pass live in your own code, so Tailwind finds them there. The
+Keys you leave out (or pass as `undefined`) keep their default. The classes you pass live in your own code, so Tailwind finds them there. The
 other classes of the pages (folder list, message header, conversation list) stay as they are.
 
 ## Confirmations

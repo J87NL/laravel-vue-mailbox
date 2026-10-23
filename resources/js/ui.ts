@@ -21,5 +21,11 @@ export const ui: MailboxUi = {
 }
 
 export function configureMailboxUi(overrides: Partial<MailboxUi>): void {
-    Object.assign(ui, overrides)
+    for (const key of Object.keys(overrides) as (keyof MailboxUi)[]) {
+        const classes = overrides[key]
+
+        if (typeof classes === 'string') {
+            ui[key] = classes
+        }
+    }
 }
