@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3'
+import { ref } from 'vue'
 import Form from '@form-builder/components/Form.vue'
 import type { FormSchema } from '@form-builder/types/form-builder'
 import TableBuilder from '@table-builder/components/TableBuilder.vue'
@@ -20,12 +21,32 @@ const props = defineProps<{
     folders: MailboxFolder[]
     mailbox: MailboxSummary
     mailboxes: MailboxSummary[]
+    refreshUrl?: string | null
     settingsUrl: string | null
     syncing: string | null
     table: TableData | null
 }>()
 
 const { t } = useMailboxTranslations()
+
+const refreshing = ref(false)
+
+function refresh(): void {
+    if (!props.refreshUrl || refreshing.value) {
+        return
+    }
+
+    router.post(props.refreshUrl, {}, {
+        preserveScroll: true,
+        preserveState: true,
+        onStart: () => {
+            refreshing.value = true
+        },
+        onFinish: () => {
+            refreshing.value = false
+        },
+    })
+}
 
 function switchMailbox(event: Event): void {
     const id = Number((event.target as HTMLSelectElement).value)
@@ -76,6 +97,9 @@ function switchMailbox(event: Event): void {
                             {{ item.unseen ? `${item.name} (${item.unseen})` : item.name }}
                         </option>
                     </select>
+                    <button v-if="refreshUrl" type="button" :class="ui.button" :disabled="refreshing" @click="refresh">
+                        {{ refreshing ? t('refreshing') : t('refresh') }}
+                    </button>
                     <Link :href="contactsUrl" :class="[ui.button, 'md:hidden']">{{ t('contacts') }}</Link>
                     <Link v-if="settingsUrl" :href="settingsUrl" :class="ui.button">{{ t('settings') }}</Link>
                     <Link v-if="composeUrl" :href="composeUrl" :class="[ui.primaryButton, 'md:hidden']">{{ t('new') }}</Link>
@@ -87,7 +111,7 @@ function switchMailbox(event: Event): void {
             </div>
 
             <div v-else-if="table" :class="ui.panel">
-                <TableBuilder :table="table" :only="['table']" :confirm="confirm" />
+                <TableBuilder :table="table" :only="['table', 'folders']" :confirm="confirm" />
             </div>
         </main>
     </div>

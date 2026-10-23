@@ -50,6 +50,9 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                 ->scopeBindings()
                 ->group(function (): void {
                     Route::get('folders/{folder?}', [FolderController::class, 'show'])->name('folders.show');
+                    Route::post('folders/{folder}/refresh', [FolderController::class, 'refresh'])
+                        ->middleware('throttle:12,1')
+                        ->name('folders.refresh');
                     Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
                     Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');
                     Route::get('messages/{message}/attachments/{index}', [AttachmentController::class, 'download'])

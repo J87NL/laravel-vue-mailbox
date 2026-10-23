@@ -63,6 +63,13 @@ class FolderController extends Controller
         return $this->render($mailbox, $folder);
     }
 
+    public function refresh(Mailbox $mailbox, MailboxFolder $folder): RedirectResponse
+    {
+        SyncFolderJob::dispatch($folder->id);
+
+        return redirect()->route(config('vue-mailbox.routes.name').'folders.show', [$mailbox, $folder]);
+    }
+
     public function store(Request $request, Mailbox $mailbox, CreateFolder $createFolder): RedirectResponse
     {
         $data = (new FolderForm($mailbox, ''))->validate($request);
@@ -111,6 +118,7 @@ class FolderController extends Controller
                 'name' => $mailbox->name,
             ],
             'mailboxes' => fn (): array => config('vue-mailbox.mailbox_switcher', true) ? $this->tree->mailboxes() : [],
+            'refreshUrl' => is_null($folder) ? null : route($routes.'folders.refresh', [$mailbox, $folder]),
             'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
             'syncing' => is_null($folder) ? __('mailbox::mailbox.syncing') : null,
             'table' => is_null($folder) ? null : MessagesTable::build($folder->setRelation('mailbox', $mailbox)),

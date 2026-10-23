@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { Head, Link } from '@inertiajs/vue3'
+import { nextTick, onBeforeUnmount, ref } from 'vue'
 import FolderList from '@mailbox/components/FolderList.vue'
+import MessageActions from '@mailbox/components/MessageActions.vue'
 import MessageFrame from '@mailbox/components/MessageFrame.vue'
 import type { AuditEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
-import { useMailboxConfirm } from '@mailbox/confirm'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
-const props = defineProps<{
+defineProps<{
     actionsUrl: string | null
     attachments: MailboxAttachment[]
     backUrl: string
@@ -35,39 +35,37 @@ const props = defineProps<{
 }>()
 
 const { t } = useMailboxTranslations()
-const confirm = useMailboxConfirm()
 
-const moveTarget = ref<number | ''>('')
+const dialog = ref<HTMLElement | null>(null)
+const fullscreen = ref(false)
 
-async function act(action: string, extra: Record<string, unknown> = {}): Promise<void> {
-    if (!props.actionsUrl) {
+let opener: HTMLElement | null = null
+
+async function openFullscreen(event: MouseEvent): Promise<void> {
+    opener = event.currentTarget as HTMLElement
+    fullscreen.value = true
+    document.body.style.overflow = 'hidden'
+
+    await nextTick()
+
+    dialog.value?.focus()
+}
+
+function closeFullscreen(): void {
+    if (!fullscreen.value) {
         return
     }
 
-    if (action === 'delete' && !(await confirm(t('message_delete_confirm')))) {
-        return
+    fullscreen.value = false
+    document.body.style.overflow = ''
+    opener?.focus()
+}
+
+onBeforeUnmount(() => {
+    if (fullscreen.value) {
+        document.body.style.overflow = ''
     }
-
-    router.post(props.actionsUrl, { action, ids: [props.message.id], ...extra }, { preserveScroll: true })
-}
-
-function move(): void {
-    if (moveTarget.value === '') {
-        return
-    }
-
-    void act('move', { folder_id: moveTarget.value })
-}
-
-function addContact(): void {
-    if (props.contactUrl) {
-        router.post(props.contactUrl, {}, { preserveScroll: true })
-    }
-}
-
-function replyUrl(mode: string): string {
-    return `${props.composeUrl}?reply=${props.message.id}&mode=${mode}`
-}
+})
 
 function addresses(list: MailAddress[] | null): string {
     return (list ?? []).map((address) => address.name ? `${address.name} <${address.email}>` : address.email).join(', ')
@@ -85,24 +83,14 @@ function addresses(list: MailAddress[] | null): string {
         <main class="flex min-w-0 flex-1 flex-col gap-4">
             <div :class="ui.toolbar">
                 <Link :href="backUrl" :class="ui.button">{{ t('back') }}</Link>
-                <template v-if="composeUrl">
-                    <Link :href="replyUrl('reply')" :class="ui.primaryButton">{{ t('reply') }}</Link>
-                    <Link :href="replyUrl('reply_all')" :class="ui.button">{{ t('reply_all') }}</Link>
-                    <Link :href="replyUrl('forward')" :class="ui.button">{{ t('forward') }}</Link>
-                </template>
-                <template v-if="actionsUrl">
-                    <button type="button" :class="ui.button" @click="act('archive')">{{ t('archive') }}</button>
-                    <button type="button" :class="ui.dangerButton" @click="act('delete')">{{ t('delete') }}</button>
-                    <button type="button" :class="ui.button" @click="act('unread')">{{ t('mark_unread') }}</button>
-                    <button type="button" :class="ui.button" @click="act(message.is_flagged ? 'unflag' : 'flag')">
-                        {{ message.is_flagged ? t('unflag') : t('flag') }}
-                    </button>
-                    <select v-model="moveTarget" :class="ui.select" @change="move">
-                        <option value="">{{ t('move_placeholder') }}</option>
-                        <option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ "\u00a0".repeat(folder.depth * 2) }}{{ folder.label }}</option>
-                    </select>
-                </template>
-                <button v-if="contactUrl" type="button" :class="ui.button" @click="addContact">{{ t('add_contact') }}</button>
+                <MessageActions
+                    :actions-url="actionsUrl"
+                    :compose-url="composeUrl"
+                    :contact-url="contactUrl"
+                    :folders="folders"
+                    :message="message"
+                />
+                <button type="button" :class="ui.button" @click="openFullscreen">{{ t('open_fullscreen') }}</button>
             </div>
 
             <article :class="ui.panel">
@@ -135,6 +123,34 @@ function addresses(list: MailAddress[] | null): string {
                     </li>
                 </ul>
             </article>
+
+            <Teleport to="body">
+                <div
+                    v-if="fullscreen"
+                    ref="dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    :aria-label="message.subject ?? t('no_subject')"
+                    tabindex="-1"
+                    class="fixed inset-0 z-40 flex flex-col gap-3 bg-white p-4 text-gray-900 focus:outline-none dark:bg-gray-900 dark:text-gray-100"
+                    @keydown.esc.stop="closeFullscreen"
+                >
+                    <div class="flex items-start justify-between gap-4">
+                        <h2 class="min-w-0 truncate text-lg font-semibold">{{ message.subject ?? t('no_subject') }}</h2>
+                        <button type="button" :class="ui.button" @click="closeFullscreen">{{ t('close') }}</button>
+                    </div>
+                    <div :class="ui.toolbar">
+                        <MessageActions
+                            :actions-url="actionsUrl"
+                            :compose-url="composeUrl"
+                            :contact-url="contactUrl"
+                            :folders="folders"
+                            :message="message"
+                        />
+                    </div>
+                    <MessageFrame :html="html" :image-origin="imageOrigin" :remote-images="remoteImages" fill @escape="closeFullscreen" />
+                </div>
+            </Teleport>
 
             <section v-if="history.length" :class="ui.muted">
                 <h2 class="mb-1 font-medium text-gray-700 dark:text-gray-300">{{ t('history') }}</h2>
