@@ -48,6 +48,8 @@ class InstallCommand extends Command
 
         $this->warnAboutUnusedCopies();
 
+        $this->warnAboutMissingCopies();
+
         $this->components->info('Run php artisan migrate, schedule mailbox:sync and mailbox:prune-bodies, and let Tailwind scan the package.');
 
         return self::SUCCESS;
@@ -112,6 +114,24 @@ class InstallCommand extends Command
         $this->components->warn(sprintf(
             'resources/js/pages/Mailbox has copies of the pages, but the page name "index" is %s, so the app still renders the package pages. Point the page names in config/vue-mailbox.php at the copies (Mailbox/...), or delete the copies.',
             $index,
+        ));
+    }
+
+    private function warnAboutMissingCopies(): void
+    {
+        $missing = array_values(array_filter(
+            $this->publishedPages(),
+            fn (string $name): bool => str_starts_with($name, 'Mailbox/')
+                && ! File::exists(resource_path(sprintf('js/pages/%s.vue', $name))),
+        ));
+
+        if ($missing === []) {
+            return;
+        }
+
+        $this->components->warn(sprintf(
+            'config/vue-mailbox.php names %s, but resources/js/pages has no such page. Since 0.5 the package pages are called mailbox/...: point these names at mailbox/... and load them from @mailbox/pages, or run mailbox:install --pages to copy the pages.',
+            implode(', ', $missing),
         ));
     }
 

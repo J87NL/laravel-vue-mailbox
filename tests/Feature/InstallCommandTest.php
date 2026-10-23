@@ -178,9 +178,30 @@ it('warns when the app has copies of the pages but the config names the package 
         ->assertSuccessful();
 });
 
+it('warns when the config names copies that do not exist', function (): void {
+    File::put(config_path('vue-mailbox.php'), implode("\n", [
+        '<?php',
+        '',
+        'return [',
+        "    'pages' => [",
+        "        'index' => 'Mailbox/Index',",
+        "        'show' => 'Mailbox/Show',",
+        '    ],',
+        '];',
+        '',
+    ]));
+    File::ensureDirectoryExists(resource_path('js/pages/Mailbox'));
+    File::put(resource_path('js/pages/Mailbox/Index.vue'), '<template><div /></template>');
+
+    $this->artisan('mailbox:install')
+        ->expectsOutputToContain('names Mailbox/Show, but resources/js/pages has no such page')
+        ->assertSuccessful();
+});
+
 it('does not warn about copies when there are none', function (): void {
     $this->artisan('mailbox:install')
         ->doesntExpectOutputToContain('still renders the package pages')
+        ->doesntExpectOutputToContain('has no such page')
         ->expectsOutputToContain('let your Inertia page resolver load mailbox/* pages')
         ->assertSuccessful();
 });

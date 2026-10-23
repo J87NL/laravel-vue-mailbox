@@ -39,7 +39,11 @@ resolve: async (name) => {
         ? findPage(mailboxPages, name.slice('mailbox/'.length))
         : appPages[`./pages/${name}.vue`];
 
-    return (await page!()).default;
+    if (page === undefined) {
+        throw new Error(`Page not found: ${name}`);
+    }
+
+    return (await page()).default;
 },
 ```
 

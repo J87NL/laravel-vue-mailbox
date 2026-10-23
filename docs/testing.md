@@ -28,10 +28,14 @@ use Inertia\Testing\AssertableInertia;
 $this->actingAs($user)
     ->get(route('mailbox.folders.show', [$mailbox, $folder]))
     ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-        ->component('mailbox/Index')
+        ->component('mailbox/Index', false)
         ->has('table')
         ->where('vue_mailbox_translations.reply', 'Reply'));
 ```
+
+Pass `false` as the second argument of `component()` for a package page: Inertia's `ensure_pages_exist` check looks for
+the page in `resources/js/pages` of your app, where `mailbox/Index` does not exist. A copy in your app
+(`Mailbox/Index`) needs no `false`.
 
 ## Working on the package
 

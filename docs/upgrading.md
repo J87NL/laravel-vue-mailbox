@@ -29,7 +29,8 @@ and your copies keep importing `@mailbox/components/...` and `@mailbox/types`, w
 
 This holds as long as your `pages` array has all seven keys, as the one `mailbox:install` published does. A missing
 key now renders the package page under its `mailbox/...` name, which your resolver does not know. `mailbox:install`
-warns when `resources/js/pages/Mailbox/Index.vue` exists while the `index` page name starts with `mailbox/`.
+warns when `resources/js/pages/Mailbox/Index.vue` exists while the `index` page name starts with `mailbox/`, and when a
+`Mailbox/...` page name has no file in `resources/js/pages`.
 
 ### Your app loaded `Mailbox/*` pages from the vendor directory
 
@@ -48,7 +49,11 @@ longer finds the file. Switch to the package names:
 The controllers now render `mailbox/...`. If you have copies in `resources/js/pages/Mailbox`, they are no longer used
 and the page fails to load until you act. Add the resolver branch from
 [Installation](installation.md#3-load-the-pages-from-the-package), or run `php artisan mailbox:install --pages` to copy
-the pages and publish a config that names the copies.
+the pages. Without a published config it publishes one that names the copies. A published config without `pages`
+stays as it is: add the seven keys with their `Mailbox/...` names to it yourself (`mailbox:install` warns until you do).
+
+Tests that assert a package page with `->component('mailbox/Index')` pass `false` as the second argument, see
+[Testing](testing.md).
 
 ### Going back from copies to the package pages
 
