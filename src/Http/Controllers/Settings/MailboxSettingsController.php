@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace J87NL\VueMailbox\Http\Controllers\Settings;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use J87NL\Mailbox\Actions\GrantAccess;
 use J87NL\Mailbox\Actions\SaveMailbox;
+use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Forms\AccessForm;
 use J87NL\Mailbox\Forms\MailboxForm;
 use J87NL\Mailbox\Models\Mailbox;
@@ -39,11 +42,16 @@ class MailboxSettingsController extends Controller
         ]);
     }
 
-    public function store(Request $request, SaveMailbox $save): RedirectResponse
+    public function store(Request $request, SaveMailbox $save, GrantAccess $grant): RedirectResponse
     {
         $data = (new MailboxForm(''))->validate($request);
 
-        $mailbox = $save->handle(null, $data, $request->user());
+        $user = $request->user();
+        $mailbox = $save->handle(null, $data, $user);
+
+        if ($user instanceof Model && Gate::denies('manageMailbox', $mailbox)) {
+            $grant->handle($mailbox, $user->getMorphClass(), $user->getKey(), AccessLevel::Manage, $user);
+        }
 
         return redirect()
             ->route($this->routes().'settings.edit', $mailbox)
