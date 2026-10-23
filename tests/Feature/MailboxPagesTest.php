@@ -6,6 +6,7 @@ use DirectoryTree\ImapEngine\Attachment;
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Enums\FolderRole;
@@ -226,6 +227,51 @@ it('sends users without any mailbox away from the mailbox index', function (): v
     $this->actingAs(member($mailbox, AccessLevel::Read))
         ->get(route('mailbox.index'))
         ->assertRedirect(route('mailbox.folders.show', $mailbox));
+});
+
+it('sends a mailbox manager without an open mailbox to the mailbox settings', function (): void {
+    config()->set('mailbox.access.admins', [
+        'admin@example.com',
+    ]);
+
+    $this->actingAs(user(['email' => 'admin@example.com']))
+        ->get(route('mailbox.index'))
+        ->assertRedirect(route('mailbox.settings.index'));
+});
+
+it('shows an empty state instead of a 404 to a user without a mailbox who manages none', function (): void {
+    Gate::define('accessAnyMailbox', fn (): bool => true);
+
+    mailbox(['active' => false]);
+
+    $this->actingAs(user())
+        ->get(route('mailbox.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->component('mailbox/Empty')
+            ->where('title', 'No mailbox has been set up for you yet')
+            ->where('hint', 'Ask an administrator to give you access to a mailbox.'));
+});
+
+it('shows the empty state in Dutch', function (): void {
+    Gate::define('accessAnyMailbox', fn (): bool => true);
+    app()->setLocale('nl');
+
+    $this->actingAs(user())
+        ->get(route('mailbox.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('title', 'Er is nog geen mailbox voor je ingesteld'));
+});
+
+it('renders the empty state with the configured page name', function (): void {
+    Gate::define('accessAnyMailbox', fn (): bool => true);
+    config()->set('vue-mailbox.pages.empty', 'Mailbox/Empty');
+
+    $this->actingAs(user())
+        ->get(route('mailbox.index'))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->component('Mailbox/Empty'));
 });
 
 it('returns to the folder when the message vanished on the server', function (): void {

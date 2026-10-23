@@ -75,3 +75,13 @@ it('only imports through aliases from the pages, so a published copy still build
     fn (SplFileInfo $file): string => $file->getPathname(),
     iterator_to_array(Finder::create()->files()->in(__DIR__.'/../../resources/js/pages')->name('*.vue')),
 )));
+
+it('fills the empty state page name for an app whose published pages predate it', function (): void {
+    config()->set('vue-mailbox.pages', [
+        'index' => 'mailbox/Index',
+    ]);
+
+    $this->app->register(VueMailboxServiceProvider::class, true);
+
+    expect(config('vue-mailbox.pages.empty'))->toBe('mailbox/Empty');
+});

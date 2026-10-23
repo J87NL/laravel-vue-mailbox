@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.1 - 2026-10-23
+
+- `mailbox.index` no longer answers `404` when the user can open no active mailbox. A user with `manageAnyMailbox` is redirected to `mailbox.settings.index`; anyone else gets the new empty state page `vue-mailbox.pages.empty` (default `mailbox/Empty`, props `title` and `hint`): "No mailbox has been set up for you yet", ask an administrator.
+- The package ships its own translation file `vue-mailbox::mailbox` (nl and en) for the empty state, publishable with the `vue-mailbox-translations` tag.
+- The default pages ask for delete confirmations through `useMailboxConfirm()` from `@mailbox/confirm`, which injects the host's `confirm` function (the same key as `j87nl/laravel-vue-cms`), instead of `window.confirm`. Without a provided function a delete does nothing.
+- Upgrade: an app with copied pages and no `mailbox/` resolver branch points the new `empty` page name at a copy. See `docs/upgrading.md`.
+
 ## 0.5.0 - 2026-10-23
 
 - **Breaking:** the Vue pages stay in the package by default (like `j87nl/laravel-vue-cms`). The default page names in `vue-mailbox.pages.*` start with `mailbox/` (`mailbox/Index`, `mailbox/Show`, `mailbox/Compose`, `mailbox/Contacts/Index`, `mailbox/Contacts/Edit`, `mailbox/Settings/Index`, `mailbox/Settings/Edit`), and the files moved inside the package from `resources/js/pages/Mailbox/*` to `resources/js/pages/*`. The host's Inertia resolver loads names that start with `mailbox/` from `@mailbox/pages` (also in `ssr.ts`). The components, `types.ts`, `translations.ts` and `ui.ts` did not move.

@@ -14,6 +14,7 @@ return [
         'compose' => 'mailbox/Compose',
         'contacts_edit' => 'mailbox/Contacts/Edit',
         'contacts_index' => 'mailbox/Contacts/Index',
+        'empty' => 'mailbox/Empty',
         'index' => 'mailbox/Index',
         'settings_edit' => 'mailbox/Settings/Edit',
         'settings_index' => 'mailbox/Settings/Index',

@@ -23,6 +23,7 @@ class VueMailboxServiceProvider extends PackageServiceProvider
             ->name('vue-mailbox')
             ->hasConfigFile()
             ->hasRoute('web')
+            ->hasTranslations()
             ->hasCommand(InstallCommand::class);
     }
 

@@ -3,6 +3,17 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.5.0 to 0.5.1: empty state and confirmations
+
+- `mailbox.index` no longer answers `404` when the user can open no active mailbox. Users with `manageAnyMailbox` are
+  redirected to `mailbox.settings.index`, others get the new page `vue-mailbox.pages.empty` (default `mailbox/Empty`).
+  An app that resolves `mailbox/` pages from `@mailbox/pages` needs no change. An app that copied the pages and has no
+  `mailbox/` resolver branch points `empty` at a page of its own in `config/vue-mailbox.php` (`mailbox:install --pages`
+  copies `Empty.vue` too), otherwise the empty state throws "page not found".
+- The default pages ask for delete confirmations through the function the app provides under the Vue injection key
+  `confirm` instead of `window.confirm`. Provide one (see [Components and helpers](frontend/components.md#confirmations)),
+  or deletes in the message view, contact form and mailbox settings do nothing.
+
 ## From 0.4 to 0.5: the pages stay in the package
 
 The pages now live in the package by default, like the pages of `j87nl/laravel-vue-cms`:

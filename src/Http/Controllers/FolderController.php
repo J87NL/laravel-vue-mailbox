@@ -28,13 +28,22 @@ class FolderController extends Controller
         private readonly FolderTree $tree,
     ) {}
 
-    public function index(): RedirectResponse
+    public function index(): RedirectResponse|Response
     {
         $first = $this->tree->mailboxes()[0] ?? null;
 
-        abort_if(is_null($first), 404);
+        if (! is_null($first)) {
+            return redirect($first['url']);
+        }
 
-        return redirect($first['url']);
+        if (Gate::allows('manageAnyMailbox')) {
+            return redirect()->route(config('vue-mailbox.routes.name').'settings.index');
+        }
+
+        return Inertia::render(config('vue-mailbox.pages.empty'), [
+            'hint' => __('vue-mailbox::mailbox.no_mailbox_hint'),
+            'title' => __('vue-mailbox::mailbox.no_mailbox_title'),
+        ]);
     }
 
     public function show(Mailbox $mailbox, SyncFolders $syncFolders, ?MailboxFolder $folder = null): Response

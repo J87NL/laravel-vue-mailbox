@@ -6,7 +6,18 @@ Route `mailbox.folders.show` (`GET {mailbox}/folders/{folder?}`) renders the `vu
 ## Opening a mailbox
 
 `mailbox.index` redirects to the first active mailbox the user can open, sorted by name. It answers `403` without the
-`accessAnyMailbox` ability and `404` when none of those mailboxes is active.
+`accessAnyMailbox` ability. When the user can open no active mailbox:
+
+- a user with `manageAnyMailbox` is redirected to `mailbox.settings.index`, to set one up;
+- anyone else gets the `vue-mailbox.pages.empty` page, default `mailbox/Empty`, instead of a `404`. It shows "No mailbox
+  has been set up for you yet" and asks the user to contact an administrator.
+
+### Empty state props
+
+| Prop | Type | Description |
+|---|---|---|
+| `hint` | `string` | Translated `vue-mailbox::mailbox.no_mailbox_hint` |
+| `title` | `string` | Translated `vue-mailbox::mailbox.no_mailbox_title` |
 
 Without a `{folder}`, the page opens the folder with the inbox role. When the mailbox has no inbox yet, the controller
 fetches the folder list from the server once and tries again. If there is still no inbox, it queues a

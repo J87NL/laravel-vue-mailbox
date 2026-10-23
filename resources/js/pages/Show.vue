@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import FolderList from '@mailbox/components/FolderList.vue'
 import MessageFrame from '@mailbox/components/MessageFrame.vue'
 import type { AuditEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
+import { useMailboxConfirm } from '@mailbox/confirm'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
@@ -34,15 +35,16 @@ const props = defineProps<{
 }>()
 
 const { t } = useMailboxTranslations()
+const confirm = useMailboxConfirm()
 
 const moveTarget = ref<number | ''>('')
 
-function act(action: string, extra: Record<string, unknown> = {}): void {
+async function act(action: string, extra: Record<string, unknown> = {}): Promise<void> {
     if (!props.actionsUrl) {
         return
     }
 
-    if (action === 'delete' && !confirm(t('message_delete_confirm'))) {
+    if (action === 'delete' && !(await confirm(t('message_delete_confirm')))) {
         return
     }
 
@@ -54,7 +56,7 @@ function move(): void {
         return
     }
 
-    act('move', { folder_id: moveTarget.value })
+    void act('move', { folder_id: moveTarget.value })
 }
 
 function addContact(): void {

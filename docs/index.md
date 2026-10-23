@@ -50,8 +50,9 @@ Link to the mailbox from your menu, for users who can open at least one mailbox:
 @endcan
 ```
 
-`mailbox.index` redirects to the first mailbox the user can open. Mailbox administrators and managers reach the
-settings through `route('mailbox.settings.index')`; show that link with `@can('manageAnyMailbox')`.
+`mailbox.index` redirects to the first mailbox the user can open. Without one it sends mailbox administrators and managers
+to `route('mailbox.settings.index')` and shows everyone else an empty state. Show a direct link to the settings with
+`@can('manageAnyMailbox')`.
 
 To change one page, point its name in `config/vue-mailbox.php` at a page of your own. To copy all pages into your app
 and edit them there:

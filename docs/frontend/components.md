@@ -7,6 +7,7 @@ Everything below is imported through the `@mailbox` alias, which points to
 |---|---|
 | `@mailbox/components/FolderList.vue` | The folder navigation |
 | `@mailbox/components/MessageFrame.vue` | The sandboxed message iframe |
+| `@mailbox/confirm` | `useMailboxConfirm()`, `MAILBOX_CONFIRM` |
 | `@mailbox/translations` | `useMailboxTranslations()`, `MAILBOX_TRANSLATIONS` |
 | `@mailbox/types` | `MailboxFolder`, `MailboxSummary`, `MailAddress`, `MailboxAttachment`, `AuditEntry` |
 | `@mailbox/ui` | `ui`, the Tailwind class strings of the default pages |
@@ -83,3 +84,16 @@ import { ui } from '@mailbox/ui';
 ```
 
 Tailwind only generates these classes when it scans the package, see [Installation](../installation.md#5-add-the-tailwind-css-source).
+
+## Confirmations
+
+The default pages never call `window.confirm`. Delete in the message view, the contact form and the mailbox settings
+asks through `useMailboxConfirm()` from `@mailbox/confirm`, which injects the function your app provides under the key
+`confirm` (`MAILBOX_CONFIRM`). It takes the message and resolves to `true` when the user agrees:
+
+```ts
+app.provide('confirm', (message: string): Promise<boolean> => openConfirmDialog(message));
+```
+
+Without a provided function every confirmation resolves to `false`, so the delete does nothing. `j87nl/laravel-vue-cms`
+uses the same key, so one provide serves both.

@@ -58,7 +58,7 @@ mailbox, so a message of another mailbox answers `404`.
 `mailbox.addresses` takes the search text as the `q` query parameter, see
 [Address suggestions](pages/compose.md#address-suggestions).
 
-`mailbox.index` redirects to the first active mailbox the user can open, sorted by name.
+`mailbox.index` redirects to the first active mailbox the user can open, sorted by name. When there is none, it redirects a user with `manageAnyMailbox` to `mailbox.settings.index`, and renders the `vue-mailbox.pages.empty` page (default `mailbox/Empty`) for anyone else instead of answering `404`.
 
 ## Settings routes
 

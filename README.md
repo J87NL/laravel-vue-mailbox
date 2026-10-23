@@ -77,7 +77,7 @@ Then follow the core package README for admins, the sync schedule, the queue wor
 
 ## Pages and props
 
-The default pages read their texts from the Inertia prop `vue_mailbox_translations` (the core `mailbox::mailbox` file, nl and en) through `useMailboxTranslations()` from `@mailbox/translations`. The prop is shared only on the mailbox routes; a host page outside them that needs it adds the `J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations` middleware.
+The default pages read their texts from the Inertia prop `vue_mailbox_translations` (the core `mailbox::mailbox` file, nl and en) through `useMailboxTranslations()` from `@mailbox/translations`. The empty state texts come from this package's own `vue-mailbox::mailbox` file (nl and en) and arrive as props. Deletes ask for confirmation through the function the host provides under the Vue injection key `confirm` (`app.provide('confirm', (message) => Promise<boolean>)`), never `window.confirm`; without it they do nothing. The prop is shared only on the mailbox routes; a host page outside them that needs it adds the `J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations` middleware.
 
 | Page (`vue-mailbox.pages.*`) | Props |
 |---|---|
@@ -86,6 +86,7 @@ The default pages read their texts from the Inertia prop `vue_mailbox_translatio
 | `mailbox/Compose` | `backUrl`, `folders`, `form`, `mailbox`, `mode` |
 | `mailbox/Contacts/Index` | `backUrl`, `createUrl`, `folders`, `mailbox`, `table` |
 | `mailbox/Contacts/Edit` | `backUrl`, `destroyUrl`, `form`, `mailbox`, `title` |
+| `mailbox/Empty` | `hint`, `title` |
 | `mailbox/Settings/Index`, `mailbox/Settings/Edit` | unchanged |
 
 Reply, reply all and forward put the original HTML in the compose body (Gmail-style header or "On … wrote:" blockquote). Its inline images use signed inline URLs with `data-mailbox-cid`; keep that attribute in your editor (the default HugeRTE options do). Inline SVG images are served with a locked-down CSP. After sending a reply or forward the app returns to the folder of the original message.
@@ -94,7 +95,7 @@ The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['ta
 
 ## Routes
 
-All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`) with the `web` and `auth` middleware. Menu links: `route('mailbox.index')` (show it with `@can('accessAnyMailbox')` / `$can('accessAnyMailbox')`) and `route('mailbox.settings.index')` (show it with `@can('manageAnyMailbox')`). Every route except the signed inline image route is gated with the core abilities (`accessAnyMailbox`, `accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`) or `manageAnyMailbox`, which this package defines unless the app already has it: `manageMailboxes`, or `manageMailbox` on at least one mailbox. The pages hide controls the user cannot use.
+All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`) with the `web` and `auth` middleware. Menu links: `route('mailbox.index')` (show it with `@can('accessAnyMailbox')` / `$can('accessAnyMailbox')`; without an open mailbox it redirects managers to the settings and shows others the `mailbox/Empty` page) and `route('mailbox.settings.index')` (show it with `@can('manageAnyMailbox')`). Every route except the signed inline image route is gated with the core abilities (`accessAnyMailbox`, `accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`) or `manageAnyMailbox`, which this package defines unless the app already has it: `manageMailboxes`, or `manageMailbox` on at least one mailbox. The pages hide controls the user cannot use.
 
 | Route | Ability |
 |---|---|

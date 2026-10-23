@@ -38,6 +38,7 @@ The inline image route always uses `['web', 'signed']`, whatever `middleware` ho
     'compose' => 'mailbox/Compose',
     'contacts_edit' => 'mailbox/Contacts/Edit',
     'contacts_index' => 'mailbox/Contacts/Index',
+    'empty' => 'mailbox/Empty',
     'index' => 'mailbox/Index',
     'settings_edit' => 'mailbox/Settings/Edit',
     'settings_index' => 'mailbox/Settings/Index',
@@ -56,6 +57,7 @@ to the copy (`mailbox/Index` becomes `Mailbox/Index`). A name you changed yourse
 | Key | Rendered by | Docs |
 |---|---|---|
 | `index` | folder and message list | [Folders and message list](pages/folders.md) |
+| `empty` | empty state of `mailbox.index` when the user has no mailbox | [Folders and message list](pages/folders.md#opening-a-mailbox) |
 | `show` | message view | [Message view](pages/messages.md) |
 | `compose` | new message, reply, reply all, forward | [Compose, reply and forward](pages/compose.md) |
 | `contacts_index` | address book list | [Address book](pages/contacts.md) |

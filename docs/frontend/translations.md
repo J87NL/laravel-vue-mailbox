@@ -38,6 +38,13 @@ const { t } = useMailboxTranslations();
 `t(key, replacements)` replaces `:name` placeholders. A missing key returns its last dot segment. The module also
 exports the prop name as `MAILBOX_TRANSLATIONS`.
 
+## Texts of this package
+
+The empty state of `mailbox.index` uses this package's own file `vue-mailbox::mailbox` (`no_mailbox_title`,
+`no_mailbox_hint`, nl and en). The controller translates them and passes them as the `title` and `hint` props, so they
+are not part of the shared prop. Override them in `lang/vendor/vue-mailbox/{locale}/mailbox.php`, or publish them with
+the `vue-mailbox-translations` tag.
+
 ## Changing texts
 
 The texts belong to `j87nl/laravel-mailbox`. Override them the Laravel way for package translations, in

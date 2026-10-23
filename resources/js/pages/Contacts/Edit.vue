@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import Form from '@form-builder/components/Form.vue'
 import type { FormSchema } from '@form-builder/types/form-builder'
+import { useMailboxConfirm } from '@mailbox/confirm'
 import { useMailboxTranslations } from '@mailbox/translations'
 import type { MailboxSummary } from '@mailbox/types'
 import { ui } from '@mailbox/ui'
@@ -15,9 +16,10 @@ const props = defineProps<{
 }>()
 
 const { t } = useMailboxTranslations()
+const confirm = useMailboxConfirm()
 
-function destroy(): void {
-    if (!props.destroyUrl || !confirm(t('contact_delete_confirm'))) {
+async function destroy(): Promise<void> {
+    if (!props.destroyUrl || !(await confirm(t('contact_delete_confirm')))) {
         return
     }
 

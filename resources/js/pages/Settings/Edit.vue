@@ -5,6 +5,7 @@ import Form from '@form-builder/components/Form.vue'
 import type { FormSchema } from '@form-builder/types/form-builder'
 import TableBuilder from '@table-builder/components/TableBuilder.vue'
 import type { TableData } from '@table-builder/types/table-builder'
+import { useMailboxConfirm } from '@mailbox/confirm'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
@@ -18,11 +19,12 @@ const props = defineProps<{
 }>()
 
 const { t } = useMailboxTranslations()
+const confirm = useMailboxConfirm()
 const page = usePage()
 const accessError = computed(() => (page.props.errors as Record<string, string> | undefined)?.accessor ?? null)
 
-function destroy(): void {
-    if (!props.destroyUrl || !confirm(t('mailbox_delete_confirm'))) {
+async function destroy(): Promise<void> {
+    if (!props.destroyUrl || !(await confirm(t('mailbox_delete_confirm')))) {
         return
     }
 
