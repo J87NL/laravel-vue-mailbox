@@ -50,7 +50,8 @@ each conversation key in the folder (by `sent_at`, then id), with the number of 
 folder after the subject (`Re: Question (3)`). Messages without a key (not yet threaded) show on their own. A bulk
 action on a row runs on every message of that conversation in the folder. While a search or filter is active, the
 table lists every matching message instead of conversations, so a conversation whose only match is an older message
-does not disappear. How the keys are made is described in the core
+does not disappear, and a bulk action then runs on the selected messages only. The table signs whether it was grouped
+(`grouped` in its signed parameters), so the bulk action route knows which of the two the user saw. How the keys are made is described in the core
 [conversation docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md#conversations). What each core action does on the server is documented in the
 core [message actions](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md) docs.
 

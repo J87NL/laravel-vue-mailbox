@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace J87NL\VueMailbox\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -22,8 +23,6 @@ use J87NL\VueMailbox\Support\MessageBodyLoader;
 class MessageController extends Controller
 {
     private const CONVERSATION_LIMIT = 50;
-
-    private const CONVERSATION_SCAN = 1000;
 
     public function __construct(
         private readonly MessageHtml $html,
@@ -124,21 +123,19 @@ class MessageController extends Controller
             return [];
         }
 
-        $ids = MailboxMessage::query()
-            ->where('mailbox_id', $mailbox->id)
-            ->where('thread_key', $message->thread_key)
-            ->orderBy('sent_at')
-            ->orderBy('id')
-            ->limit(self::CONVERSATION_SCAN)
-            ->pluck('id')
-            ->all();
-        $start = $this->windowStart(array_search($message->id, $ids, true), count($ids));
+        $before = $this->neighbours($mailbox, $message, earlier: true);
+        $after = $this->neighbours($mailbox, $message, earlier: false);
+        $ids = [
+            ...array_reverse($before),
+            $message->id,
+            ...$after,
+        ];
+        $start = max(0, min(count($before) - intdiv(self::CONVERSATION_LIMIT, 2), count($ids) - self::CONVERSATION_LIMIT));
+        $window = array_slice($ids, $start, self::CONVERSATION_LIMIT);
 
         $messages = MailboxMessage::query()
-            ->whereKey(array_slice($ids, $start, self::CONVERSATION_LIMIT))
+            ->whereKey($window)
             ->with('folder')
-            ->orderBy('sent_at')
-            ->orderBy('id')
             ->get([
                 'id',
                 'mailbox_folder_id',
@@ -152,7 +149,10 @@ class MessageController extends Controller
             return [];
         }
 
+        $order = array_flip($window);
+
         return $messages
+            ->sortBy(fn (MailboxMessage $item): int => $order[$item->id])
             ->map(fn (MailboxMessage $item): array => [
                 'current' => $item->id === $message->id,
                 'folder' => $item->folder->role->label() ?? $item->folder->name,
@@ -166,15 +166,45 @@ class MessageController extends Controller
             ->all();
     }
 
-    private function windowStart(int|false $position, int $count): int
+    /**
+     * @return list<int>
+     */
+    private function neighbours(Mailbox $mailbox, MailboxMessage $message, bool $earlier): array
     {
-        $last = max(0, $count - self::CONVERSATION_LIMIT);
+        $sentAt = $message->sent_at;
 
-        if ($position === false) {
-            return $last;
-        }
+        return MailboxMessage::query()
+            ->where('mailbox_id', $mailbox->id)
+            ->where('thread_key', $message->thread_key)
+            ->whereKeyNot($message->id)
+            ->where(function (Builder $query) use ($earlier, $message, $sentAt): void {
+                if (is_null($sentAt)) {
+                    $query->whereNull('sent_at')
+                        ->where('id', $earlier ? '<' : '>', $message->id);
 
-        return max(0, min($position - intdiv(self::CONVERSATION_LIMIT, 2), $last));
+                    if (! $earlier) {
+                        $query->orWhereNotNull('sent_at');
+                    }
+
+                    return;
+                }
+
+                $query->where('sent_at', $earlier ? '<' : '>', $sentAt)
+                    ->orWhere(function (Builder $same) use ($earlier, $message, $sentAt): void {
+                        $same->where('sent_at', $sentAt)
+                            ->where('id', $earlier ? '<' : '>', $message->id);
+                    });
+
+                if ($earlier) {
+                    $query->orWhereNull('sent_at');
+                }
+            })
+            ->orderByRaw(sprintf('case when sent_at is null then %d else %d end', $earlier ? 1 : 0, $earlier ? 0 : 1))
+            ->orderBy('sent_at', $earlier ? 'desc' : 'asc')
+            ->orderBy('id', $earlier ? 'desc' : 'asc')
+            ->limit(self::CONVERSATION_LIMIT - 1)
+            ->pluck('id')
+            ->all();
     }
 
     /**

@@ -26,12 +26,17 @@ final class MessagesTable extends AbstractTable
 
     public function __construct(
         private readonly MailboxFolder $folder,
+        private readonly ?bool $grouped = null,
     ) {}
 
     public static function fromSignedParameters(array $parameters, Request $request): static
     {
-        return new self(MailboxFolder::query()
-            ->with('mailbox')->findOrFail($parameters['folder']));
+        return new self(
+            MailboxFolder::query()
+                ->with('mailbox')
+                ->findOrFail($parameters['folder']),
+            (bool) ($parameters['grouped'] ?? true),
+        );
     }
 
     public function authorize(Request $request): bool
@@ -48,6 +53,7 @@ final class MessagesTable extends AbstractTable
     {
         return [
             'folder' => $this->folder->id,
+            'grouped' => $this->grouped ?? ! $this->filtering(),
         ];
     }
 
@@ -180,7 +186,7 @@ final class MessagesTable extends AbstractTable
 
         $threads = $selected->pluck('thread_key')->filter()->unique()->values()->all();
 
-        if (! $this->conversations() || $threads === []) {
+        if (! $this->conversations() || $this->grouped === false || $threads === []) {
             return $selected;
         }
 
