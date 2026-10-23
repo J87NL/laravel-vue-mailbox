@@ -6,9 +6,10 @@ namespace J87NL\VueMailbox\Tables;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Request;
-use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\HtmlString;
 use J87NL\Mailbox\Actions\ArchiveMessages;
 use J87NL\Mailbox\Actions\DeleteMessages;
 use J87NL\Mailbox\Actions\MarkMessages;
@@ -50,7 +51,7 @@ final class MessagesTable extends AbstractTable
 
     public function for(): Builder
     {
-        return MailboxMessage::query()
+        $query = MailboxMessage::query()
             ->select([
                 'id',
                 'mailbox_id',
@@ -64,8 +65,44 @@ final class MessagesTable extends AbstractTable
                 'is_flagged',
                 'is_answered',
                 'has_attachments',
+                'thread_key',
             ])
             ->whereBelongsTo($this->folder, 'folder');
+
+        if (! $this->conversations()) {
+            return $query;
+        }
+
+        return $query
+            ->addSelect([
+                'thread_count' => $this->threadMessages(),
+                'thread_unseen' => $this->threadMessages()->where('thread.is_seen', false),
+            ])
+            ->where(function (Builder $query): void {
+                $query->whereNull('mailbox_messages.thread_key')
+                    ->orWhereNotExists(function (QueryBuilder $newer): void {
+                        $newer->selectRaw('1')
+                            ->from('mailbox_messages', 'newer')
+                            ->whereColumn('newer.mailbox_folder_id', 'mailbox_messages.mailbox_folder_id')
+                            ->whereColumn('newer.thread_key', 'mailbox_messages.thread_key')
+                            ->where(function (QueryBuilder $later): void {
+                                $later->whereColumn('newer.sent_at', '>', 'mailbox_messages.sent_at')
+                                    ->orWhere(function (QueryBuilder $same): void {
+                                        $same->whereColumn('newer.sent_at', 'mailbox_messages.sent_at')
+                                            ->whereColumn('newer.id', '>', 'mailbox_messages.id');
+                                    })
+                                    ->orWhere(function (QueryBuilder $dated): void {
+                                        $dated->whereNull('mailbox_messages.sent_at')
+                                            ->whereNotNull('newer.sent_at');
+                                    })
+                                    ->orWhere(function (QueryBuilder $undated): void {
+                                        $undated->whereNull('mailbox_messages.sent_at')
+                                            ->whereNull('newer.sent_at')
+                                            ->whereColumn('newer.id', '>', 'mailbox_messages.id');
+                                    });
+                            });
+                    });
+            });
     }
 
     public function configure(TableBuilder $table): void
@@ -82,7 +119,7 @@ final class MessagesTable extends AbstractTable
             ->column('subject', __('mailbox::mailbox.subject'), canBeHidden: false, as: fn (?string $subject, MailboxMessage $message): HtmlString|string => $this->subject($subject, $message))
             ->column('sent_at', __('mailbox::mailbox.received'), sortable: true, as: fn (mixed $value, MailboxMessage $message): string => $this->received($message))
             ->rowLink(fn (MailboxMessage $message): string => route(config('vue-mailbox.routes.name').'messages.show', [$this->folder->mailbox, $message]))
-            ->rowClass(fn (MailboxMessage $message): string => $message->is_seen ? '' : 'font-semibold')
+            ->rowClass(fn (MailboxMessage $message): string => $this->isUnread($message) ? 'font-semibold' : '')
             ->poll((int) config('vue-mailbox.poll_seconds', 30))
             ->emptyState(title: __('mailbox::mailbox.empty'))
             ->paginate(config('vue-mailbox.per_page'));
@@ -133,11 +170,52 @@ final class MessagesTable extends AbstractTable
      */
     private function messages(array $ids): Collection
     {
-        return MailboxMessage::query()
+        $selected = MailboxMessage::query()
             ->whereBelongsTo($this->folder, 'folder')
             ->whereKey($ids)
             ->with('folder')
             ->get();
+
+        $threads = $selected->pluck('thread_key')->filter()->unique()->values()->all();
+
+        if (! $this->conversations() || $threads === []) {
+            return $selected;
+        }
+
+        return MailboxMessage::query()
+            ->whereBelongsTo($this->folder, 'folder')
+            ->where(function (Builder $query) use ($ids, $threads): void {
+                $query->whereKey($ids)
+                    ->orWhereIn('thread_key', $threads);
+            })
+            ->with('folder')
+            ->get();
+    }
+
+    private function conversations(): bool
+    {
+        return (bool) $this->folder->mailbox->conversation_view;
+    }
+
+    /**
+     * @return Builder<MailboxMessage>
+     */
+    private function threadMessages(): Builder
+    {
+        return MailboxMessage::query()
+            ->from('mailbox_messages', 'thread')
+            ->selectRaw('count(*)')
+            ->whereColumn('thread.mailbox_folder_id', 'mailbox_messages.mailbox_folder_id')
+            ->whereColumn('thread.thread_key', 'mailbox_messages.thread_key');
+    }
+
+    private function isUnread(MailboxMessage $message): bool
+    {
+        if (! is_null($message->getAttribute('thread_unseen'))) {
+            return (int) $message->getAttribute('thread_unseen') > 0;
+        }
+
+        return ! $message->is_seen;
     }
 
     private function received(MailboxMessage $message): string
@@ -158,7 +236,8 @@ final class MessagesTable extends AbstractTable
     {
         $flag = $message->is_flagged ? '⚑ ' : '';
         $answered = $message->is_answered ? '↩ ' : '';
-        $text = $flag.$answered.($subject ?: '—');
+        $count = (int) $message->getAttribute('thread_count');
+        $text = $flag.$answered.($subject ?: '—').($count > 1 ? sprintf(' (%d)', $count) : '');
 
         if (! $message->has_attachments) {
             return $text;

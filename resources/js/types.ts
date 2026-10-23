@@ -38,3 +38,13 @@ export interface AuditEntry {
     target: string | null
     user: string | null
 }
+
+export interface ConversationEntry {
+    current: boolean
+    folder: string
+    from: string
+    id: number
+    sent_at: string | null
+    subject: string | null
+    url: string
+}

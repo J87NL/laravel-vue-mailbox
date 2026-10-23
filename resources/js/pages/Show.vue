@@ -4,7 +4,7 @@ import { nextTick, onBeforeUnmount, ref } from 'vue'
 import FolderList from '@mailbox/components/FolderList.vue'
 import MessageActions from '@mailbox/components/MessageActions.vue'
 import MessageFrame from '@mailbox/components/MessageFrame.vue'
-import type { AuditEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
+import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
@@ -14,6 +14,7 @@ defineProps<{
     backUrl: string
     composeUrl: string | null
     contactUrl: string | null
+    conversation?: ConversationEntry[]
     folders: MailboxFolder[]
     hasRemoteImages: boolean
     history: AuditEntry[]
@@ -92,6 +93,24 @@ function addresses(list: MailAddress[] | null): string {
                 />
                 <button type="button" :class="ui.button" @click="openFullscreen">{{ t('open_fullscreen') }}</button>
             </div>
+
+            <nav v-if="conversation?.length" :class="[ui.panel, 'p-0']" :aria-label="t('conversation')">
+                <h2 class="border-b border-gray-200 px-4 py-2 text-sm font-medium dark:border-gray-700">{{ t('conversation') }} ({{ conversation.length }})</h2>
+                <ol class="divide-y divide-gray-200 text-sm dark:divide-gray-700">
+                    <li v-for="entry in conversation" :key="entry.id">
+                        <span v-if="entry.current" class="flex flex-wrap gap-x-3 px-4 py-2 font-semibold" aria-current="true">
+                            <span class="min-w-0 flex-1 truncate">{{ entry.from }}</span>
+                            <span :class="ui.muted">{{ entry.folder }}</span>
+                            <span :class="ui.muted">{{ entry.sent_at ? new Date(entry.sent_at).toLocaleString() : '' }}</span>
+                        </span>
+                        <Link v-else :href="entry.url" class="flex flex-wrap gap-x-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <span class="min-w-0 flex-1 truncate">{{ entry.from }}</span>
+                            <span :class="ui.muted">{{ entry.folder }}</span>
+                            <span :class="ui.muted">{{ entry.sent_at ? new Date(entry.sent_at).toLocaleString() : '' }}</span>
+                        </Link>
+                    </li>
+                </ol>
+            </nav>
 
             <article :class="ui.panel">
                 <header class="mb-4 border-b border-gray-200 pb-3 dark:border-gray-700">

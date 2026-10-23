@@ -21,6 +21,8 @@ use J87NL\VueMailbox\Support\MessageBodyLoader;
 
 class MessageController extends Controller
 {
+    private const CONVERSATION_LIMIT = 50;
+
     public function __construct(
         private readonly MessageHtml $html,
         private readonly InlineUrls $inlineUrls,
@@ -53,6 +55,7 @@ class MessageController extends Controller
             'attachments' => $this->attachments($mailbox, $message),
             'backUrl' => route($routes.'folders.show', [$mailbox, $message->folder]),
             'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
+            'conversation' => $this->conversation($mailbox, $message),
             'contactUrl' => $canWork && ! is_null($message->from_email) ? route($routes.'messages.contact', [$mailbox, $message]) : null,
             'folders' => $tree->for($mailbox),
             'history' => $this->history($message),
@@ -106,6 +109,49 @@ class MessageController extends Controller
                 'url' => route(config('vue-mailbox.routes.name').'attachments.download', [$mailbox, $message, $index]),
             ])
             ->reject(fn (array $attachment): bool => $attachment['inline'] && ! is_null($attachment['content_id']))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{current: bool, folder: string, from: string, id: int, sent_at: ?string, subject: ?string, url: string}>
+     */
+    private function conversation(Mailbox $mailbox, MailboxMessage $message): array
+    {
+        if (! $mailbox->conversation_view || is_null($message->thread_key)) {
+            return [];
+        }
+
+        $messages = MailboxMessage::query()
+            ->where('mailbox_id', $mailbox->id)
+            ->where('thread_key', $message->thread_key)
+            ->with('folder')
+            ->orderBy('sent_at')
+            ->orderBy('id')
+            ->limit(self::CONVERSATION_LIMIT)
+            ->get([
+                'id',
+                'mailbox_folder_id',
+                'subject',
+                'from_email',
+                'from_name',
+                'sent_at',
+            ]);
+
+        if ($messages->count() < 2) {
+            return [];
+        }
+
+        return $messages
+            ->map(fn (MailboxMessage $item): array => [
+                'current' => $item->id === $message->id,
+                'folder' => $item->folder->role->label() ?? $item->folder->name,
+                'from' => $item->from_name ?: (string) $item->from_email,
+                'id' => $item->id,
+                'sent_at' => $item->sent_at?->toIso8601String(),
+                'subject' => $item->subject,
+                'url' => route(config('vue-mailbox.routes.name').'messages.show', [$mailbox, $item]),
+            ])
             ->values()
             ->all();
     }
