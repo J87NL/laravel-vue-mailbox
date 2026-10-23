@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3 - 2026-10-23
+
+- Bulk actions and row actions in the message list, the contacts list, the mailbox settings list and the access table ask through the app's `confirm` function (the same one the message view uses) instead of the browser's `window.confirm`.
+
 ## 0.5.2 - 2026-10-23
 
 - Requires `j87nl/laravel-mailbox` ^0.3.4.

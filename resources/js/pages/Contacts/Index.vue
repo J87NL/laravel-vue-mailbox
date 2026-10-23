@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3'
 import TableBuilder from '@table-builder/components/TableBuilder.vue'
+import { useMailboxConfirm } from '@mailbox/confirm'
 import type { TableData } from '@table-builder/types/table-builder'
 import FolderList from '@mailbox/components/FolderList.vue'
 import { useMailboxTranslations } from '@mailbox/translations'
 import type { MailboxFolder, MailboxSummary } from '@mailbox/types'
 import { ui } from '@mailbox/ui'
+
+const confirm = useMailboxConfirm()
 
 defineProps<{
     backUrl: string
@@ -39,7 +42,7 @@ const { t } = useMailboxTranslations()
             </div>
 
             <div :class="ui.panel">
-                <TableBuilder :table="table" />
+                <TableBuilder :table="table" :confirm="confirm" />
             </div>
         </main>
     </div>

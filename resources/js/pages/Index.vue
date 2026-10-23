@@ -3,11 +3,14 @@ import { Head, Link } from '@inertiajs/vue3'
 import Form from '@form-builder/components/Form.vue'
 import type { FormSchema } from '@form-builder/types/form-builder'
 import TableBuilder from '@table-builder/components/TableBuilder.vue'
+import { useMailboxConfirm } from '@mailbox/confirm'
 import type { TableData } from '@table-builder/types/table-builder'
 import FolderList from '@mailbox/components/FolderList.vue'
 import { useMailboxTranslations } from '@mailbox/translations'
 import type { MailboxFolder, MailboxSummary } from '@mailbox/types'
 import { ui } from '@mailbox/ui'
+
+const confirm = useMailboxConfirm()
 
 defineProps<{
     composeUrl: string | null
@@ -76,7 +79,7 @@ const { t } = useMailboxTranslations()
             </div>
 
             <div v-else-if="table" :class="ui.panel">
-                <TableBuilder :table="table" :only="['table']" />
+                <TableBuilder :table="table" :only="['table']" :confirm="confirm" />
             </div>
         </main>
     </div>

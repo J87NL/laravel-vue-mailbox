@@ -52,7 +52,7 @@ async function destroy(): Promise<void> {
             <h2 class="mb-1 text-lg font-semibold">{{ t('access') }}</h2>
             <p :class="[ui.muted, 'mb-4']">{{ t('access_help') }}</p>
             <p v-if="accessError" class="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{{ accessError }}</p>
-            <TableBuilder :table="accessTable" />
+            <TableBuilder :table="accessTable" :confirm="confirm" />
             <div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
                 <Form :schema="accessForm" />
             </div>
