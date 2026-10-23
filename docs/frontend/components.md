@@ -52,7 +52,8 @@ it sends `html`. See [Message view](../pages/messages.md#the-message-frame).
 
 The reply, reply all, forward, archive, delete (with a confirmation through `confirm`), mark unread, flag and move
 controls, and "Add to address book". It renders only the controls whose URL it gets, inside a `display: contents` wrapper, so they lay out as items of
-your toolbar. Flag, unflag and mark unread preserve the page state.
+your toolbar. Every action posts with `preserveState`; flag and unflag return to the
+message, the other actions go to the folder.
 
 | Prop | Type | Description |
 |---|---|---|

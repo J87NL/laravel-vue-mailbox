@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useMailboxTranslations } from '../translations'
 
 const props = withDefaults(defineProps<{
     html: string
@@ -14,12 +15,12 @@ const emit = defineEmits<{
     escape: []
 }>()
 
+const { t } = useMailboxTranslations()
+
 const frame = ref<HTMLIFrameElement | null>(null)
 const height = ref(400)
 
 let observer: ResizeObserver | null = null
-let measuredContent = 0
-let measuredFrame = 0
 
 const imageSources = computed(() => props.remoteImages ? '* data:' : `data: ${props.imageOrigin}`)
 
@@ -44,25 +45,19 @@ function availableHeight(): number {
     return window.innerHeight - top - 24
 }
 
-function resize(observed = false): void {
+function resize(): void {
     const body = frame.value?.contentDocument?.body
+    const view = frame.value?.contentWindow
 
-    if (!body) {
+    if (!body || !view) {
         return
     }
 
     const content = body.scrollHeight
-    const frameGrowth = height.value - measuredFrame
-    const followsFrame = observed && frameGrowth > 0 && Math.abs(content - measuredContent - frameGrowth) <= 2
+    const overflowing = content > view.innerHeight
+    const needed = overflowing ? content + 24 : Math.min(height.value, content + 24)
 
-    measuredContent = content
-    measuredFrame = height.value
-
-    if (followsFrame) {
-        return
-    }
-
-    height.value = Math.max(320, content + 24, availableHeight())
+    height.value = Math.max(320, needed, availableHeight())
 }
 
 function onWindowResize(): void {
@@ -92,7 +87,7 @@ function observe(): void {
         return
     }
 
-    observer = new ResizeObserver(() => resize(true))
+    observer = new ResizeObserver(() => resize())
     observer.observe(body)
 }
 
@@ -115,7 +110,7 @@ onBeforeUnmount(() => {
         class="w-full rounded-md border-0 bg-white"
         :class="{ 'h-full min-h-0 flex-1': fill }"
         :style="fill ? undefined : { height: `${height}px` }"
-        title="Message"
+        :title="t('message_frame_title')"
         @load="observe"
     />
 </template>

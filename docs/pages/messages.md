@@ -60,8 +60,8 @@ overlay teleported to `<body>`, `z-40`), so it does not depend on a dialog compo
 archive, delete, flag, move and address book actions stay available in it. Esc (also inside the message) and the Close
 button close it, and focus returns to the button. While it is open, every other element directly under `<body>` is
 `inert`, so keyboard focus and assistive technology stay inside the dialog; elements added later, such as the host's
-confirm dialog, are not affected. Flag, unflag and mark unread keep the dialog open (`preserveState`); archive, delete
-and move go to the folder. The host's confirm dialog, which the delete action asks through
+confirm dialog, are not affected. Flag and unflag keep the dialog open (`preserveState`); mark unread, archive,
+delete and move go to the folder. The host's confirm dialog, which the delete action asks through
 `confirm`, needs a higher z-index than `40` to show on top; the dialogs of shadcn-vue and reka-ui use `z-50`.
 
 ## Conversation
@@ -108,6 +108,19 @@ The default page offers, depending on the URLs it gets:
 - Full screen, see above.
 
 The actions are the `MessageActions` component, used both in the toolbar and in the full-screen dialog.
+
+### Extra actions of the host
+
+The page has an `actions` slot, rendered after the package actions in the toolbar and again in the full-screen
+dialog, so host actions stay available there too. A host wraps the page and fills the slot:
+
+```vue
+<MailboxShow v-bind="props">
+    <template #actions>
+        <Link :href="todoUrl" class="...">Todo from mail</Link>
+    </template>
+</MailboxShow>
+```
 
 ## Add the sender to the address book
 

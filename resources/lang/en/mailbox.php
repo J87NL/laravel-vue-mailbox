@@ -6,6 +6,7 @@ return [
     'close' => 'Close',
     'conversation' => 'Conversation',
     'has_attachments' => 'Has attachments',
+    'message_frame_title' => 'Message',
     'no_mailbox_hint' => 'Ask an administrator to give you access to a mailbox.',
     'no_mailbox_title' => 'No mailbox has been set up for you yet',
     'open_fullscreen' => 'Full screen',

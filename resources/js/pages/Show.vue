@@ -113,6 +113,7 @@ function addresses(list: MailAddress[] | null): string {
                     :folders="folders"
                     :message="message"
                 />
+                <slot name="actions" />
                 <button type="button" :class="ui.button" @click="openFullscreen">{{ t('open_fullscreen') }}</button>
             </div>
 
@@ -188,6 +189,7 @@ function addresses(list: MailAddress[] | null): string {
                             :folders="folders"
                             :message="message"
                         />
+                        <slot name="actions" />
                     </div>
                     <MessageFrame :html="html" :image-origin="imageOrigin" :remote-images="remoteImages" fill @escape="closeFullscreen" />
                 </div>

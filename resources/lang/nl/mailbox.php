@@ -6,6 +6,7 @@ return [
     'close' => 'Sluiten',
     'conversation' => 'Gesprek',
     'has_attachments' => 'Heeft bijlagen',
+    'message_frame_title' => 'Bericht',
     'no_mailbox_hint' => 'Vraag een beheerder om je toegang te geven tot een mailbox.',
     'no_mailbox_title' => 'Er is nog geen mailbox voor je ingesteld',
     'open_fullscreen' => 'Volledig scherm',
