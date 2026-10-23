@@ -190,6 +190,17 @@ it('puts the mailbox signature above the quote', function (string $mode): void {
     'forward',
 ]);
 
+it('sanitises a stored signature again when it fills the body', function (): void {
+    $mailbox = mailbox([
+        'signature' => '<p onclick="steal()">Regards, <strong>Team</strong></p><script>alert(1)</script><img src="https://cdn.example.org/logo.png">',
+    ]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->get(route('mailbox.compose.create', $mailbox))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('form.defaults.body', '<p></p><div class="mailbox-signature"><p>Regards, <strong>Team</strong></p><img src="https://cdn.example.org/logo.png" /></div>'));
+});
+
 it('shares the mailbox translations with every page', function (): void {
     $mailbox = mailbox();
 
