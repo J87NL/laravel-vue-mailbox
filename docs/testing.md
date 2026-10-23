@@ -17,7 +17,8 @@ beforeEach(function (): void {
 });
 ```
 
-How the fake works is documented in the core
+Fake the disk of the core raw message cache (`Storage::fake('local')`) so tests that open a message do not write to
+`storage/app`. How the fake works is documented in the core
 [testing](https://github.com/J87NL/laravel-mailbox/blob/main/docs/testing.md) docs.
 
 The page props are plain Inertia props, so you can check them with Inertia's testing helpers:

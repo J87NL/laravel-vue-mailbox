@@ -11,6 +11,9 @@ route, so they show in the message view and in the editor of a reply or forward.
   middleware. A missing, changed or expired signature answers `403`.
 - Only `image/gif`, `image/jpeg`, `image/png`, `image/svg+xml` and `image/webp` are served. Other types, unknown
   content ids and messages that no longer exist on the server answer `404`.
+- The image comes from the raw message the core cached when the message was opened (core `cache.raw_hours`, default
+  24 hours), so a message with many images costs one IMAP fetch instead of one per image. The signature check above runs
+  first, also for a cached message.
 - The response is `Content-Disposition: inline`, `Cache-Control: private` with a max age of one hour, and
   `X-Content-Type-Options: nosniff`.
 - An SVG image also gets `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox`, so scripts

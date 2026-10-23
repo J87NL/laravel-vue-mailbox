@@ -66,7 +66,7 @@ addresses are used as they are, without removing duplicates.
 - **Body**: a `<div class="mailbox-quote">` with a "Forwarded message" header block (From, Date, Subject, To and Cc;
   empty lines are left out) and the original HTML.
 - **Attachments**: the original attachments that are not inline images, each with a download link and removable.
-  When the attachment metadata of the source was pruned, it is fetched from the server again first.
+  When the attachment metadata of the source was pruned, it is fetched again first (from the core raw cache, or from the server).
 
 Dates in the quote use the format `d-m-Y H:i` in the
 [display timezone](https://github.com/J87NL/laravel-mailbox/blob/main/docs/configuration.md#display-timezone) of the

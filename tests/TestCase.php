@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Inertia\ServiceProvider as InertiaServiceProvider;
 use J87NL\Mailbox\MailboxServiceProvider;
 use J87NL\Mailbox\Testing\FakeConnector;
@@ -30,6 +31,7 @@ abstract class TestCase extends Orchestra
         parent::setUp();
 
         Http::preventStrayRequests();
+        Storage::fake('local');
 
         $this->connector = FakeConnector::install();
     }

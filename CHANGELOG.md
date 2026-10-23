@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2 - 2026-10-23
+
+- Requires `j87nl/laravel-mailbox` ^0.3.4.
+- Opening a message marks it read with the core's `MarkMessages::readInBackground()`: the row, the unread count and the audit trail change right away, the `\Seen` flag is set on the server after the response. Opening no longer waits for that IMAP round trip.
+- Inline images and attachment downloads are served from the raw message the core caches on the first fetch, so a message with many inline images costs one IMAP fetch instead of one per image. The routes keep their signature and access checks.
+
 ## 0.5.1 - 2026-10-23
 
 - `mailbox.index` no longer answers `404` when the user can open no active mailbox. A user with `manageAnyMailbox` is redirected to `mailbox.settings.index`; anyone else gets the new empty state page `vue-mailbox.pages.empty` (default `mailbox/Empty`, props `title` and `hint`): "No mailbox has been set up for you yet", ask an administrator.

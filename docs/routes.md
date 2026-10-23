@@ -55,6 +55,11 @@ mailbox, so a message of another mailbox answers `404`.
 | DELETE | `{mailbox}/contacts/{contact}` | `mailbox.contacts.destroy` | `workInMailbox` |
 | POST | `{mailbox}/messages/{message}/contact` | `mailbox.messages.contact` | `workInMailbox` |
 
+`mailbox.messages.show` fetches the body on first open and marks the message read for a user with `workInMailbox`. The
+row and the unread count change right away; the `\Seen` flag is set on the server after the response (core
+`MarkMessages::readInBackground()`), so opening does not wait for IMAP. The attachment download and the inline route
+read the raw message the core cached on that first fetch (core `cache.raw_hours`), after the same checks as always.
+
 `mailbox.addresses` takes the search text as the `q` query parameter, see
 [Address suggestions](pages/compose.md#address-suggestions).
 

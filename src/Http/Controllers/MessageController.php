@@ -41,7 +41,7 @@ class MessageController extends Controller
         $canWork = Gate::allows('workInMailbox', $mailbox);
 
         if ($canWork && ! $message->is_seen) {
-            $markMessages->read(collect([$message]), $request->user());
+            $markMessages->readInBackground(collect([$message]), $request->user());
             $message->is_seen = true;
         }
 
