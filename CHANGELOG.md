@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+- **Breaking:** the Vue pages stay in the package by default (like `j87nl/laravel-vue-cms`). The default page names in `vue-mailbox.pages.*` start with `mailbox/` (`mailbox/Index`, `mailbox/Show`, `mailbox/Compose`, `mailbox/Contacts/Index`, `mailbox/Contacts/Edit`, `mailbox/Settings/Index`, `mailbox/Settings/Edit`), and the files moved inside the package from `resources/js/pages/Mailbox/*` to `resources/js/pages/*`. The host's Inertia resolver loads names that start with `mailbox/` from `@mailbox/pages` (also in `ssr.ts`). The components, `types.ts`, `translations.ts` and `ui.ts` did not move.
+- **Upgrade:** compatibility runs only through the config. An app whose published `config/vue-mailbox.php` names its own copies for every key (such as Trefpunt) needs no app change. These apps break at runtime ("page not found") until they act: an app with copies in `resources/js/pages/Mailbox` but no published config or no `pages` in it, and an app that loaded `Mailbox/*` from the vendor directory as the 0.4 docs suggested. They point the names at their copies, or switch to `mailbox/` and add the resolver branch. See `docs/upgrading.md`.
+- A `pages` array in the published config is merged with the defaults per key, so a key left out keeps its default instead of rendering `null` (which threw).
+- `mailbox:install --pages` still copies the pages to `resources/js/pages/Mailbox` with the same file names as before, and now also changes every default page name in `config/vue-mailbox.php` (single or double quoted) to its copy (`mailbox/Index` becomes `Mailbox/Index`). Names the app changed itself are left alone.
+- `mailbox:install` warns when `resources/js/pages/Mailbox/Index.vue` exists while the `index` page name starts with `mailbox/`, so unused copies do not go unnoticed, and when a `Mailbox/...` page name has no file in `resources/js/pages`, so an app that loaded the pages from the vendor directory hears about it. Without `--pages` it reminds you to add the resolver branch.
+- The docs describe the resolver (typed as `import.meta.glob<{ default: DefineComponent }>`), apps on the `@inertiajs/vite` plugin without a resolver of their own, SSR, the Tailwind source `vendor/j87nl/laravel-vue-mailbox/resources/js` (the whole folder, `ui.ts` included) and an upgrade page.
+
 ## 0.4.0 - 2026-10-21
 
 - **Breaking:** `mailbox.settings.index` needs the new ability `manageAnyMailbox` (`manageMailboxes`, or `manageMailbox` on at least one mailbox). It is only defined when the host has not defined it, and follows the host's own `manageMailboxes` and `manageMailbox`. Gate the host's settings menu link on it. `MailboxesTable::authorize()` checks the same ability. Upgrade: users who manage no mailbox now get a 403 instead of an empty list, so show the host's settings link only with `@can('manageAnyMailbox')`. A host that already shows it only for `manageMailboxes` (such as Trefpunt) needs no change.

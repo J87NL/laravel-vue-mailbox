@@ -1,7 +1,7 @@
 # Message view
 
 Route `mailbox.messages.show` (`GET {mailbox}/messages/{message}`) renders the `vue-mailbox.pages.show` page, default
-`Mailbox/Show`.
+`mailbox/Show`.
 
 ## Loading the body
 

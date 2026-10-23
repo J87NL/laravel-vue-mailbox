@@ -42,7 +42,7 @@ it('lets writers manage the address book and readers only look', function (): vo
         ->get(route('mailbox.contacts.index', $mailbox))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->component('Mailbox/Contacts/Index')
+            ->component('mailbox/Contacts/Index')
             ->where('createUrl', null)
             ->where('table.rowActions', [])
             ->where('table.bulkActions', []));

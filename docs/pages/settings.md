@@ -5,7 +5,7 @@ The settings pages list the mailboxes, create and edit them, and manage who has 
 ## Mailbox list
 
 Route `mailbox.settings.index` (`GET settings`) renders the `vue-mailbox.pages.settings_index` page, default
-`Mailbox/Settings/Index`. It needs `manageAnyMailbox`: `manageMailboxes`, or `manageMailbox` on at least one mailbox.
+`mailbox/Settings/Index`. It needs `manageAnyMailbox`: `manageMailboxes`, or `manageMailbox` on at least one mailbox.
 Other users get a 403, so gate your menu link on the same ability. The table only lists the mailboxes the user can
 manage (`manageMailbox`).
 
@@ -17,7 +17,7 @@ manage (`manageMailbox`).
 ## Create and edit
 
 Routes `mailbox.settings.create` (`manageMailboxes`) and `mailbox.settings.edit` (`manageMailbox`) render the
-`vue-mailbox.pages.settings_edit` page, default `Mailbox/Settings/Edit`.
+`vue-mailbox.pages.settings_edit` page, default `mailbox/Settings/Edit`.
 
 | Prop | Type | Description |
 |---|---|---|

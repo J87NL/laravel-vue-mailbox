@@ -11,13 +11,13 @@ return [
     ],
 
     'pages' => [
-        'compose' => 'Mailbox/Compose',
-        'contacts_edit' => 'Mailbox/Contacts/Edit',
-        'contacts_index' => 'Mailbox/Contacts/Index',
-        'index' => 'Mailbox/Index',
-        'settings_edit' => 'Mailbox/Settings/Edit',
-        'settings_index' => 'Mailbox/Settings/Index',
-        'show' => 'Mailbox/Show',
+        'compose' => 'mailbox/Compose',
+        'contacts_edit' => 'mailbox/Contacts/Edit',
+        'contacts_index' => 'mailbox/Contacts/Index',
+        'index' => 'mailbox/Index',
+        'settings_edit' => 'mailbox/Settings/Edit',
+        'settings_index' => 'mailbox/Settings/Index',
+        'show' => 'mailbox/Show',
     ],
 
     'per_page' => 50,

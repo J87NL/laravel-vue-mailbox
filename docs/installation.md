@@ -35,7 +35,8 @@ php artisan migrate
 
 `mailbox:install` publishes the core config (`config/mailbox.php`), the core migrations and this package's config
 (`config/vue-mailbox.php`). It adds the `@mailbox` alias to your Vite config and the `@mailbox/*` path to
-`tsconfig.json`. Running it again changes nothing that is already there. See [Artisan commands](artisan-commands.md).
+`tsconfig.json`; both are needed for the package pages and for the components and types they import. Running it
+again changes nothing that is already there. See [Artisan commands](artisan-commands.md).
 
 If the installer cannot patch your Vite config, add the alias yourself:
 
@@ -63,42 +64,67 @@ And the path in `tsconfig.json`:
 }
 ```
 
-## 3. Make the pages resolvable
+## 3. Load the pages from the package
 
-The controllers render Inertia pages by name, such as `Mailbox/Index` (see [Configuration](configuration.md#pages)).
-Your Inertia page resolver has to find them. The package does not register a resolver of its own.
-
-The simplest way is to publish the default pages into your app:
-
-```bash
-php artisan mailbox:install --pages
-```
-
-This copies them to `resources/js/pages/Mailbox`. See [Customizing pages](frontend/customizing-pages.md).
-
-Alternatively, leave the pages in the package and let your resolver also look there. For example, in
-`resources/js/app.ts`:
+The pages stay in the package. The controllers render them by name, and every default name starts with `mailbox/`:
+`mailbox/Index`, `mailbox/Show`, `mailbox/Compose`, `mailbox/Contacts/Index`, `mailbox/Contacts/Edit`,
+`mailbox/Settings/Index` and `mailbox/Settings/Edit` (see [Configuration](configuration.md#pages)). The rest of the name
+is the path below the package's `resources/js/pages`, so `mailbox/Contacts/Index` is
+`resources/js/pages/Contacts/Index.vue`. The package does not register a resolver of its own: let your app's Inertia
+resolver load names that start with `mailbox/` from `@mailbox/pages`, in `resources/js/app.ts`:
 
 ```ts
 import { createInertiaApp } from '@inertiajs/vue3';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 
+type PageModule = { default: DefineComponent };
+type PageLoader = () => Promise<PageModule>;
+
+const appPages = import.meta.glob<PageModule>('./pages/**/*.vue');
+const mailboxPages = import.meta.glob<PageModule>('@mailbox/pages/**/*.vue');
+
+function findPage(pages: Record<string, PageLoader>, name: string): PageLoader | undefined {
+    const suffix = `/pages/${name}.vue`;
+    const key = Object.keys(pages).find((path) => path.endsWith(suffix));
+
+    return key === undefined ? undefined : pages[key];
+}
+
+function pageFor(name: string): PageLoader | undefined {
+    if (name.startsWith('mailbox/')) {
+        return findPage(mailboxPages, name.slice('mailbox/'.length));
+    }
+
+    return appPages[`./pages/${name}.vue`];
+}
+
 createInertiaApp({
-    resolve: (name) => resolvePageComponent(
-        name.startsWith('Mailbox/')
-            ? `../../vendor/j87nl/laravel-vue-mailbox/resources/js/pages/${name}.vue`
-            : `./pages/${name}.vue`,
-        {
-            ...import.meta.glob<DefineComponent>('./pages/**/*.vue'),
-            ...import.meta.glob<DefineComponent>('../../vendor/j87nl/laravel-vue-mailbox/resources/js/pages/**/*.vue'),
-        },
-    ),
+    resolve: async (name) => {
+        const page = pageFor(name);
+
+        if (page === undefined) {
+            throw new Error(`Page not found: ${name}`);
+        }
+
+        return (await page()).default;
+    },
     // ...
 });
 ```
 
-Adapt this to the resolver your app already has. With this setup, package updates change the pages too.
+This is the same pattern as `@cms/pages` of `j87nl/laravel-vue-cms`; an app that already has a `findPage` helper only
+adds the `mailbox/` branch. Package updates then change the pages too. The glob needs the `@mailbox` Vite alias from
+step 2.
+
+- **No `resolve` of your own yet?** Apps on the `@inertiajs/vite` plugin (such as the Laravel 13 starter kits) often
+  call `createInertiaApp()` without `resolve` or `pages`; the plugin then adds a resolver that only knows
+  `./pages`. Add the `resolve` above: the plugin leaves a `createInertiaApp()` that has one alone.
+- **SSR:** `resources/js/ssr.ts` resolves pages on its own. Give it the same resolver, for example by moving the globs
+  and `pageFor()` to `resources/js/lib/pages.ts` and importing that in both `app.ts` and `ssr.ts`.
+
+The names are lowercase `mailbox/`, so they never collide with an app page in `resources/js/pages/Mailbox`. To replace
+one page, point its key in `config/vue-mailbox.php` at a page of your own; to copy all of them, see
+[Customizing pages](frontend/customizing-pages.md).
 
 ## 4. Install the compose editor
 
@@ -131,6 +157,9 @@ Tailwind 4 in `resources/css/app.css`:
 ```css
 @source '../../vendor/j87nl/laravel-vue-mailbox/resources/js';
 ```
+
+Scan the whole `resources/js` folder, not only the `.vue` files: `ui.ts` holds the shared button classes. Without it,
+the pages load from the package but the classes only they use are missing from your CSS.
 
 ## 6. Build assets
 

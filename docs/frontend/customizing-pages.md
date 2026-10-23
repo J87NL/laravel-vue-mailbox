@@ -1,49 +1,59 @@
 # Customizing pages
 
-The package ships seven Inertia pages in `resources/js/pages/Mailbox`:
+The package ships seven Inertia pages in its `resources/js/pages`. By default the app loads them from the package (see
+[Installation](../installation.md#3-load-the-pages-from-the-package)), so package updates change them too.
 
-| Page | Docs |
-|---|---|
-| `Mailbox/Index` | [Folders and message list](../pages/folders.md) |
-| `Mailbox/Show` | [Message view](../pages/messages.md) |
-| `Mailbox/Compose` | [Compose, reply and forward](../pages/compose.md) |
-| `Mailbox/Contacts/Index` | [Address book](../pages/contacts.md) |
-| `Mailbox/Contacts/Edit` | [Address book](../pages/contacts.md) |
-| `Mailbox/Settings/Index` | [Mailbox settings](../pages/settings.md) |
-| `Mailbox/Settings/Edit` | [Mailbox settings](../pages/settings.md) |
+| Page name (default) | File in the package | Docs |
+|---|---|---|
+| `mailbox/Index` | `pages/Index.vue` | [Folders and message list](../pages/folders.md) |
+| `mailbox/Show` | `pages/Show.vue` | [Message view](../pages/messages.md) |
+| `mailbox/Compose` | `pages/Compose.vue` | [Compose, reply and forward](../pages/compose.md) |
+| `mailbox/Contacts/Index` | `pages/Contacts/Index.vue` | [Address book](../pages/contacts.md) |
+| `mailbox/Contacts/Edit` | `pages/Contacts/Edit.vue` | [Address book](../pages/contacts.md) |
+| `mailbox/Settings/Index` | `pages/Settings/Index.vue` | [Mailbox settings](../pages/settings.md) |
+| `mailbox/Settings/Edit` | `pages/Settings/Edit.vue` | [Mailbox settings](../pages/settings.md) |
 
 The pages set no Inertia layout and do not show flash messages. The controllers flash `success` and `error` messages
 to the session; show them in your own layout if you want them.
 
-## Publish the default pages
+There are three ways to change a page. Pick the smallest one that does the job.
 
-```bash
-php artisan mailbox:install --pages
-```
+## Replace one page
 
-Or with only the publish step:
-
-```bash
-php artisan vendor:publish --tag="vue-mailbox-pages"
-```
-
-Both copy the pages to `resources/js/pages/Mailbox`. Edit them there. The published pages keep importing the shared
-components and helpers from `@mailbox/...`, so the `@mailbox` alias stays required.
-
-## Use your own page names
-
-Each controller renders the page named in `config('vue-mailbox.pages')`. Point a key at another component to replace a
-single page:
+Each controller renders the page named in `config('vue-mailbox.pages')`. Point a key at a page of your own; the other keys
+keep the package pages:
 
 ```php
 // config/vue-mailbox.php
 'pages' => [
     'show' => 'Inbox/Message',
-    // ...
 ],
 ```
 
-Your page receives the same props as the default page. They are listed on each page's docs.
+A key you leave out keeps its `mailbox/...` default, so `'pages' => ['show' => 'Inbox/Message']` is enough.
+`Inbox/Message` is then `resources/js/pages/Inbox/Message.vue` in your app. Your page receives the same props as the
+default page; they are listed on each page's docs. Start from a copy of the package file if you like.
+
+## Copy all pages
+
+```bash
+php artisan mailbox:install --pages
+```
+
+This copies the pages to `resources/js/pages/Mailbox` (`Mailbox/Index.vue`, `Mailbox/Contacts/Index.vue`, ...) and
+changes every default name in `config/vue-mailbox.php` to its copy, so `mailbox/Index` becomes `Mailbox/Index`. Names
+you changed yourself are left alone, and copies that already exist are not overwritten. Your app's resolver finds the
+copies like any other app page.
+
+With only the publish step, the config keeps pointing at the package pages until you change the names yourself:
+
+```bash
+php artisan vendor:publish --tag="vue-mailbox-pages"
+```
+
+Copied pages no longer follow package updates. Compare them with the package pages after an update, see
+[Upgrading](../upgrading.md). The copies keep importing the shared components and helpers from `@mailbox/...`, so the
+`@mailbox` alias stays required.
 
 ## Build from the shared parts
 

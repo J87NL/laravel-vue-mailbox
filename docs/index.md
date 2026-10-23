@@ -36,9 +36,9 @@ the [laravel-mailbox docs](https://github.com/J87NL/laravel-mailbox/blob/main/do
    image route is gated with an ability the core package defines (`accessAnyMailbox`, `accessMailbox`,
    `workInMailbox`, `manageMailbox`, `manageMailboxes`), or with `manageAnyMailbox` for the settings list, see
    [core access control](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md).
-3. The controllers render Inertia pages (`Mailbox/Index`, `Mailbox/Show`, `Mailbox/Compose`, ...). The package
-   registers no page resolver, so publish the default pages or let your own resolver find them; you can also point
-   the config at your own pages.
+3. The controllers render Inertia pages (`mailbox/Index`, `mailbox/Show`, `mailbox/Compose`, ...). The pages stay in
+   the package: your app's resolver loads names that start with `mailbox/` from `@mailbox/pages`. Point a name in the
+   config at your own page to replace one page, or copy all of them with `mailbox:install --pages`.
 
 ## Quick example
 
@@ -53,7 +53,8 @@ Link to the mailbox from your menu, for users who can open at least one mailbox:
 `mailbox.index` redirects to the first mailbox the user can open. Mailbox administrators and managers reach the
 settings through `route('mailbox.settings.index')`; show that link with `@can('manageAnyMailbox')`.
 
-To change a page, publish the defaults and edit them in your app:
+To change one page, point its name in `config/vue-mailbox.php` at a page of your own. To copy all pages into your app
+and edit them there:
 
 ```bash
 php artisan mailbox:install --pages
@@ -65,4 +66,5 @@ php artisan mailbox:install --pages
 - [Configuration](configuration.md) - route prefix, page names, polling and signed URLs
 - [Routes and authorization](routes.md) - every route and the ability it needs
 - [Customizing pages](frontend/customizing-pages.md) - replace or edit the Inertia pages
+- [Upgrading](upgrading.md) - what to change when you update the package
 - [laravel-mailbox docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/index.md) - the core package

@@ -31,7 +31,7 @@ it('only queues a folder sync when the folder was not synced in the last minute'
         ->get(route('mailbox.folders.show', [$mailbox, $folder]))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->component('Mailbox/Index')
+            ->component('mailbox/Index')
             ->where('composeUrl', null)
             ->where('settingsUrl', null));
 
@@ -60,7 +60,7 @@ it('blocks remote images unless the user asks for them', function (): void {
     $this->actingAs($user)
         ->get(route('mailbox.messages.show', [$mailbox, $message]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->component('Mailbox/Show')
+            ->component('mailbox/Show')
             ->where('remoteImages', false)
             ->where('hasRemoteImages', true)
             ->where('html', fn (string $html): bool => ! str_contains($html, 'tracker.test'))
@@ -106,7 +106,7 @@ it('prefills a reply with recipient, subject and quote', function (): void {
             'reply' => $message->id,
         ]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->component('Mailbox/Compose')
+            ->component('mailbox/Compose')
             ->where('mode', 'reply')
             ->where('form.defaults.to', ['sender@example.org'])
             ->where('form.defaults.subject', 'Re: Question')
@@ -366,7 +366,7 @@ it('shows a synchronising state when the folder list cannot be fetched yet', fun
         ->get(route('mailbox.folders.show', $mailbox))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
-            ->component('Mailbox/Index')
+            ->component('mailbox/Index')
             ->where('folder', null)
             ->where('table', null)
             ->where('syncing', fn (string $message): bool => $message !== ''));

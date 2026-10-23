@@ -35,18 +35,23 @@ The inline image route always uses `['web', 'signed']`, whatever `middleware` ho
 
 ```php
 'pages' => [
-    'compose' => 'Mailbox/Compose',
-    'contacts_edit' => 'Mailbox/Contacts/Edit',
-    'contacts_index' => 'Mailbox/Contacts/Index',
-    'index' => 'Mailbox/Index',
-    'settings_edit' => 'Mailbox/Settings/Edit',
-    'settings_index' => 'Mailbox/Settings/Index',
-    'show' => 'Mailbox/Show',
+    'compose' => 'mailbox/Compose',
+    'contacts_edit' => 'mailbox/Contacts/Edit',
+    'contacts_index' => 'mailbox/Contacts/Index',
+    'index' => 'mailbox/Index',
+    'settings_edit' => 'mailbox/Settings/Edit',
+    'settings_index' => 'mailbox/Settings/Index',
+    'show' => 'mailbox/Show',
 ],
 ```
 
-The Inertia component each controller renders. Point a key at your own page to replace it. Your page receives the
-props listed on the page's docs. See [Customizing pages](frontend/customizing-pages.md).
+The Inertia component each controller renders. The defaults start with `mailbox/` and name the pages inside the package
+(`mailbox/Index` is `resources/js/pages/Index.vue` of the package); your page resolver loads them from `@mailbox/pages`,
+see [Installation](installation.md#3-load-the-pages-from-the-package). Point a key at your own page to replace that one
+page; a key you leave out keeps its default. Your page receives the props listed on the page's docs. See [Customizing pages](frontend/customizing-pages.md).
+
+`mailbox:install --pages` copies the pages to `resources/js/pages/Mailbox` and changes every default name in this file
+to the copy (`mailbox/Index` becomes `Mailbox/Index`). A name you changed yourself is left alone.
 
 | Key | Rendered by | Docs |
 |---|---|---|

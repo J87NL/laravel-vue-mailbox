@@ -15,9 +15,41 @@ php artisan mailbox:install
 php artisan migrate
 ```
 
-`mailbox:install` publishes the core and Vue config and the migrations, adds the `@mailbox` Vite alias (`./vendor/j87nl/laravel-vue-mailbox/resources/js`) and the `@mailbox/*` tsconfig path, and with `--pages` copies the default pages to `resources/js/pages/Mailbox` for customising. Running it again changes nothing that is already there.
+`mailbox:install` publishes the core and Vue config and the migrations, and adds the `@mailbox` Vite alias (`./vendor/j87nl/laravel-vue-mailbox/resources/js`) and the `@mailbox/*` tsconfig path. Running it again changes nothing that is already there.
 
-The controllers render the pages by name (`Mailbox/Index`, `Mailbox/Show`, …) and the package registers no Inertia page resolver of its own. Your app's resolver must find every `Mailbox/*` page: either publish the pages with `--pages` so they live in `resources/js/pages/Mailbox`, or let the resolver also look in `vendor/j87nl/laravel-vue-mailbox/resources/js/pages` for names that start with `Mailbox/`. See [Installation](docs/installation.md).
+### Pages
+
+The Vue pages stay in the package, like those of `j87nl/laravel-vue-cms`. The controllers render them by name, and every default name starts with `mailbox/` (`mailbox/Index`, `mailbox/Show`, `mailbox/Compose`, `mailbox/Contacts/Index`, `mailbox/Contacts/Edit`, `mailbox/Settings/Index`, `mailbox/Settings/Edit`); the rest of the name is the path below the package's `resources/js/pages`. The package registers no Inertia resolver, so let your app's resolver load those names from `@mailbox/pages`:
+
+```ts
+// resources/js/app.ts
+type PageModule = { default: DefineComponent };
+
+const appPages = import.meta.glob<PageModule>('./pages/**/*.vue');
+const mailboxPages = import.meta.glob<PageModule>('@mailbox/pages/**/*.vue');
+
+function findPage(pages: Record<string, () => Promise<PageModule>>, name: string) {
+    const key = Object.keys(pages).find((path) => path.endsWith(`/pages/${name}.vue`));
+
+    return key === undefined ? undefined : pages[key];
+}
+
+resolve: async (name) => {
+    const page = name.startsWith('mailbox/')
+        ? findPage(mailboxPages, name.slice('mailbox/'.length))
+        : appPages[`./pages/${name}.vue`];
+
+    if (page === undefined) {
+        throw new Error(`Page not found: ${name}`);
+    }
+
+    return (await page()).default;
+},
+```
+
+An app on the `@inertiajs/vite` plugin without a `resolve` of its own adds this one (the plugin then leaves it alone), and an app with SSR uses the same resolver in `resources/js/ssr.ts`.
+
+To replace one page, point its key in `config/vue-mailbox.php` (`vue-mailbox.pages.*`) at a page of your own. To copy every page into your app instead, run `php artisan mailbox:install --pages`: it copies them to `resources/js/pages/Mailbox` and points the default names in `config/vue-mailbox.php` at the copies (`Mailbox/Index`, ...). See [Installation](docs/installation.md), [Customizing pages](docs/frontend/customizing-pages.md) and, when you update from 0.4, [Upgrading](docs/upgrading.md).
 
 The compose editor defaults to HugeRTE:
 
@@ -49,12 +81,12 @@ The default pages read their texts from the Inertia prop `vue_mailbox_translatio
 
 | Page (`vue-mailbox.pages.*`) | Props |
 |---|---|
-| `Mailbox/Index` | `composeUrl`, `contactsUrl`, `folder` (`id`, `label`, `name`, `role`) or null, `folderForm`, `folders`, `mailbox`, `mailboxes`, `settingsUrl`, `syncing`, `table` |
-| `Mailbox/Show` | `actionsUrl`, `attachments`, `backUrl`, `composeUrl`, `contactUrl`, `folders`, `hasRemoteImages`, `history`, `html`, `imageOrigin`, `mailbox`, `message`, `remoteImages` |
-| `Mailbox/Compose` | `backUrl`, `folders`, `form`, `mailbox`, `mode` |
-| `Mailbox/Contacts/Index` | `backUrl`, `createUrl`, `folders`, `mailbox`, `table` |
-| `Mailbox/Contacts/Edit` | `backUrl`, `destroyUrl`, `form`, `mailbox`, `title` |
-| `Mailbox/Settings/Index`, `Mailbox/Settings/Edit` | unchanged |
+| `mailbox/Index` | `composeUrl`, `contactsUrl`, `folder` (`id`, `label`, `name`, `role`) or null, `folderForm`, `folders`, `mailbox`, `mailboxes`, `settingsUrl`, `syncing`, `table` |
+| `mailbox/Show` | `actionsUrl`, `attachments`, `backUrl`, `composeUrl`, `contactUrl`, `folders`, `hasRemoteImages`, `history`, `html`, `imageOrigin`, `mailbox`, `message`, `remoteImages` |
+| `mailbox/Compose` | `backUrl`, `folders`, `form`, `mailbox`, `mode` |
+| `mailbox/Contacts/Index` | `backUrl`, `createUrl`, `folders`, `mailbox`, `table` |
+| `mailbox/Contacts/Edit` | `backUrl`, `destroyUrl`, `form`, `mailbox`, `title` |
+| `mailbox/Settings/Index`, `mailbox/Settings/Edit` | unchanged |
 
 Reply, reply all and forward put the original HTML in the compose body (Gmail-style header or "On … wrote:" blockquote). Its inline images use signed inline URLs with `data-mailbox-cid`; keep that attribute in your editor (the default HugeRTE options do). Inline SVG images are served with a locked-down CSP. After sending a reply or forward the app returns to the folder of the original message.
 

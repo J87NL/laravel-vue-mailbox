@@ -1,5 +1,6 @@
 - [Introduction](index.md)
 - [Installation](installation.md)
+- [Upgrading](upgrading.md)
 - [Configuration](configuration.md)
 - [Routes and authorization](routes.md)
 - Pages

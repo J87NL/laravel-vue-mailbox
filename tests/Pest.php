@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\Mailbox;
@@ -95,4 +96,39 @@ function member(Mailbox $mailbox, AccessLevel $level): User
         ]);
 
     return $user;
+}
+
+/**
+ * @return array<string, string>
+ */
+function renderedPages(): array
+{
+    $mailbox = mailbox();
+    $message = storedMessage(folder($mailbox), 1);
+    $user = member($mailbox, AccessLevel::Manage);
+
+    $routes = [
+        'compose' => route('mailbox.compose.create', $mailbox),
+        'contacts_edit' => route('mailbox.contacts.create', $mailbox),
+        'contacts_index' => route('mailbox.contacts.index', $mailbox),
+        'index' => route('mailbox.folders.show', $mailbox),
+        'settings_edit' => route('mailbox.settings.edit', $mailbox),
+        'settings_index' => route('mailbox.settings.index'),
+        'show' => route('mailbox.messages.show', [$mailbox, $message]),
+    ];
+
+    $components = [];
+
+    foreach ($routes as $key => $url) {
+        test()->actingAs($user)
+            ->get($url)
+            ->assertOk()
+            ->assertInertia(function (AssertableInertia $page) use ($key, &$components): AssertableInertia {
+                $components[$key] = $page->toArray()['component'];
+
+                return $page;
+            });
+    }
+
+    return $components;
 }

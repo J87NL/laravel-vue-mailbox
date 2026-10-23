@@ -1,7 +1,7 @@
 # Compose, reply and forward
 
 Route `mailbox.compose.create` (`GET {mailbox}/compose`) renders the `vue-mailbox.pages.compose` page, default
-`Mailbox/Compose`. The form posts to `mailbox.compose.store`. Both need `workInMailbox`.
+`mailbox/Compose`. The form posts to `mailbox.compose.store`. Both need `workInMailbox`.
 
 ## Modes
 
