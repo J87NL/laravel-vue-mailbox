@@ -3,6 +3,22 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.5 to the next release: conversations, navigation and full screen
+
+- Requires `j87nl/laravel-mailbox` ^0.4, which adds the migration `add_conversations_to_mailbox_tables`. Publish and
+  run it (`php artisan vendor:publish --tag=mailbox-migrations` adds only the new one, then `php artisan migrate`) and
+  thread the stored messages once with `php artisan mailbox:threads`. The message table selects `thread_key`, so the
+  folder page fails until the migration ran.
+- The folder page no longer lists every mailbox above the folders. It shows a compact switcher instead, or nothing
+  with `vue-mailbox.mailbox_switcher` set to `false`. List the mailboxes in your own menu with
+  [`MailboxNavigation`](navigation.md).
+- The attachment column is gone; a paperclip follows the subject. A saved column choice for `has_attachments` is
+  ignored.
+- The shared translations now also hold the package's own `vue-mailbox::mailbox` keys. An app with copied pages needs
+  no change.
+- An app with copied pages keeps its own message view and folder page; the new props (`refreshUrl`, `conversation`)
+  are extra and can be ignored.
+
 ## From 0.5.0 to 0.5.1: empty state and confirmations
 
 - `mailbox.index` no longer answers `404` when the user can open no active mailbox. Users with `manageAnyMailbox` are

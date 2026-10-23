@@ -27,6 +27,18 @@ and `table` set to `null` and a `syncing` message, instead of answering `404`.
 When the opened folder was not synced in the last 60 seconds, the controller queues a `SyncFolderJob` for it. The page
 renders the messages already stored; the table picks up new mail on its next poll.
 
+## Refreshing
+
+The folder view refreshes itself: the message table reloads every `vue-mailbox.poll_seconds` seconds while the tab is
+visible (the TableBuilder pauses while the tab is hidden), and every reload of the page queues a folder sync when the
+folder was not synced in the last 60 seconds. The default page reloads `table` and `folders` on each poll, so the unread
+counts in the folder list follow.
+
+The Refresh button posts to `mailbox.folders.refresh` (`POST {mailbox}/folders/{folder}/refresh`, `accessMailbox`,
+at most 12 a minute per user). It queues a `SyncFolderJob` for the folder whether or not it was synced recently and
+returns to the folder. With a `sync` queue the new mail shows right away; with a queue worker it shows on the next poll.
+The core job is unique per folder for 120 seconds, so repeated clicks do not stack syncs.
+
 ## Props
 
 | Prop | Type | Description |
@@ -37,13 +49,20 @@ renders the messages already stored; the table picks up new mail on its next pol
 | `folderForm` | `FormSchema \| null` | Form to add a folder, `null` without `workInMailbox` |
 | `folders` | `MailboxFolder[]` | Selectable folders of the mailbox, see below |
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
-| `mailboxes` | `MailboxSummary[]` | Active mailboxes the user can open, sorted by name |
+| `mailboxes` | `MailboxSummary[]` | Active mailboxes the user can open, sorted by name, with the unread count of their inbox (`unseen`); empty when `vue-mailbox.mailbox_switcher` is `false` |
+| `refreshUrl` | `string \| null` | `mailbox.folders.refresh` URL of the open folder, `null` while syncing |
 | `settingsUrl` | `string \| null` | Settings URL, `null` without `manageMailbox` |
 | `syncing` | `string \| null` | Translated "syncing" notice while there is no folder yet |
 | `table` | `TableData \| null` | The message table, `null` while syncing |
 
 `folderForm`, `folders` and `mailboxes` are lazy closures. A partial reload that asks only for `table` does not compute
 them, so polling the message list does not query the folder list again.
+
+### Mailbox switcher
+
+The page shows only the folders of the open mailbox. When `mailboxes` holds more than one mailbox, the default page
+shows a compact select at the top to switch to another mailbox. A host that lists every mailbox in its own menu (see
+[Navigation](../navigation.md)) turns the switcher off with `vue-mailbox.mailbox_switcher` set to `false`.
 
 ### Folder list
 
@@ -68,8 +87,11 @@ The table is a `MessagesTable` (TableBuilder). It polls every `vue-mailbox.poll_
 `:only="['table']"` so a poll only reloads the table:
 
 ```vue
-<TableBuilder :table="table" :only="['table']" />
+<TableBuilder :table="table" :only="['table', 'folders']" />
 ```
+
+With the conversation view of the mailbox on, the table shows one row per conversation. See
+[Tables](../tables.md#conversations).
 
 Columns, bulk actions and row styling are described in [Tables](../tables.md#messagestable).
 

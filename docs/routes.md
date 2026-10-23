@@ -40,6 +40,7 @@ mailbox, so a message of another mailbox answers `404`.
 |---|---|---|---|
 | GET | `/` | `mailbox.index` | `accessAnyMailbox` |
 | GET | `{mailbox}/folders/{folder?}` | `mailbox.folders.show` | `accessMailbox` |
+| POST | `{mailbox}/folders/{folder}/refresh` | `mailbox.folders.refresh` | `accessMailbox`, `throttle:12,1` |
 | GET | `{mailbox}/messages/{message}` | `mailbox.messages.show` | `accessMailbox` |
 | GET | `{mailbox}/messages/{message}/attachments/{index}` | `mailbox.attachments.download` | `accessMailbox` |
 | GET | `{mailbox}/contacts` | `mailbox.contacts.index` | `accessMailbox` |
