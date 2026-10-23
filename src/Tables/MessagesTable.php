@@ -7,6 +7,7 @@ namespace J87NL\VueMailbox\Tables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Actions\ArchiveMessages;
 use J87NL\Mailbox\Actions\DeleteMessages;
@@ -78,8 +79,7 @@ final class MessagesTable extends AbstractTable
                 'from_name',
             ])
             ->column('from_name', __('mailbox::mailbox.from'), canBeHidden: false, highlight: true, as: fn (?string $name, MailboxMessage $message): string => $this->sender($name, $message))
-            ->column('subject', __('mailbox::mailbox.subject'), canBeHidden: false, as: fn (?string $subject, MailboxMessage $message): string => $this->subject($subject, $message))
-            ->column('has_attachments', __('mailbox::mailbox.attachments'), boolean: true, alignment: 'center')
+            ->column('subject', __('mailbox::mailbox.subject'), canBeHidden: false, as: fn (?string $subject, MailboxMessage $message): HtmlString|string => $this->subject($subject, $message))
             ->column('sent_at', __('mailbox::mailbox.received'), sortable: true, as: fn (mixed $value, MailboxMessage $message): string => $this->received($message))
             ->rowLink(fn (MailboxMessage $message): string => route(config('vue-mailbox.routes.name').'messages.show', [$this->folder->mailbox, $message]))
             ->rowClass(fn (MailboxMessage $message): string => $message->is_seen ? '' : 'font-semibold')
@@ -154,11 +154,27 @@ final class MessagesTable extends AbstractTable
         return $name ?: (string) $message->from_email;
     }
 
-    private function subject(?string $subject, MailboxMessage $message): string
+    private function subject(?string $subject, MailboxMessage $message): HtmlString|string
     {
         $flag = $message->is_flagged ? '⚑ ' : '';
         $answered = $message->is_answered ? '↩ ' : '';
+        $text = $flag.$answered.($subject ?: '—');
 
-        return $flag.$answered.($subject ?: '—');
+        if (! $message->has_attachments) {
+            return $text;
+        }
+
+        return new HtmlString(sprintf('%s %s', e($text), $this->paperclip()));
+    }
+
+    private function paperclip(): string
+    {
+        $label = e(__('vue-mailbox::mailbox.has_attachments'));
+
+        return sprintf(
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="%s" style="display:inline;vertical-align:-2px;opacity:.6"><title>%s</title><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>',
+            $label,
+            $label,
+        );
     }
 }

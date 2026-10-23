@@ -129,3 +129,25 @@ it('queries the folders of the mailbox once per page view', function (): void {
 
     expect($queries)->toBe(1);
 });
+
+it('marks messages with attachments with a paperclip in the subject instead of a column', function (): void {
+    $this->actingAs(user());
+    $folder = folder(mailbox());
+    storedMessage($folder, 1, [
+        'has_attachments' => true,
+        'subject' => 'Invoice <b>May</b>',
+    ]);
+    storedMessage($folder, 2, [
+        'has_attachments' => false,
+        'subject' => 'Plain',
+    ]);
+
+    $table = MessagesTable::build($folder)->toArray();
+    $subjects = collect($table['data'])->mapWithKeys(fn (array $row): array => [$row['uid'] => (string) $row['subject']])->all();
+
+    expect(collect($table['columns'])->pluck('key')->all())->not->toContain('has_attachments')
+        ->and($subjects[1])->toStartWith('Invoice &lt;b&gt;May&lt;/b&gt;')
+        ->and($subjects[1])->toContain('<svg')
+        ->and($subjects[1])->toContain('aria-label="Has attachments"')
+        ->and($subjects[2])->toBe('Plain');
+});
