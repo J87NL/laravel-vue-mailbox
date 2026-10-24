@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased]
+## 0.6.0 - 2026-10-24
 
-Release this as **0.6.0**: it needs the core migration of `j87nl/laravel-mailbox` 0.4.0 and drops the attachment column. After deploying, run `php artisan mailbox:threads` once.
+This release needs the core migration of `j87nl/laravel-mailbox` 0.4.0 and drops the attachment column. After deploying, run `php artisan mailbox:threads` once.
 
 - Requires `j87nl/laravel-mailbox` ^0.4.0 (publish and run its new migration `add_conversations_to_mailbox_tables`, then run `php artisan mailbox:threads` once).
 - New `J87NL\VueMailbox\Support\MailboxNavigation::for($user)`: the active mailboxes the user may open, sorted by name, with `id`, `name`, `email`, `unseen` (inbox unread count), `url` and `active_path`, for a host menu with one item per mailbox. The new `ShareMailboxNavigation` middleware shares it as the Inertia prop `mailboxNavigation`. See `docs/navigation.md`.
@@ -18,6 +18,7 @@ Release this as **0.6.0**: it needs the core migration of `j87nl/laravel-mailbox
 - The message view shows a flag before the subject of a flagged message (new translation `flagged`, nl and en).
 - Creating a mailbox grants the creator `Manage` on it when they could not manage it otherwise, for apps that let non-admins pass `manageMailboxes`. Before, such a creator was sent to the edit page of the new mailbox and got a 403. Admins (`MAILBOX_ADMINS`) get no row, as before. When the grant fails, the new mailbox is deleted again; the connection test and the queued sync run outside any database transaction. The core still lets only admins manage an inactive mailbox, so a non-admin who creates an inactive mailbox gets a 403 on its edit page unless the app defines `manageMailbox` itself.
 - `mailbox.settings.destroy` now needs `manageMailbox` on the mailbox as well as `manageMailboxes`, so an app that lets non-admins pass `manageMailboxes` no longer lets them delete a mailbox they have no access to. Admins (`MAILBOX_ADMINS`) manage every mailbox, so nothing changes for them.
+- The mailbox settings pages drop their `p-4` padding when a layout provides `pagePadding` as `false` (`useMailboxPagePadding()` from `@mailbox/padding`), so a host can render them inside a settings layout that pads its content itself. Without a provider nothing changes.
 
 ## 0.5.3 - 2026-10-23
 

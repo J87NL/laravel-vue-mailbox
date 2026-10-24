@@ -9,6 +9,7 @@ Everything below is imported through the `@mailbox` alias, which points to
 | `@mailbox/components/MessageFrame.vue` | The sandboxed message iframe |
 | `@mailbox/components/MessageActions.vue` | Reply, forward and message action buttons of the message view |
 | `@mailbox/confirm` | `useMailboxConfirm()`, `MAILBOX_CONFIRM` |
+| `@mailbox/padding` | `useMailboxPagePadding()`, `MAILBOX_PAGE_PADDING` |
 | `@mailbox/translations` | `useMailboxTranslations()`, `MAILBOX_TRANSLATIONS` |
 | `@mailbox/types` | `MailboxFolder`, `MailboxSummary`, `MailAddress`, `MailboxAttachment`, `AuditEntry` |
 | `@mailbox/ui` | `ui`, the Tailwind class strings of the default pages, and `configureMailboxUi()` to replace them |
@@ -138,3 +139,18 @@ app.provide('confirm', (message: string): Promise<boolean> => openConfirmDialog(
 
 Without a provided function every confirmation resolves to `false`, so the delete does nothing. `j87nl/laravel-vue-cms`
 uses the same key, so one provide serves both.
+
+## Padding inside your own layout
+
+The mailbox settings pages (`mailbox/Settings/Index` and `mailbox/Settings/Edit`) wrap their content in `p-4`. When your
+app renders them inside a layout that pads its content itself, such as a settings layout with its own menu, provide
+`false` under the key `pagePadding` (`MAILBOX_PAGE_PADDING`) in that layout and the pages drop their own padding:
+
+```ts
+import { provide } from 'vue'
+
+provide('pagePadding', false)
+```
+
+`useMailboxPagePadding()` from `@mailbox/padding` reads the key. Without a provider it returns `true`, so the pages look
+as before. The other mailbox pages keep their padding.
