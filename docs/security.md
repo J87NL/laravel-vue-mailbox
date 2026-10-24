@@ -11,6 +11,8 @@
 - The tables check the same abilities in their `authorize()` hooks. `MessagesTable` and `ContactsTable`, the tables
   with bulk actions, also check `workInMailbox` in `authorizeBulkAction()`, so the TableBuilder's signed bulk action
   requests are checked as well. See [Tables](tables.md).
+- The access form gets no list of users and groups. It searches them through `mailbox.settings.accessors`, which needs
+  `manageMailbox`, is throttled and returns at most 20 matches.
 - Controllers pass `null` for URLs the user may not call. Hiding a button is a convenience; the route check is the
   guard.
 

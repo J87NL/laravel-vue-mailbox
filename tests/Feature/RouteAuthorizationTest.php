@@ -116,6 +116,10 @@ function endpoint(string $name, Mailbox $mailbox): array
             'post',
             route('mailbox.settings.access.store', $mailbox),
         ],
+        'settings.accessors' => [
+            'get',
+            route('mailbox.settings.accessors', [$mailbox, 'q' => 'test']),
+        ],
         'settings.access.destroy' => [
             'delete',
             route('mailbox.settings.access.destroy', [$mailbox, $access]),
@@ -171,6 +175,7 @@ function routeMatrix(): array
         'settings.update' => 'manage',
         'settings.access.store' => 'manage',
         'settings.access.destroy' => 'manage',
+        'settings.accessors' => 'manage',
         'settings.create' => 'admin',
         'settings.store' => 'admin',
         'settings.destroy' => 'admin',

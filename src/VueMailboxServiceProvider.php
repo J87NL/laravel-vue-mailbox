@@ -22,6 +22,8 @@ class VueMailboxServiceProvider extends PackageServiceProvider
 {
     public const REFRESH_LIMITER = 'vue-mailbox-refresh';
 
+    public const ACCESSOR_SEARCH_LIMITER = 'vue-mailbox-accessor-search';
+
     public function configurePackage(Package $package): void
     {
         $package
@@ -51,6 +53,9 @@ class VueMailboxServiceProvider extends PackageServiceProvider
     {
         RateLimiter::for(self::REFRESH_LIMITER, fn (Request $request): Limit => Limit::perMinute(12)
             ->by(sprintf('%s|%s', self::REFRESH_LIMITER, $request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        RateLimiter::for(self::ACCESSOR_SEARCH_LIMITER, fn (Request $request): Limit => Limit::perMinute(60)
+            ->by(sprintf('%s|%s', self::ACCESSOR_SEARCH_LIMITER, $request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         $this->app->booted(function (): void {
             self::defineAbilities();

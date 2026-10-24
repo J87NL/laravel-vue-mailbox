@@ -45,6 +45,9 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                 Route::middleware('can:manageMailbox,mailbox')->scopeBindings()->group(function (): void {
                     Route::get('{mailbox}', [MailboxSettingsController::class, 'edit'])->name('edit');
                     Route::put('{mailbox}', [MailboxSettingsController::class, 'update'])->name('update');
+                    Route::get('{mailbox}/accessors', [MailboxAccessController::class, 'search'])
+                        ->middleware(sprintf('throttle:%s', VueMailboxServiceProvider::ACCESSOR_SEARCH_LIMITER))
+                        ->name('accessors');
                     Route::post('{mailbox}/access', [MailboxAccessController::class, 'store'])->name('access.store');
                     Route::delete('{mailbox}/access/{access}', [MailboxAccessController::class, 'destroy'])->name('access.destroy');
                 });

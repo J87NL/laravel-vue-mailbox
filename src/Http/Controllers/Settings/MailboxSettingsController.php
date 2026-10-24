@@ -64,7 +64,10 @@ class MailboxSettingsController extends Controller
     public function edit(Mailbox $mailbox): Response
     {
         return Inertia::render(config('vue-mailbox.pages.settings_edit'), [
-            'accessForm' => AccessForm::make(route($this->routes().'settings.access.store', $mailbox)),
+            'accessForm' => AccessForm::make(
+                route($this->routes().'settings.access.store', $mailbox),
+                route($this->routes().'settings.accessors', $mailbox),
+            ),
             'accessTable' => MailboxAccessTable::build($mailbox),
             'backUrl' => route($this->routes().'settings.index'),
             'destroyUrl' => Gate::allows('manageMailboxes') ? route($this->routes().'settings.destroy', $mailbox) : null,

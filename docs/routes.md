@@ -76,8 +76,12 @@ read the raw message the core cached on that first fetch (core `cache.raw_hours`
 | DELETE | `settings/{mailbox}` | `mailbox.settings.destroy` | `manageMailboxes` and `manageMailbox` |
 | GET | `settings/{mailbox}` | `mailbox.settings.edit` | `manageMailbox` |
 | PUT | `settings/{mailbox}` | `mailbox.settings.update` | `manageMailbox` |
+| GET | `settings/{mailbox}/accessors` | `mailbox.settings.accessors` | `manageMailbox`, throttled |
 | POST | `settings/{mailbox}/access` | `mailbox.settings.access.store` | `manageMailbox` |
 | DELETE | `settings/{mailbox}/access/{access}` | `mailbox.settings.access.destroy` | `manageMailbox` |
+
+`mailbox.settings.accessors` is the search behind the access form, limited to 60 requests per minute per user
+(`VueMailboxServiceProvider::ACCESSOR_SEARCH_LIMITER`).
 
 `mailbox.settings.index` needs `manageAnyMailbox`; other users get a 403. Its table only lists the mailboxes the user
 can manage. See

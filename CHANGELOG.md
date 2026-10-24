@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0 - 2026-10-24
+
+- The access form on the mailbox settings page no longer sends every user and group to the browser. Its `accessor` select searches the new route `GET settings/{mailbox}/accessors?q=<term>` (`mailbox.settings.accessors`) from two characters on, which returns at most 20 matching users (by name or e-mail) and groups (by label) as `[{value, label}]`. The route needs `manageMailbox`, like the rest of the access section, and is throttled to 60 requests per minute per user (`ACCESSOR_SEARCH_LIMITER`).
+- Granting access validates the accessor with the core `ExistingAccessor` rule instead of comparing it with the full list.
+- Requires `j87nl/laravel-mailbox` ^0.5.0 and `tranquil-tools/laravel-vue-form-builder` ^1.13. Rebuild the frontend after updating. See `docs/upgrading.md`.
+
 ## 0.6.0 - 2026-10-24
 
 This release needs the core migration of `j87nl/laravel-mailbox` 0.4.0 and drops the attachment column. After deploying, run `php artisan mailbox:threads` once.

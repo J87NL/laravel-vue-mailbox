@@ -137,3 +137,126 @@ function newMailboxForm(): array
         'smtp_username' => 'office@example.com',
     ];
 }
+
+it('sends the access form without the list of users', function (): void {
+    $mailbox = mailbox();
+    user(['name' => 'Secret Colleague']);
+
+    $response = $this->actingAs(member($mailbox, AccessLevel::Manage))
+        ->get(route('mailbox.settings.edit', $mailbox))
+        ->assertOk();
+
+    $accessor = collect($response->inertiaProps('accessForm.fields'))->firstWhere('name', 'accessor');
+
+    expect($accessor)->not->toHaveKey('options')
+        ->and($accessor['searchUrl'])->toBe(route('mailbox.settings.accessors', $mailbox))
+        ->and($accessor['minSearchLength'])->toBe(2)
+        ->and($response->getContent())->not->toContain('Secret Colleague');
+});
+
+it('searches users and groups for a manager of the mailbox', function (): void {
+    $mailbox = mailbox();
+    $jane = user(['email' => 'jane@example.com', 'name' => 'Jane Doe']);
+    user(['email' => 'carl@example.com', 'name' => 'Carl']);
+
+    $this->actingAs(member($mailbox, AccessLevel::Manage))
+        ->getJson(route('mailbox.settings.accessors', [$mailbox, 'q' => 'JANE']))
+        ->assertOk()
+        ->assertExactJson([
+            [
+                'label' => 'User: Jane Doe',
+                'value' => sprintf('%s:%s', $jane->getMorphClass(), $jane->id),
+            ],
+        ]);
+});
+
+it('returns nothing for a search term shorter than two characters', function (): void {
+    $mailbox = mailbox();
+    user(['name' => 'Jane Doe']);
+
+    $this->actingAs(member($mailbox, AccessLevel::Manage))
+        ->getJson(route('mailbox.settings.accessors', [$mailbox, 'q' => ' j ']))
+        ->assertOk()
+        ->assertExactJson([]);
+});
+
+it('returns at most twenty matches', function (): void {
+    $mailbox = mailbox();
+
+    foreach (range(1, 25) as $number) {
+        user(['email' => "member{$number}@example.com", 'name' => "Member {$number}"]);
+    }
+
+    $this->actingAs(member($mailbox, AccessLevel::Manage))
+        ->getJson(route('mailbox.settings.accessors', [$mailbox, 'q' => 'member']))
+        ->assertOk()
+        ->assertJsonCount(20);
+});
+
+it('refuses the search to users who do not manage the mailbox', function (): void {
+    $mailbox = mailbox();
+    member(mailbox(['name' => 'Other']), AccessLevel::Manage);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->getJson(route('mailbox.settings.accessors', [$mailbox, 'q' => 'test']))
+        ->assertForbidden();
+});
+
+it('throttles the search', function (): void {
+    $mailbox = mailbox();
+    $manager = member($mailbox, AccessLevel::Manage);
+
+    foreach (range(1, 60) as $attempt) {
+        $this->actingAs($manager)
+            ->getJson(route('mailbox.settings.accessors', [$mailbox, 'q' => 'te']))
+            ->assertOk();
+    }
+
+    $this->actingAs($manager)
+        ->getJson(route('mailbox.settings.accessors', [$mailbox, 'q' => 'te']))
+        ->assertTooManyRequests();
+});
+
+it('grants a searched accessor and rejects one that does not exist', function (): void {
+    $mailbox = mailbox();
+    $manager = member($mailbox, AccessLevel::Manage);
+    $colleague = user();
+
+    $this->actingAs($manager)
+        ->from(route('mailbox.settings.edit', $mailbox))
+        ->post(route('mailbox.settings.access.store', $mailbox), [
+            'accessor' => sprintf('%s:999', $colleague->getMorphClass()),
+            'level' => 'read',
+        ])
+        ->assertSessionHasErrors('accessor');
+
+    $this->actingAs($manager)
+        ->from(route('mailbox.settings.edit', $mailbox))
+        ->post(route('mailbox.settings.access.store', $mailbox), [
+            'accessor' => sprintf('%s:%s', $colleague->getMorphClass(), $colleague->id),
+            'level' => 'read',
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect(MailboxAccess::query()
+        ->where('accessor_id', $colleague->id)
+        ->sole()->level)->toBe(AccessLevel::Read);
+});
+
+it('changes the level of existing access through the form', function (): void {
+    $mailbox = mailbox();
+    $manager = member($mailbox, AccessLevel::Manage);
+    $colleague = member($mailbox, AccessLevel::Read);
+
+    $this->actingAs($manager)
+        ->from(route('mailbox.settings.edit', $mailbox))
+        ->post(route('mailbox.settings.access.store', $mailbox), [
+            'accessor' => sprintf('%s:%s', $colleague->getMorphClass(), $colleague->id),
+            'level' => 'write',
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect(MailboxAccess::query()
+        ->where('accessor_id', $colleague->id)
+        ->sole()->level)->toBe(AccessLevel::Write);
+});

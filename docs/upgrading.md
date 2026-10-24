@@ -3,6 +3,18 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.6 to 0.7: searching the access form
+
+- Requires `j87nl/laravel-mailbox` ^0.5 and `tranquil-tools/laravel-vue-form-builder` ^1.13. Update them together:
+  `composer update j87nl/laravel-mailbox j87nl/laravel-vue-mailbox 'tranquil-tools/*' -W`, then rebuild the frontend
+  (`npm run build`) so the searchable select of the new form builder is bundled. No migration.
+- The access form searches users and groups on the server (new route `mailbox.settings.accessors`) instead of sending
+  all of them with the page. An app with a copied `Settings/Edit` page that renders `accessForm` with `<Form>` needs no
+  change.
+- An app that builds the core `AccessForm` itself passes the search url as second argument, see the core
+  [changelog](https://github.com/J87NL/laravel-mailbox/blob/main/CHANGELOG.md). A custom `ResolvesAccessors` needs a
+  `search()` method.
+
 ## From 0.5 to 0.6: conversations, navigation and full screen
 
 - Requires `j87nl/laravel-mailbox` ^0.4, which adds the migration `add_conversations_to_mailbox_tables`. Publish and

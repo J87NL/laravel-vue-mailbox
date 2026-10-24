@@ -55,8 +55,14 @@ need `manageMailbox`.
 
 | Field | Description |
 |---|---|
-| `accessor` | An assignable user or group, as `type:id`, from the core [accessor resolver](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md#users-and-groups) |
+| `accessor` | An existing user or group, as `type:id`, from the core [accessor resolver](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md#users-and-groups), checked with the core `ExistingAccessor` rule |
 | `level` | `read`, `write` or `manage` |
+
+The `accessor` field does not list every user and group. From two characters on it searches
+`GET settings/{mailbox}/accessors?q=<term>` (`mailbox.settings.accessors`), which answers with at most 20 matching
+users and groups as `[{"value": "type:id", "label": "User: Jane Doe"}]`. Users match on name and e-mail, groups on their
+label, case-insensitively. The search needs `manageMailbox` on the mailbox and is throttled to 60 requests per minute
+per user. A shorter term returns `[]`.
 
 `DELETE settings/{mailbox}/access/{access}` (`mailbox.settings.access.destroy`) revokes one row. Both go through the
 core [`GrantAccess`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md#granting-and-revoking) action and
