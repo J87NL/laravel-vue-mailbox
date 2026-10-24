@@ -5,6 +5,7 @@ declare(strict_types=1);
 return [
     'close' => 'Close',
     'conversation' => 'Conversation',
+    'flagged' => 'Flagged',
     'has_attachments' => 'Has attachments',
     'message_frame_title' => 'Message',
     'no_mailbox_hint' => 'Ask an administrator to give you access to a mailbox.',

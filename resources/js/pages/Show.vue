@@ -137,7 +137,10 @@ function addresses(list: MailAddress[] | null): string {
 
             <article :class="ui.panel">
                 <header class="mb-4 border-b border-gray-200 pb-3 dark:border-gray-700">
-                    <h1 class="text-xl font-semibold">{{ message.subject ?? t('no_subject') }}</h1>
+                    <h1 class="flex items-center gap-2 text-xl font-semibold">
+                        <span v-if="message.is_flagged" class="shrink-0 text-amber-500" role="img" :aria-label="t('flagged')" :title="t('flagged')">⚑</span>
+                        {{ message.subject ?? t('no_subject') }}
+                    </h1>
                     <dl class="mt-2 grid grid-cols-[4rem_1fr] gap-x-2 text-sm text-gray-600 dark:text-gray-300">
                         <dt>{{ t('from') }}</dt>
                         <dd>{{ message.from_name ? `${message.from_name} <${message.from_email}>` : message.from_email }}</dd>

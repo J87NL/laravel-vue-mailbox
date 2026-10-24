@@ -211,6 +211,26 @@ it('shares the mailbox translations with every page', function (): void {
             ->where('vue_mailbox_translations.contacts', 'Address book'));
 });
 
+it('shares the flagged label of the message view in English and Dutch', function (string $locale, string $label): void {
+    $mailbox = mailbox();
+    app()->setLocale($locale);
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.folders.show', [$mailbox, folder($mailbox)]))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('vue_mailbox_translations.flagged', $label));
+})->with([
+    'English' => ['en', 'Flagged'],
+    'Dutch' => ['nl', 'Gemarkeerd'],
+]);
+
+it('has the same translation keys in English and Dutch', function (): void {
+    $english = array_keys(require __DIR__.'/../../resources/lang/en/mailbox.php');
+    $dutch = array_keys(require __DIR__.'/../../resources/lang/nl/mailbox.php');
+
+    expect($dutch)->toBe($english);
+});
+
 it('does not share the mailbox translations outside the mailbox routes', function (): void {
     Route::middleware('web')->get('elsewhere', fn (): Response => Inertia\Inertia::render('Elsewhere'));
 

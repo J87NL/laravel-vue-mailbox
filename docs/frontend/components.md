@@ -11,7 +11,7 @@ Everything below is imported through the `@mailbox` alias, which points to
 | `@mailbox/confirm` | `useMailboxConfirm()`, `MAILBOX_CONFIRM` |
 | `@mailbox/translations` | `useMailboxTranslations()`, `MAILBOX_TRANSLATIONS` |
 | `@mailbox/types` | `MailboxFolder`, `MailboxSummary`, `MailAddress`, `MailboxAttachment`, `AuditEntry` |
-| `@mailbox/ui` | `ui`, the Tailwind class strings of the default pages |
+| `@mailbox/ui` | `ui`, the Tailwind class strings of the default pages, and `configureMailboxUi()` to replace them |
 
 ## FolderList
 
@@ -105,6 +105,26 @@ import { ui } from '@mailbox/ui';
 ```
 
 Tailwind only generates these classes when it scans the package, see [Installation](../installation.md#5-add-the-tailwind-css-source).
+
+### Your own button and panel styles
+
+The default classes use a neutral gray palette. To make the package pages follow your app's buttons, panels and theme
+colours, replace any of the keys with `configureMailboxUi()` once in your app entrypoint, before the app mounts:
+
+```ts
+import { configureMailboxUi } from '@mailbox/ui';
+import { buttonVariants } from '@/components/ui/button';
+
+configureMailboxUi({
+    button: buttonVariants({ variant: 'outline', size: 'sm' }),
+    primaryButton: buttonVariants({ size: 'sm' }),
+    panel: 'rounded-xl border bg-card p-4 text-card-foreground shadow-xs',
+    muted: 'text-sm text-muted-foreground',
+});
+```
+
+Keys you leave out (or pass as `undefined`) keep their default. The classes you pass live in your own code, so Tailwind finds them there. The
+other classes of the pages (folder list, message header, conversation list) stay as they are.
 
 ## Confirmations
 
