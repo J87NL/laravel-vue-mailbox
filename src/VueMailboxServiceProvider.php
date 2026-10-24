@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace J87NL\VueMailbox;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use J87NL\Mailbox\Access\MailboxAccessResolver;
 use J87NL\Mailbox\Contracts\ResolvesInlineImageUrls;
 use J87NL\Mailbox\Models\Mailbox;
@@ -17,6 +20,8 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class VueMailboxServiceProvider extends PackageServiceProvider
 {
+    public const REFRESH_LIMITER = 'vue-mailbox-refresh';
+
     public function configurePackage(Package $package): void
     {
         $package
@@ -44,6 +49,9 @@ class VueMailboxServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        RateLimiter::for(self::REFRESH_LIMITER, fn (Request $request): Limit => Limit::perMinute(12)
+            ->by(sprintf('%s|%s', self::REFRESH_LIMITER, $request->user()?->getAuthIdentifier() ?? $request->ip())));
+
         $this->app->booted(function (): void {
             self::defineAbilities();
         });

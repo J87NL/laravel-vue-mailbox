@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace J87NL\VueMailbox\Http\Controllers\Settings;
 
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use J87NL\Mailbox\Actions\GrantAccess;
 use J87NL\Mailbox\Actions\SaveMailbox;
+use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Forms\AccessForm;
 use J87NL\Mailbox\Forms\MailboxForm;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\VueMailbox\Tables\MailboxAccessTable;
 use J87NL\VueMailbox\Tables\MailboxesTable;
+use Throwable;
 
 class MailboxSettingsController extends Controller
 {
@@ -39,11 +44,17 @@ class MailboxSettingsController extends Controller
         ]);
     }
 
-    public function store(Request $request, SaveMailbox $save): RedirectResponse
+    public function store(Request $request, SaveMailbox $save, GrantAccess $grant): RedirectResponse
     {
         $data = (new MailboxForm(''))->validate($request);
 
-        $mailbox = $save->handle(null, $data, $request->user());
+        $user = $request->user();
+
+        $mailbox = $save->handle(null, $data, $user);
+
+        if ($user instanceof Model && Gate::denies('manageMailbox', $mailbox)) {
+            $this->grantCreator($grant, $mailbox, $user);
+        }
 
         return redirect()
             ->route($this->routes().'settings.edit', $mailbox)
@@ -76,6 +87,17 @@ class MailboxSettingsController extends Controller
         $mailbox->delete();
 
         return redirect()->route($this->routes().'settings.index');
+    }
+
+    private function grantCreator(GrantAccess $grant, Mailbox $mailbox, Authenticatable&Model $user): void
+    {
+        try {
+            $grant->handle($mailbox, $user->getMorphClass(), $user->getKey(), AccessLevel::Manage, $user);
+        } catch (Throwable $exception) {
+            $mailbox->delete();
+
+            throw $exception;
+        }
     }
 
     private function routes(): string

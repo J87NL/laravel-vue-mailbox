@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { Head, Link } from '@inertiajs/vue3'
+import { nextTick, onBeforeUnmount, ref } from 'vue'
 import FolderList from '@mailbox/components/FolderList.vue'
+import MessageActions from '@mailbox/components/MessageActions.vue'
 import MessageFrame from '@mailbox/components/MessageFrame.vue'
-import type { AuditEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
-import { useMailboxConfirm } from '@mailbox/confirm'
+import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
-const props = defineProps<{
+defineProps<{
     actionsUrl: string | null
     attachments: MailboxAttachment[]
     backUrl: string
     composeUrl: string | null
     contactUrl: string | null
+    conversation?: ConversationEntry[]
     folders: MailboxFolder[]
     hasRemoteImages: boolean
     history: AuditEntry[]
@@ -35,39 +36,59 @@ const props = defineProps<{
 }>()
 
 const { t } = useMailboxTranslations()
-const confirm = useMailboxConfirm()
 
-const moveTarget = ref<number | ''>('')
+const dialog = ref<HTMLElement | null>(null)
+const fullscreen = ref(false)
 
-async function act(action: string, extra: Record<string, unknown> = {}): Promise<void> {
-    if (!props.actionsUrl) {
+let opener: HTMLElement | null = null
+let inerted: HTMLElement[] = []
+
+function inertOutside(overlay: HTMLElement): void {
+    inerted = Array.from(document.body.children)
+        .filter((element): element is HTMLElement => element instanceof HTMLElement && element !== overlay && !element.inert)
+
+    inerted.forEach((element) => {
+        element.inert = true
+    })
+}
+
+function releaseOutside(): void {
+    inerted.forEach((element) => {
+        element.inert = false
+    })
+    inerted = []
+}
+
+async function openFullscreen(event: MouseEvent): Promise<void> {
+    opener = event.currentTarget as HTMLElement
+    fullscreen.value = true
+    document.body.style.overflow = 'hidden'
+
+    await nextTick()
+
+    if (dialog.value) {
+        inertOutside(dialog.value)
+        dialog.value.focus()
+    }
+}
+
+function closeFullscreen(): void {
+    if (!fullscreen.value) {
         return
     }
 
-    if (action === 'delete' && !(await confirm(t('message_delete_confirm')))) {
-        return
+    fullscreen.value = false
+    document.body.style.overflow = ''
+    releaseOutside()
+    opener?.focus()
+}
+
+onBeforeUnmount(() => {
+    if (fullscreen.value) {
+        document.body.style.overflow = ''
+        releaseOutside()
     }
-
-    router.post(props.actionsUrl, { action, ids: [props.message.id], ...extra }, { preserveScroll: true })
-}
-
-function move(): void {
-    if (moveTarget.value === '') {
-        return
-    }
-
-    void act('move', { folder_id: moveTarget.value })
-}
-
-function addContact(): void {
-    if (props.contactUrl) {
-        router.post(props.contactUrl, {}, { preserveScroll: true })
-    }
-}
-
-function replyUrl(mode: string): string {
-    return `${props.composeUrl}?reply=${props.message.id}&mode=${mode}`
-}
+})
 
 function addresses(list: MailAddress[] | null): string {
     return (list ?? []).map((address) => address.name ? `${address.name} <${address.email}>` : address.email).join(', ')
@@ -85,29 +106,41 @@ function addresses(list: MailAddress[] | null): string {
         <main class="flex min-w-0 flex-1 flex-col gap-4">
             <div :class="ui.toolbar">
                 <Link :href="backUrl" :class="ui.button">{{ t('back') }}</Link>
-                <template v-if="composeUrl">
-                    <Link :href="replyUrl('reply')" :class="ui.primaryButton">{{ t('reply') }}</Link>
-                    <Link :href="replyUrl('reply_all')" :class="ui.button">{{ t('reply_all') }}</Link>
-                    <Link :href="replyUrl('forward')" :class="ui.button">{{ t('forward') }}</Link>
-                </template>
-                <template v-if="actionsUrl">
-                    <button type="button" :class="ui.button" @click="act('archive')">{{ t('archive') }}</button>
-                    <button type="button" :class="ui.dangerButton" @click="act('delete')">{{ t('delete') }}</button>
-                    <button type="button" :class="ui.button" @click="act('unread')">{{ t('mark_unread') }}</button>
-                    <button type="button" :class="ui.button" @click="act(message.is_flagged ? 'unflag' : 'flag')">
-                        {{ message.is_flagged ? t('unflag') : t('flag') }}
-                    </button>
-                    <select v-model="moveTarget" :class="ui.select" @change="move">
-                        <option value="">{{ t('move_placeholder') }}</option>
-                        <option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ "\u00a0".repeat(folder.depth * 2) }}{{ folder.label }}</option>
-                    </select>
-                </template>
-                <button v-if="contactUrl" type="button" :class="ui.button" @click="addContact">{{ t('add_contact') }}</button>
+                <MessageActions
+                    :actions-url="actionsUrl"
+                    :compose-url="composeUrl"
+                    :contact-url="contactUrl"
+                    :folders="folders"
+                    :message="message"
+                />
+                <slot name="actions" />
+                <button type="button" :class="ui.button" @click="openFullscreen">{{ t('open_fullscreen') }}</button>
             </div>
+
+            <nav v-if="conversation?.length" :class="[ui.panel, 'p-0']" :aria-label="t('conversation')">
+                <h2 class="border-b border-gray-200 px-4 py-2 text-sm font-medium dark:border-gray-700">{{ t('conversation') }} ({{ conversation.length }})</h2>
+                <ol class="divide-y divide-gray-200 text-sm dark:divide-gray-700">
+                    <li v-for="entry in conversation" :key="entry.id">
+                        <span v-if="entry.current" class="flex flex-wrap gap-x-3 px-4 py-2 font-semibold" aria-current="true">
+                            <span class="min-w-0 flex-1 truncate">{{ entry.from }}</span>
+                            <span :class="ui.muted">{{ entry.folder }}</span>
+                            <span :class="ui.muted">{{ entry.sent_at ? new Date(entry.sent_at).toLocaleString() : '' }}</span>
+                        </span>
+                        <Link v-else :href="entry.url" class="flex flex-wrap gap-x-3 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <span class="min-w-0 flex-1 truncate">{{ entry.from }}</span>
+                            <span :class="ui.muted">{{ entry.folder }}</span>
+                            <span :class="ui.muted">{{ entry.sent_at ? new Date(entry.sent_at).toLocaleString() : '' }}</span>
+                        </Link>
+                    </li>
+                </ol>
+            </nav>
 
             <article :class="ui.panel">
                 <header class="mb-4 border-b border-gray-200 pb-3 dark:border-gray-700">
-                    <h1 class="text-xl font-semibold">{{ message.subject ?? t('no_subject') }}</h1>
+                    <h1 class="flex items-center gap-2 text-xl font-semibold">
+                        <span v-if="message.is_flagged" class="shrink-0 text-amber-500" role="img" :aria-label="t('flagged')" :title="t('flagged')">⚑</span>
+                        {{ message.subject ?? t('no_subject') }}
+                    </h1>
                     <dl class="mt-2 grid grid-cols-[4rem_1fr] gap-x-2 text-sm text-gray-600 dark:text-gray-300">
                         <dt>{{ t('from') }}</dt>
                         <dd>{{ message.from_name ? `${message.from_name} <${message.from_email}>` : message.from_email }}</dd>
@@ -135,6 +168,35 @@ function addresses(list: MailAddress[] | null): string {
                     </li>
                 </ul>
             </article>
+
+            <Teleport to="body">
+                <div
+                    v-if="fullscreen"
+                    ref="dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    :aria-label="message.subject ?? t('no_subject')"
+                    tabindex="-1"
+                    class="fixed inset-0 z-40 flex flex-col gap-3 bg-white p-4 text-gray-900 focus:outline-none dark:bg-gray-900 dark:text-gray-100"
+                    @keydown.esc.stop="closeFullscreen"
+                >
+                    <div class="flex items-start justify-between gap-4">
+                        <h2 class="min-w-0 truncate text-lg font-semibold">{{ message.subject ?? t('no_subject') }}</h2>
+                        <button type="button" :class="ui.button" @click="closeFullscreen">{{ t('close') }}</button>
+                    </div>
+                    <div :class="ui.toolbar">
+                        <MessageActions
+                            :actions-url="actionsUrl"
+                            :compose-url="composeUrl"
+                            :contact-url="contactUrl"
+                            :folders="folders"
+                            :message="message"
+                        />
+                        <slot name="actions" />
+                    </div>
+                    <MessageFrame :html="html" :image-origin="imageOrigin" :remote-images="remoteImages" fill @escape="closeFullscreen" />
+                </div>
+            </Teleport>
 
             <section v-if="history.length" :class="ui.muted">
                 <h2 class="mb-1 font-medium text-gray-700 dark:text-gray-300">{{ t('history') }}</h2>

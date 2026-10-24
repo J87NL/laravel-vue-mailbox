@@ -81,8 +81,8 @@ The default pages read their texts from the Inertia prop `vue_mailbox_translatio
 
 | Page (`vue-mailbox.pages.*`) | Props |
 |---|---|
-| `mailbox/Index` | `composeUrl`, `contactsUrl`, `folder` (`id`, `label`, `name`, `role`) or null, `folderForm`, `folders`, `mailbox`, `mailboxes`, `settingsUrl`, `syncing`, `table` |
-| `mailbox/Show` | `actionsUrl`, `attachments`, `backUrl`, `composeUrl`, `contactUrl`, `folders`, `hasRemoteImages`, `history`, `html`, `imageOrigin`, `mailbox`, `message`, `remoteImages` |
+| `mailbox/Index` | `composeUrl`, `contactsUrl`, `folder` (`id`, `label`, `name`, `role`) or null, `folderForm`, `folders`, `mailbox`, `mailboxes`, `refreshUrl`, `settingsUrl`, `syncing`, `table` |
+| `mailbox/Show` | `actionsUrl`, `attachments`, `backUrl`, `composeUrl`, `contactUrl`, `conversation`, `folders`, `hasRemoteImages`, `history`, `html`, `imageOrigin`, `mailbox`, `message`, `remoteImages` |
 | `mailbox/Compose` | `backUrl`, `folders`, `form`, `mailbox`, `mode` |
 | `mailbox/Contacts/Index` | `backUrl`, `createUrl`, `folders`, `mailbox`, `table` |
 | `mailbox/Contacts/Edit` | `backUrl`, `destroyUrl`, `form`, `mailbox`, `title` |
@@ -91,7 +91,11 @@ The default pages read their texts from the Inertia prop `vue_mailbox_translatio
 
 Reply, reply all and forward put the original HTML in the compose body (Gmail-style header or "On … wrote:" blockquote). Its inline images use signed inline URLs with `data-mailbox-cid`; keep that attribute in your editor (the default HugeRTE options do). Inline SVG images are served with a locked-down CSP. After sending a reply or forward the app returns to the folder of the original message.
 
-The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['table']"` to `TableBuilder` so a tick reloads only the table. Unread rows get `font-semibold` from the server.
+The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['table', 'folders']"` to `TableBuilder` so a tick reloads only the table and the folder counts. Unread rows get `font-semibold` from the server, and a paperclip follows the subject of a message with attachments. The Refresh button queues a sync of the folder (`mailbox.folders.refresh`). With the core `conversation_view` setting of a mailbox on, the list shows one row per conversation and the message view lists the conversation.
+
+The folder page shows only the folders of the open mailbox, with a compact mailbox switcher when the user has several (`vue-mailbox.mailbox_switcher`, default `true`). To list every mailbox in the host menu, use `J87NL\VueMailbox\Support\MailboxNavigation::for($user)` or the `ShareMailboxNavigation` middleware, which shares it as the `mailboxNavigation` prop (`id`, `name`, `email`, `unseen`, `url`, `active_path`); see `docs/navigation.md`.
+
+The message view fills the viewport and has a Full screen button that opens the message, with its actions, in a package-owned dialog (Esc or Close closes it). It needs no dialog component of the host; the host's `confirm` dialog must sit above `z-40`.
 
 ## Routes
 

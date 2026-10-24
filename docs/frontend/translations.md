@@ -1,11 +1,13 @@
 # Translations
 
-The default pages are fully translated. They read their texts from the core translation file `mailbox::mailbox`,
-which ships in Dutch (`nl`) and English (`en`). The locale is the app locale.
+The default pages are fully translated. They read their texts from the core translation file `mailbox::mailbox` and
+this package's own file `vue-mailbox::mailbox` (for texts that only the UI uses, such as `refresh`, `open_fullscreen`,
+`close`, `conversation`, `flagged`, `switch_mailbox`, `has_attachments` and `message_frame_title`). Both ship in Dutch (`nl`) and English (`en`). The
+locale is the app locale.
 
 ## The shared prop
 
-`J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations` shares the whole `mailbox::mailbox` file as the Inertia prop
+`J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations` shares the whole `mailbox::mailbox` file, merged with `vue-mailbox::mailbox`, as the Inertia prop
 `vue_mailbox_translations` (`ShareMailboxTranslations::PROP`). The package adds this middleware to its own routes only,
 so other pages of your app do not carry the prop.
 

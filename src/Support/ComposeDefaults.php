@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace J87NL\VueMailbox\Support;
 
 use Illuminate\Support\Str;
+use J87NL\Mailbox\Html\MessageHtml;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
 
@@ -16,6 +17,7 @@ class ComposeDefaults
     ];
 
     public function __construct(
+        private readonly MessageHtml $html,
         private readonly QuoteBuilder $quotes,
     ) {}
 
@@ -53,11 +55,13 @@ class ComposeDefaults
 
     private function body(Mailbox $mailbox, string $quote): string
     {
-        if (is_null($mailbox->signature) || $mailbox->signature === '') {
+        $signature = $this->html->sanitizeSignature($mailbox->signature);
+
+        if (is_null($signature)) {
             return sprintf('<p></p>%s', $quote);
         }
 
-        return sprintf('<p></p><div class="mailbox-signature">%s</div>%s', $mailbox->signature, $quote);
+        return sprintf('<p></p><div class="mailbox-signature">%s</div>%s', $signature, $quote);
     }
 
     /**

@@ -3,6 +3,7 @@
 - [Upgrading](upgrading.md)
 - [Configuration](configuration.md)
 - [Routes and authorization](routes.md)
+- [Navigation](navigation.md)
 - Pages
     - [Folders and message list](pages/folders.md)
     - [Message view](pages/messages.md)

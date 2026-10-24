@@ -40,6 +40,7 @@ mailbox, so a message of another mailbox answers `404`.
 |---|---|---|---|
 | GET | `/` | `mailbox.index` | `accessAnyMailbox` |
 | GET | `{mailbox}/folders/{folder?}` | `mailbox.folders.show` | `accessMailbox` |
+| POST | `{mailbox}/folders/{folder}/refresh` | `mailbox.folders.refresh` | `accessMailbox`, `throttle:vue-mailbox-refresh` |
 | GET | `{mailbox}/messages/{message}` | `mailbox.messages.show` | `accessMailbox` |
 | GET | `{mailbox}/messages/{message}/attachments/{index}` | `mailbox.attachments.download` | `accessMailbox` |
 | GET | `{mailbox}/contacts` | `mailbox.contacts.index` | `accessMailbox` |
@@ -72,7 +73,7 @@ read the raw message the core cached on that first fetch (core `cache.raw_hours`
 | GET | `settings` | `mailbox.settings.index` | `manageAnyMailbox` |
 | GET | `settings/create` | `mailbox.settings.create` | `manageMailboxes` |
 | POST | `settings` | `mailbox.settings.store` | `manageMailboxes` |
-| DELETE | `settings/{mailbox}` | `mailbox.settings.destroy` | `manageMailboxes` |
+| DELETE | `settings/{mailbox}` | `mailbox.settings.destroy` | `manageMailboxes` and `manageMailbox` |
 | GET | `settings/{mailbox}` | `mailbox.settings.edit` | `manageMailbox` |
 | PUT | `settings/{mailbox}` | `mailbox.settings.update` | `manageMailbox` |
 | POST | `settings/{mailbox}/access` | `mailbox.settings.access.store` | `manageMailbox` |

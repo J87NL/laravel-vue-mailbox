@@ -5,7 +5,8 @@ them as the `table` or `accessTable` prop. Bulk actions run through the TableBui
 each table checks the mailbox abilities in its `authorize()` hook, and the tables with bulk actions (`MessagesTable`,
 `ContactsTable`) also in `authorizeBulkAction()`.
 
-All column labels and texts come from the core translation file `mailbox::mailbox`.
+Column labels and texts come from the core translation file `mailbox::mailbox`; the paperclip label comes from
+`vue-mailbox::mailbox.has_attachments`.
 
 ## MessagesTable
 
@@ -17,15 +18,17 @@ MessagesTable::build($folder);
 
 | Setting | Value |
 |---|---|
-| Columns | From (name, or the address), Subject, Attachments (boolean), Received |
+| Columns | From (name, or the address), Subject, Received |
 | Sort | `sent_at`, newest first |
 | Global search | `subject`, `from_email`, `from_name` |
 | Per page | `config('vue-mailbox.per_page')`, default 50 |
 | Poll | `config('vue-mailbox.poll_seconds')`, default 30 |
 | Row link | `mailbox.messages.show` |
-| Row class | `font-semibold` for unread messages |
+| Row class | `font-semibold` for unread messages (for a conversation: when any message in it is unread) |
 
-The subject is prefixed with `⚑` for flagged and `↩` for answered messages, and shows `—` when empty. The received
+The subject is prefixed with `⚑` for flagged and `↩` for answered messages, and shows `—` when empty. A message with
+one or more attachments gets a paperclip icon after the subject (an inline SVG with `role="img"` and a translated
+`aria-label` and `<title>`, so it needs no Tailwind class of the host). The subject is escaped before the icon is added. The received
 date shows the time (`H:i`) for today and the date (`d-m-Y`) otherwise, in the display timezone of the core package.
 
 Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk actions:
@@ -38,7 +41,18 @@ Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk act
 | Mark as unread | core `MarkMessages::unread()` |
 | Move to folder | core `MoveMessages`, with a choice of the other selectable folders of the mailbox |
 
-Bulk actions only touch messages of the table's folder. What each core action does on the server is documented in the
+Bulk actions only touch messages of the table's folder.
+
+### Conversations
+
+When the folder's mailbox has `conversation_view` on, the table shows one row per conversation: the latest message of
+each conversation key in the folder (by `sent_at`, then id), with the number of messages of that conversation in the
+folder after the subject (`Re: Question (3)`). Messages without a key (not yet threaded) show on their own. A bulk
+action on a row runs on every message of that conversation in the folder. While a search or filter is active, the
+table lists every matching message instead of conversations, so a conversation whose only match is an older message
+does not disappear, and a bulk action then runs on the selected messages only. The table signs whether it was grouped
+(`grouped` in its signed parameters), so the bulk action route knows which of the two the user saw. How the keys are made is described in the core
+[conversation docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md#conversations). What each core action does on the server is documented in the
 core [message actions](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md) docs.
 
 ## ContactsTable

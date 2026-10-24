@@ -68,6 +68,8 @@ to the copy (`mailbox/Index` becomes `Mailbox/Index`). A name you changed yourse
 ## Message list
 
 ```php
+'mailbox_switcher' => true,
+
 'per_page' => 50,
 
 'poll_seconds' => 30,
@@ -75,6 +77,7 @@ to the copy (`mailbox/Index` becomes `Mailbox/Index`). A name you changed yourse
 
 | Key | Default | Description |
 |---|---|---|
+| `mailbox_switcher` | `true` | Offer the other mailboxes in a select on the folder page. Set to `false` when the host menu lists every mailbox, see [Navigation](navigation.md) |
 | `per_page` | `50` | Messages per page in the message table |
 | `poll_seconds` | `30` | Interval in seconds at which the message table reloads itself |
 

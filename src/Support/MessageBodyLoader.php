@@ -7,6 +7,7 @@ namespace J87NL\VueMailbox\Support;
 use Closure;
 use DirectoryTree\ImapEngine\Attachment;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use J87NL\Mailbox\Actions\FetchMessageBody;
 use J87NL\Mailbox\Actions\ForgetMessage;
 use J87NL\Mailbox\Exceptions\MessageGoneException;
@@ -64,7 +65,10 @@ class MessageBodyLoader
         try {
             return $callback();
         } catch (MessageGoneException $exception) {
-            report($exception);
+            Log::info($exception->getMessage(), [
+                'mailbox_id' => $message->mailbox_id,
+                'message_id' => $message->id,
+            ]);
 
             $this->forget->handle($message);
 

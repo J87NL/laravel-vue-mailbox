@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace J87NL\VueMailbox\Http\Controllers;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -21,6 +22,8 @@ use J87NL\VueMailbox\Support\MessageBodyLoader;
 
 class MessageController extends Controller
 {
+    private const CONVERSATION_LIMIT = 50;
+
     public function __construct(
         private readonly MessageHtml $html,
         private readonly InlineUrls $inlineUrls,
@@ -53,6 +56,7 @@ class MessageController extends Controller
             'attachments' => $this->attachments($mailbox, $message),
             'backUrl' => route($routes.'folders.show', [$mailbox, $message->folder]),
             'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
+            'conversation' => $this->conversation($mailbox, $message),
             'contactUrl' => $canWork && ! is_null($message->from_email) ? route($routes.'messages.contact', [$mailbox, $message]) : null,
             'folders' => $tree->for($mailbox),
             'history' => $this->history($message),
@@ -107,6 +111,99 @@ class MessageController extends Controller
             ])
             ->reject(fn (array $attachment): bool => $attachment['inline'] && ! is_null($attachment['content_id']))
             ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{current: bool, folder: string, from: string, id: int, sent_at: ?string, subject: ?string, url: string}>
+     */
+    private function conversation(Mailbox $mailbox, MailboxMessage $message): array
+    {
+        if (! $mailbox->conversation_view || is_null($message->thread_key)) {
+            return [];
+        }
+
+        $before = $this->neighbours($mailbox, $message, earlier: true);
+        $after = $this->neighbours($mailbox, $message, earlier: false);
+        $ids = [
+            ...array_reverse($before),
+            $message->id,
+            ...$after,
+        ];
+        $start = max(0, min(count($before) - intdiv(self::CONVERSATION_LIMIT, 2), count($ids) - self::CONVERSATION_LIMIT));
+        $window = array_slice($ids, $start, self::CONVERSATION_LIMIT);
+
+        $messages = MailboxMessage::query()
+            ->whereKey($window)
+            ->with('folder')
+            ->get([
+                'id',
+                'mailbox_folder_id',
+                'subject',
+                'from_email',
+                'from_name',
+                'sent_at',
+            ]);
+
+        if ($messages->count() < 2) {
+            return [];
+        }
+
+        $order = array_flip($window);
+
+        return $messages
+            ->sortBy(fn (MailboxMessage $item): int => $order[$item->id])
+            ->map(fn (MailboxMessage $item): array => [
+                'current' => $item->id === $message->id,
+                'folder' => $item->folder->role->label() ?? $item->folder->name,
+                'from' => $item->from_name ?: (string) $item->from_email,
+                'id' => $item->id,
+                'sent_at' => $item->sent_at?->toIso8601String(),
+                'subject' => $item->subject,
+                'url' => route(config('vue-mailbox.routes.name').'messages.show', [$mailbox, $item]),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function neighbours(Mailbox $mailbox, MailboxMessage $message, bool $earlier): array
+    {
+        $sentAt = $message->sent_at;
+
+        return MailboxMessage::query()
+            ->where('mailbox_id', $mailbox->id)
+            ->where('thread_key', $message->thread_key)
+            ->whereKeyNot($message->id)
+            ->where(function (Builder $query) use ($earlier, $message, $sentAt): void {
+                if (is_null($sentAt)) {
+                    $query->whereNull('sent_at')
+                        ->where('id', $earlier ? '<' : '>', $message->id);
+
+                    if (! $earlier) {
+                        $query->orWhereNotNull('sent_at');
+                    }
+
+                    return;
+                }
+
+                $query->where('sent_at', $earlier ? '<' : '>', $sentAt)
+                    ->orWhere(function (Builder $same) use ($earlier, $message, $sentAt): void {
+                        $same->where('sent_at', $sentAt)
+                            ->where('id', $earlier ? '<' : '>', $message->id);
+                    });
+
+                if ($earlier) {
+                    $query->orWhereNull('sent_at');
+                }
+            })
+            ->orderByRaw(sprintf('case when sent_at is null then %d else %d end', $earlier ? 1 : 0, $earlier ? 0 : 1))
+            ->orderBy('sent_at', $earlier ? 'desc' : 'asc')
+            ->orderBy('id', $earlier ? 'desc' : 'asc')
+            ->limit(self::CONVERSATION_LIMIT - 1)
+            ->pluck('id')
             ->all();
     }
 

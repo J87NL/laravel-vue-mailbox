@@ -18,8 +18,21 @@ class ShareMailboxTranslations
      */
     public function handle(Request $request, Closure $next): Response
     {
-        Inertia::share(self::PROP, fn (): mixed => trans('mailbox::mailbox'));
+        Inertia::share(self::PROP, fn (): array => [
+            ...$this->group('mailbox::mailbox'),
+            ...$this->group('vue-mailbox::mailbox'),
+        ]);
 
         return $next($request);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function group(string $key): array
+    {
+        $lines = trans($key);
+
+        return is_array($lines) ? $lines : [];
     }
 }

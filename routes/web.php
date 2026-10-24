@@ -12,6 +12,7 @@ use J87NL\VueMailbox\Http\Controllers\MessageController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxAccessController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxSettingsController;
 use J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations;
+use J87NL\VueMailbox\VueMailboxServiceProvider;
 
 Route::prefix(config('vue-mailbox.routes.prefix'))
     ->name(config('vue-mailbox.routes.name'))
@@ -34,7 +35,12 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                 Route::get('/', [MailboxSettingsController::class, 'index'])->middleware('can:manageAnyMailbox')->name('index');
                 Route::get('create', [MailboxSettingsController::class, 'create'])->middleware('can:manageMailboxes')->name('create');
                 Route::post('/', [MailboxSettingsController::class, 'store'])->middleware('can:manageMailboxes')->name('store');
-                Route::delete('{mailbox}', [MailboxSettingsController::class, 'destroy'])->middleware('can:manageMailboxes')->name('destroy');
+                Route::delete('{mailbox}', [MailboxSettingsController::class, 'destroy'])
+                    ->middleware([
+                        'can:manageMailboxes',
+                        'can:manageMailbox,mailbox',
+                    ])
+                    ->name('destroy');
 
                 Route::middleware('can:manageMailbox,mailbox')->scopeBindings()->group(function (): void {
                     Route::get('{mailbox}', [MailboxSettingsController::class, 'edit'])->name('edit');
@@ -50,6 +56,9 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                 ->scopeBindings()
                 ->group(function (): void {
                     Route::get('folders/{folder?}', [FolderController::class, 'show'])->name('folders.show');
+                    Route::post('folders/{folder}/refresh', [FolderController::class, 'refresh'])
+                        ->middleware(sprintf('throttle:%s', VueMailboxServiceProvider::REFRESH_LIMITER))
+                        ->name('folders.refresh');
                     Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
                     Route::get('contacts', [ContactController::class, 'index'])->name('contacts.index');
                     Route::get('messages/{message}/attachments/{index}', [AttachmentController::class, 'download'])

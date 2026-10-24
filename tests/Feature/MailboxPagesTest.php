@@ -6,6 +6,7 @@ use DirectoryTree\ImapEngine\Attachment;
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
@@ -275,6 +276,7 @@ it('renders the empty state with the configured page name', function (): void {
 });
 
 it('returns to the folder when the message vanished on the server', function (): void {
+    Exceptions::fake();
     $mailbox = mailbox();
     $folder = folder($mailbox);
     $message = storedMessage($folder, 1, ['body_fetched_at' => null]);
@@ -282,15 +284,17 @@ it('returns to the folder when the message vanished on the server', function ():
     $this->actingAs(member($mailbox, AccessLevel::Read))
         ->get(route('mailbox.messages.show', [$mailbox, $message]))
         ->assertRedirect(route('mailbox.folders.show', [$mailbox, $folder]))
-        ->assertSessionHas('error');
+        ->assertSessionHas('error', __('mailbox::mailbox.message_gone'));
 
     expect(MailboxMessage::query()
         ->whereKey($message->id)
         ->exists())->toBeFalse();
+    Exceptions::assertNothingReported();
     Bus::assertDispatched(SyncFolderJob::class, fn (SyncFolderJob $job): bool => $job->folderId === $folder->id);
 });
 
 it('answers 404 for attachments of a vanished message', function (): void {
+    Exceptions::fake();
     $mailbox = mailbox();
     $message = storedMessage(folder($mailbox), 1);
 
@@ -301,6 +305,8 @@ it('answers 404 for attachments of a vanished message', function (): void {
             0,
         ]))
         ->assertNotFound();
+
+    Exceptions::assertNothingReported();
 });
 
 it('strips path separators from attachment filenames', function (): void {

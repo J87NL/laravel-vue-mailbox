@@ -15,6 +15,8 @@ export interface MailboxSummary {
     email: string
     url?: string
     synced_at?: string | null
+    unseen?: number
+    active_path?: string
 }
 
 export interface MailAddress {
@@ -35,4 +37,14 @@ export interface AuditEntry {
     at: string | null
     target: string | null
     user: string | null
+}
+
+export interface ConversationEntry {
+    current: boolean
+    folder: string
+    from: string
+    id: number
+    sent_at: string | null
+    subject: string | null
+    url: string
 }

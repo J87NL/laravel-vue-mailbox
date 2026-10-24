@@ -1,5 +1,24 @@
 # Changelog
 
+## [Unreleased]
+
+Release this as **0.6.0**: it needs the core migration of `j87nl/laravel-mailbox` 0.4.0 and drops the attachment column. After deploying, run `php artisan mailbox:threads` once.
+
+- Requires `j87nl/laravel-mailbox` ^0.4.0 (publish and run its new migration `add_conversations_to_mailbox_tables`, then run `php artisan mailbox:threads` once).
+- New `J87NL\VueMailbox\Support\MailboxNavigation::for($user)`: the active mailboxes the user may open, sorted by name, with `id`, `name`, `email`, `unseen` (inbox unread count), `url` and `active_path`, for a host menu with one item per mailbox. The new `ShareMailboxNavigation` middleware shares it as the Inertia prop `mailboxNavigation`. See `docs/navigation.md`.
+- The folder page shows only the folders of the open mailbox. The stacked list of all mailboxes is replaced by a compact mailbox switcher at the top, shown when the user has more than one mailbox; the new config key `mailbox_switcher` (default `true`) turns it off for hosts that list the mailboxes in their own menu. The `mailboxes` prop items now carry `unseen` and `active_path`.
+- The message list has no attachment column any more: a paperclip icon (with a translated accessible label) follows the subject of a message with attachments.
+- Conversation view: when a mailbox has the core `conversation_view` setting on, the message list shows one row per conversation (latest message, message count, bold while any message is unread), a bulk action on that row runs on the whole conversation in the folder, and the message view gets a `conversation` prop with up to 50 messages of the conversation across folders, around the open message. While a search or filter is active the list shows the matching messages instead of conversations, and bulk actions run on the selected messages only.
+- The reading pane uses the height left in the viewport and keeps growing with its content when images load. A Full screen button opens the message in a package-owned full-screen dialog with the message actions; Esc and Close close it, the rest of the page is `inert` while it is open, and flag and unflag keep it open. The actions are the new `MessageActions` component. The page has an `actions` slot for host actions, rendered in the toolbar and in the full-screen dialog. The frame's title is translated (`message_frame_title`).
+- Refresh button on the folder page: `POST {mailbox}/folders/{folder}/refresh` (`mailbox.folders.refresh`, `accessMailbox`, 12 a minute per user through the package's own rate limiter `vue-mailbox-refresh`) queues a sync of the folder even when it synced less than a minute ago. The table poll now also reloads the folder list, so unread counts follow.
+- The shared `vue_mailbox_translations` prop also holds this package's own `vue-mailbox::mailbox` keys (`close`, `conversation`, `has_attachments`, `message_frame_title`, `open_fullscreen`, `refresh`, `refreshing`, `switch_mailbox`).
+- The compose body sanitises the mailbox signature again with the core `MessageHtml::sanitizeSignature()`, so a signature stored outside `SaveMailbox` cannot bring active content into the editor.
+- Opening a message whose remote copy is gone (moved or relabelled in another client) is no longer reported as an error: `MessageBodyLoader` writes an info line to the log, forgets the row and returns to the folder with the "no longer on the server" message.
+- New `configureMailboxUi()` in `@mailbox/ui`: an app replaces the button, select, panel and text classes of the default pages with its own (for example its button variants and theme colours) once in its entrypoint. `ui` is now typed as `MailboxUi`. Without a call nothing changes.
+- The message view shows a flag before the subject of a flagged message (new translation `flagged`, nl and en).
+- Creating a mailbox grants the creator `Manage` on it when they could not manage it otherwise, for apps that let non-admins pass `manageMailboxes`. Before, such a creator was sent to the edit page of the new mailbox and got a 403. Admins (`MAILBOX_ADMINS`) get no row, as before. When the grant fails, the new mailbox is deleted again; the connection test and the queued sync run outside any database transaction. The core still lets only admins manage an inactive mailbox, so a non-admin who creates an inactive mailbox gets a 403 on its edit page unless the app defines `manageMailbox` itself.
+- `mailbox.settings.destroy` now needs `manageMailbox` on the mailbox as well as `manageMailboxes`, so an app that lets non-admins pass `manageMailboxes` no longer lets them delete a mailbox they have no access to. Admins (`MAILBOX_ADMINS`) manage every mailbox, so nothing changes for them.
+
 ## 0.5.3 - 2026-10-23
 
 - Bulk actions and row actions in the message list, the contacts list, the mailbox settings list and the access table ask through the app's `confirm` function (the same one the message view uses) instead of the browser's `window.confirm`.

@@ -22,6 +22,7 @@ leaves the read state alone.
 | `backUrl` | `string` | URL of the message's folder |
 | `composeUrl` | `string \| null` | Compose URL, `null` without `workInMailbox` |
 | `contactUrl` | `string \| null` | "Add to address book" URL, `null` without `workInMailbox` or without a sender address |
+| `conversation` | `ConversationEntry[]` | The messages of the conversation, oldest first, see below; empty when the conversation view is off or the message is alone |
 | `folders` | `MailboxFolder[]` | Folder list, see [Folders and message list](folders.md#folder-list) |
 | `hasRemoteImages` | `boolean` | The HTML references remote images that are blocked |
 | `history` | `AuditEntry[]` | The last 20 audit entries with the message's `Message-ID` in this mailbox, newest first |
@@ -31,7 +32,8 @@ leaves the read state alone.
 | `message` | `object` | `id`, `subject`, `from_email`, `from_name`, `to`, `cc`, `sent_at`, `is_flagged`, `is_answered` |
 | `remoteImages` | `boolean` | Remote images are allowed in this render |
 
-`to` and `cc` are lists of `{ email, name }`.
+`to` and `cc` are lists of `{ email, name }`. A flagged message shows a flag before its subject, labelled with the
+`flagged` translation.
 
 ## Remote images
 
@@ -49,7 +51,28 @@ The default page renders `html` with the `MessageFrame` component. It writes the
   `imageOrigin` (inline images), or from anywhere when `remoteImages` is `true`
 - `referrerpolicy="no-referrer"` and `<base target="_blank">`, so links open in a new tab
 
-The frame grows to the height of its content. See [Components and helpers](../frontend/components.md#messageframe).
+The frame is at least as tall as the space left in the viewport below it, and grows with its content, also when images
+load later. See [Components and helpers](../frontend/components.md#messageframe).
+
+## Full screen
+
+The Full screen button opens the message in a full-screen dialog that the package renders itself (a `role="dialog"`
+overlay teleported to `<body>`, `z-40`), so it does not depend on a dialog component of the host. The reply, forward,
+archive, delete, flag, move and address book actions stay available in it. Esc (also inside the message) and the Close
+button close it, and focus returns to the button. While it is open, every other element directly under `<body>` is
+`inert`, so keyboard focus and assistive technology stay inside the dialog; elements added later, such as the host's
+confirm dialog, are not affected. Flag and unflag keep the dialog open (`preserveState`); mark unread, archive,
+delete and move go to the folder. The host's confirm dialog, which the delete action asks through
+`confirm`, needs a higher z-index than `40` to show on top; the dialogs of shadcn-vue and reka-ui use `z-50`.
+
+## Conversation
+
+When the mailbox has the conversation view on (core setting `conversation_view`), `conversation` lists up to 50
+messages of the mailbox with the same conversation key, across folders, oldest first. For a longer conversation it is
+a window around the open message, so the open message is always in it. Each entry has `id`, `subject`,
+`from` (name or address), `folder` (translated role or name), `sent_at` (ISO 8601), `url` and `current`. The default
+page shows them above the message, with the open message marked. See the core
+[conversation docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md#conversations).
 
 ## Attachments
 
@@ -83,6 +106,22 @@ The default page offers, depending on the URLs it gets:
 - Archive, Delete (with a confirmation), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
   `actionsUrl`. See [Message actions](folders.md#message-actions).
 - Add to address book, posted to `contactUrl`.
+- Full screen, see above.
+
+The actions are the `MessageActions` component, used both in the toolbar and in the full-screen dialog.
+
+### Extra actions of the host
+
+The page has an `actions` slot, rendered after the package actions in the toolbar and again in the full-screen
+dialog, so host actions stay available there too. A host wraps the page and fills the slot:
+
+```vue
+<MailboxShow v-bind="props">
+    <template #actions>
+        <Link :href="todoUrl" class="...">Todo from mail</Link>
+    </template>
+</MailboxShow>
+```
 
 ## Add the sender to the address book
 
