@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0 - 2026-10-26
+
+- Browser notifications for new mail while a page of the app is open (no service worker, no web push). The folder page and the message view have a toggle, the new `NotificationToggle` component ("Meldingen aanzetten" / "Meldingen uitzetten", disabled with "Meldingen geblokkeerd door browser" when the user denied the permission). It asks the browser for permission only on a click, never on load, and remembers the choice per browser in `localStorage` (`vue-mailbox.notifications`). See `docs/notifications.md`.
+- While notifications are on, the open tab polls the new route `GET notifications?after=<cursor>` (`mailbox.notifications`) every `vue-mailbox.poll_seconds` seconds. It needs `accessAnyMailbox`, is throttled to 60 requests per minute per user (`VueMailboxServiceProvider::NOTIFICATIONS_LIMITER`) and returns the unread INBOX messages newer than the cursor and sent in the last 24 hours (or undated) of the active mailboxes the user passes `accessMailbox` for, skipping messages sent from those mailbox addresses or the user's own address: `count`, the newest ten as `messages` (`MailboxNotifications::LIMIT`) and the next `cursor`. The first poll only fetches the cursor, so messages that were already there get no notification.
+- One notification per new message (sender, subject and mailbox name), or one "N nieuwe berichten" notification when more than three arrive in one poll. Clicking focuses the tab and opens the message. A message in the folder on screen is skipped while the tab is visible and focused.
+- The logic is the composable `useMailboxNotifications()` in `@mailbox/notifications`, so a host can put the toggle in its own layout. `ShareMailboxTranslations` and `ShareMailboxNavigation` share the new prop `vueMailboxNotifications` (`url`, `poll_seconds`, translated `labels`), `null` without `accessAnyMailbox`.
+- New `MailboxNavigation::visible($user)`: the active mailboxes the user may open, as models.
+- New translations `new_messages` and `notifications_*` in `vue-mailbox::mailbox` (nl and en).
+- Rebuild the frontend after updating. See `docs/upgrading.md`.
+
 ## 0.7.0 - 2026-10-24
 
 - The access form on the mailbox settings page no longer sends every user and group to the browser. Its `accessor` select searches the new route `GET settings/{mailbox}/accessors?q=<term>` (`mailbox.settings.accessors`) from two characters on, which returns at most 20 matching users (by name or e-mail) and groups (by label) as `[{value, label}]`. The route needs `manageMailbox`, like the rest of the access section, and is throttled to 60 requests per minute per user (`ACCESSOR_SEARCH_LIMITER`).

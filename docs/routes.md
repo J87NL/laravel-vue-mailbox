@@ -39,6 +39,7 @@ mailbox, so a message of another mailbox answers `404`.
 | Method | URI | Name | Ability |
 |---|---|---|---|
 | GET | `/` | `mailbox.index` | `accessAnyMailbox` |
+| GET | `notifications?after=` | `mailbox.notifications` | `accessAnyMailbox`, `throttle:vue-mailbox-notifications` |
 | GET | `{mailbox}/folders/{folder?}` | `mailbox.folders.show` | `accessMailbox` |
 | POST | `{mailbox}/folders/{folder}/refresh` | `mailbox.folders.refresh` | `accessMailbox`, `throttle:vue-mailbox-refresh` |
 | GET | `{mailbox}/messages/{message}` | `mailbox.messages.show` | `accessMailbox` |
@@ -60,6 +61,8 @@ mailbox, so a message of another mailbox answers `404`.
 row and the unread count change right away; the `\Seen` flag is set on the server after the response (core
 `MarkMessages::readInBackground()`), so opening does not wait for IMAP. The attachment download and the inline route
 read the raw message the core cached on that first fetch (core `cache.raw_hours`), after the same checks as always.
+
+`mailbox.notifications` returns, as JSON, the new unread inbox messages since the `after` cursor, only from the mailboxes the user passes `accessMailbox` for, limited to 60 requests per minute per user (`VueMailboxServiceProvider::NOTIFICATIONS_LIMITER`). See [Browser notifications](notifications.md).
 
 `mailbox.addresses` takes the search text as the `q` query parameter, see
 [Address suggestions](pages/compose.md#address-suggestions).

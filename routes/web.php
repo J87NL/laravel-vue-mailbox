@@ -9,6 +9,7 @@ use J87NL\VueMailbox\Http\Controllers\ContactController;
 use J87NL\VueMailbox\Http\Controllers\FolderController;
 use J87NL\VueMailbox\Http\Controllers\MessageActionController;
 use J87NL\VueMailbox\Http\Controllers\MessageController;
+use J87NL\VueMailbox\Http\Controllers\NotificationController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxAccessController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxSettingsController;
 use J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations;
@@ -30,6 +31,13 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
             Route::get('/', [FolderController::class, 'index'])
                 ->middleware('can:accessAnyMailbox')
                 ->name('index');
+
+            Route::get('notifications', NotificationController::class)
+                ->middleware([
+                    'can:accessAnyMailbox',
+                    sprintf('throttle:%s', VueMailboxServiceProvider::NOTIFICATIONS_LIMITER),
+                ])
+                ->name('notifications');
 
             Route::prefix('settings')->name('settings.')->group(function (): void {
                 Route::get('/', [MailboxSettingsController::class, 'index'])->middleware('can:manageAnyMailbox')->name('index');

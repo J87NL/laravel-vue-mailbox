@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace J87NL\VueMailbox\Support;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Access\MailboxAccessResolver;
 use J87NL\Mailbox\Enums\FolderRole;
@@ -22,17 +23,7 @@ class MailboxNavigation
             return [];
         }
 
-        $mailboxes = Mailbox::query()
-            ->where('active', true)
-            ->orderBy('name')
-            ->orderBy('id')
-            ->get();
-
-        app(MailboxAccessResolver::class)->preload($user, $mailboxes->modelKeys());
-
-        $visible = $mailboxes
-            ->filter(fn (Mailbox $mailbox): bool => Gate::forUser($user)->allows('accessMailbox', $mailbox))
-            ->values();
+        $visible = $this->visible($user);
 
         $unseen = $this->unseenInInbox($visible->modelKeys());
         $routes = config('vue-mailbox.routes.name');
@@ -48,6 +39,24 @@ class MailboxNavigation
                 'url' => route($routes.'folders.show', $mailbox),
             ])
             ->all();
+    }
+
+    /**
+     * @return Collection<int, Mailbox>
+     */
+    public function visible(Authenticatable $user): Collection
+    {
+        $mailboxes = Mailbox::query()
+            ->where('active', true)
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get();
+
+        app(MailboxAccessResolver::class)->preload($user, $mailboxes->modelKeys());
+
+        return $mailboxes
+            ->filter(fn (Mailbox $mailbox): bool => Gate::forUser($user)->allows('accessMailbox', $mailbox))
+            ->values();
     }
 
     /**

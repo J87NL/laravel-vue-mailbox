@@ -8,6 +8,8 @@ Everything below is imported through the `@mailbox` alias, which points to
 | `@mailbox/components/FolderList.vue` | The folder navigation |
 | `@mailbox/components/MessageFrame.vue` | The sandboxed message iframe |
 | `@mailbox/components/MessageActions.vue` | Reply, forward and message action buttons of the message view |
+| `@mailbox/components/NotificationToggle.vue` | The button that turns browser notifications on and off, see [Browser notifications](../notifications.md) |
+| `@mailbox/notifications` | `useMailboxNotifications()`, `MAILBOX_NOTIFICATIONS`, `MAILBOX_NOTIFICATIONS_STORAGE_KEY` |
 | `@mailbox/confirm` | `useMailboxConfirm()`, `MAILBOX_CONFIRM` |
 | `@mailbox/padding` | `useMailboxPagePadding()`, `MAILBOX_PAGE_PADDING` |
 | `@mailbox/translations` | `useMailboxTranslations()`, `MAILBOX_TRANSLATIONS` |

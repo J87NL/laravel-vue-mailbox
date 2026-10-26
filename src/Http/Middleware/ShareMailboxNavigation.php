@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use J87NL\VueMailbox\Support\MailboxNavigation;
+use J87NL\VueMailbox\Support\MailboxNotifications;
 use Symfony\Component\HttpFoundation\Response;
 
 class ShareMailboxNavigation
@@ -24,6 +25,8 @@ class ShareMailboxNavigation
     public function handle(Request $request, Closure $next): Response
     {
         Inertia::share(self::PROP, fn (): array => $this->navigation->for($request->user()));
+
+        Inertia::share(MailboxNotifications::PROP, fn (): ?array => MailboxNotifications::shared($request->user()));
 
         return $next($request);
     }

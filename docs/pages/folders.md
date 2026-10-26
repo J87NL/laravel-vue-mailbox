@@ -45,6 +45,11 @@ RateLimiter::for('vue-mailbox-refresh', fn (Request $request): Limit => Limit::p
 returns to the folder. With a `sync` queue the new mail shows right away; with a queue worker it shows on the next poll.
 The core job is unique per folder for 120 seconds, so repeated clicks do not stack syncs.
 
+## Notifications
+
+The toolbar has a toggle for browser notifications on new mail while the app is open. A new message in the folder on
+screen gets no notification while the tab is visible and has focus. See [Browser notifications](../notifications.md).
+
 ## Props
 
 | Prop | Type | Description |

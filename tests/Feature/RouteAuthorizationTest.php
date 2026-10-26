@@ -136,6 +136,10 @@ function endpoint(string $name, Mailbox $mailbox): array
             'delete',
             route('mailbox.settings.destroy', $mailbox),
         ],
+        'notifications' => [
+            'get',
+            route('mailbox.notifications', ['after' => 0]),
+        ],
     };
 }
 
@@ -179,6 +183,7 @@ function routeMatrix(): array
         'settings.create' => 'admin',
         'settings.store' => 'admin',
         'settings.destroy' => 'admin',
+        'notifications' => 'read',
     ];
 
     $cases = [];

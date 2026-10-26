@@ -13,6 +13,12 @@
   requests are checked as well. See [Tables](tables.md).
 - The access form gets no list of users and groups. It searches them through `mailbox.settings.accessors`, which needs
   `manageMailbox`, is throttled and returns at most 20 matches.
+- `mailbox.notifications` needs `accessAnyMailbox` and then filters every message on `accessMailbox` of its mailbox
+  (active mailboxes only, inbox only), so it never returns a message of a mailbox the user may not read. It is
+  throttled and returns at most ten messages. Its cursor is the highest message id, which says nothing about the
+  content of other mailboxes; a user who compares cursors can only see how many messages arrived in all mailboxes
+  together. The shared `vueMailboxNotifications` prop is `null` for users without
+  `accessAnyMailbox`, which hides the toggle.
 - Controllers pass `null` for URLs the user may not call. Hiding a button is a convenience; the route check is the
   guard.
 

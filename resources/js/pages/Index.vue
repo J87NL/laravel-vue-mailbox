@@ -7,6 +7,7 @@ import TableBuilder from '@table-builder/components/TableBuilder.vue'
 import { useMailboxConfirm } from '@mailbox/confirm'
 import type { TableData } from '@table-builder/types/table-builder'
 import FolderList from '@mailbox/components/FolderList.vue'
+import NotificationToggle from '@mailbox/components/NotificationToggle.vue'
 import { useMailboxTranslations } from '@mailbox/translations'
 import type { MailboxFolder, MailboxSummary } from '@mailbox/types'
 import { ui } from '@mailbox/ui'
@@ -100,6 +101,7 @@ function switchMailbox(event: Event): void {
                     <button v-if="refreshUrl" type="button" :class="ui.button" :disabled="refreshing" @click="refresh">
                         {{ refreshing ? t('refreshing') : t('refresh') }}
                     </button>
+                    <NotificationToggle :folder-id="folder?.id ?? null" />
                     <Link :href="contactsUrl" :class="[ui.button, 'md:hidden']">{{ t('contacts') }}</Link>
                     <Link v-if="settingsUrl" :href="settingsUrl" :class="ui.button">{{ t('settings') }}</Link>
                     <Link v-if="composeUrl" :href="composeUrl" :class="[ui.primaryButton, 'md:hidden']">{{ t('new') }}</Link>

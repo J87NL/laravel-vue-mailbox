@@ -4,6 +4,7 @@ import { nextTick, onBeforeUnmount, ref } from 'vue'
 import FolderList from '@mailbox/components/FolderList.vue'
 import MessageActions from '@mailbox/components/MessageActions.vue'
 import MessageFrame from '@mailbox/components/MessageFrame.vue'
+import NotificationToggle from '@mailbox/components/NotificationToggle.vue'
 import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
@@ -115,6 +116,7 @@ function addresses(list: MailAddress[] | null): string {
                 />
                 <slot name="actions" />
                 <button type="button" :class="ui.button" @click="openFullscreen">{{ t('open_fullscreen') }}</button>
+                <NotificationToggle />
             </div>
 
             <nav v-if="conversation?.length" :class="[ui.panel, 'p-0']" :aria-label="t('conversation')">

@@ -15,6 +15,7 @@
     - [Customizing pages](frontend/customizing-pages.md)
     - [Translations](frontend/translations.md)
     - [Components and helpers](frontend/components.md)
+- [Browser notifications](notifications.md)
 - [Inline images](inline-images.md)
 - [Artisan commands](artisan-commands.md)
 - [Security](security.md)

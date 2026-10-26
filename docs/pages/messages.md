@@ -107,6 +107,7 @@ The default page offers, depending on the URLs it gets:
   `actionsUrl`. See [Message actions](folders.md#message-actions).
 - Add to address book, posted to `contactUrl`.
 - Full screen, see above.
+- The toggle for browser notifications, see [Browser notifications](../notifications.md).
 
 The actions are the `MessageActions` component, used both in the toolbar and in the full-screen dialog.
 

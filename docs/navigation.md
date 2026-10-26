@@ -48,6 +48,9 @@ use J87NL\VueMailbox\Http\Middleware\ShareMailboxNavigation;
 </Link>
 ```
 
+The middleware also shares `vueMailboxNotifications` (`MailboxNotifications::PROP`), the endpoint and texts of the
+[browser notifications](notifications.md), so a toggle in the host layout keeps working outside the mailbox pages.
+
 A host that builds its menu on the server (such as j87.nl's `NavigationRegistry`) calls `MailboxNavigation` directly
 instead. Gate the menu on `accessAnyMailbox` as before; when the list is empty, fall back to a single link to
 `mailbox.index`, which sends a manager without a mailbox to the settings.

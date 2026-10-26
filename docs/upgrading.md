@@ -3,6 +3,16 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.7 to 0.8: browser notifications
+
+- No migration and no config change. Rebuild the frontend (`npm run build`) so the toggle is bundled.
+- Hosts on the default pages (`mailbox/Index`, `mailbox/Show`) get the toggle in the toolbar without a change.
+- An app with copied `Index` or `Show` pages adds `<NotificationToggle :folder-id="folder?.id ?? null" />` (folder
+  page) or `<NotificationToggle />` (message view) from `@mailbox/components/NotificationToggle.vue` to its toolbar.
+- To keep notifications running on other pages of the app, add the toggle to that layout and the
+  `ShareMailboxNavigation` middleware to its routes. See [Browser notifications](notifications.md).
+- A strict `Content-Security-Policy` needs no change: the poll is a same-origin `fetch`.
+
 ## From 0.6 to 0.7: searching the access form
 
 - Requires `j87nl/laravel-mailbox` ^0.5 and `tranquil-tools/laravel-vue-form-builder` ^1.13. Update them together:

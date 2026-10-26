@@ -95,6 +95,8 @@ The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['ta
 
 The folder page shows only the folders of the open mailbox, with a compact mailbox switcher when the user has several (`vue-mailbox.mailbox_switcher`, default `true`). To list every mailbox in the host menu, use `J87NL\VueMailbox\Support\MailboxNavigation::for($user)` or the `ShareMailboxNavigation` middleware, which shares it as the `mailboxNavigation` prop (`id`, `name`, `email`, `unseen`, `url`, `active_path`); see `docs/navigation.md`.
 
+Browser notifications: the folder page and the message view have a "Meldingen aanzetten" toggle. Once the user turns it on (the browser asks for permission then, never on load), the open tab polls `mailbox.notifications` every `poll_seconds` and shows a notification per new unread inbox message of the mailboxes the user may read (one "N nieuwe berichten" notification above three). Clicking it opens the message. No service worker: it only works while a tab of the app is open. See `docs/notifications.md`.
+
 The message view fills the viewport and has a Full screen button that opens the message, with its actions, in a package-owned dialog (Esc or Close closes it). It needs no dialog component of the host; the host's `confirm` dialog must sit above `z-40`.
 
 ## Routes
@@ -103,6 +105,7 @@ All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`)
 
 | Route | Ability |
 |---|---|
+| `mailbox.notifications` `GET notifications?after=` (new unread inbox messages, JSON, throttled) | `accessAnyMailbox`, then `accessMailbox` per message |
 | `mailbox.contacts.index` `GET {mailbox}/contacts` | `accessMailbox` |
 | `mailbox.contacts.create`, `.store`, `.edit`, `.update`, `.destroy` | `workInMailbox` |
 | `mailbox.messages.contact` `POST {mailbox}/messages/{message}/contact` (add the sender to the address book) | `workInMailbox` |

@@ -24,6 +24,8 @@ class VueMailboxServiceProvider extends PackageServiceProvider
 
     public const ACCESSOR_SEARCH_LIMITER = 'vue-mailbox-accessor-search';
 
+    public const NOTIFICATIONS_LIMITER = 'vue-mailbox-notifications';
+
     public function configurePackage(Package $package): void
     {
         $package
@@ -56,6 +58,9 @@ class VueMailboxServiceProvider extends PackageServiceProvider
 
         RateLimiter::for(self::ACCESSOR_SEARCH_LIMITER, fn (Request $request): Limit => Limit::perMinute(60)
             ->by(sprintf('%s|%s', self::ACCESSOR_SEARCH_LIMITER, $request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        RateLimiter::for(self::NOTIFICATIONS_LIMITER, fn (Request $request): Limit => Limit::perMinute(60)
+            ->by(sprintf('%s|%s', self::NOTIFICATIONS_LIMITER, $request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         $this->app->booted(function (): void {
             self::defineAbilities();

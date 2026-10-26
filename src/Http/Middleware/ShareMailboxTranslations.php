@@ -7,6 +7,7 @@ namespace J87NL\VueMailbox\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use J87NL\VueMailbox\Support\MailboxNotifications;
 use Symfony\Component\HttpFoundation\Response;
 
 class ShareMailboxTranslations
@@ -22,6 +23,8 @@ class ShareMailboxTranslations
             ...$this->group('mailbox::mailbox'),
             ...$this->group('vue-mailbox::mailbox'),
         ]);
+
+        Inertia::share(MailboxNotifications::PROP, fn (): ?array => MailboxNotifications::shared($request->user()));
 
         return $next($request);
     }

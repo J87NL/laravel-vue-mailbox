@@ -67,5 +67,6 @@ php artisan mailbox:install --pages
 - [Configuration](configuration.md) - route prefix, page names, polling and signed URLs
 - [Routes and authorization](routes.md) - every route and the ability it needs
 - [Customizing pages](frontend/customizing-pages.md) - replace or edit the Inertia pages
+- [Browser notifications](notifications.md) - notifications for new mail while the app is open
 - [Upgrading](upgrading.md) - what to change when you update the package
 - [laravel-mailbox docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/index.md) - the core package

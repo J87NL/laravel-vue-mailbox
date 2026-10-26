@@ -44,7 +44,9 @@ exports the prop name as `MAILBOX_TRANSLATIONS`.
 
 The empty state of `mailbox.index` uses this package's own file `vue-mailbox::mailbox` (`no_mailbox_title`,
 `no_mailbox_hint`, nl and en). The controller translates them and passes them as the `title` and `hint` props, so they
-are not part of the shared prop. Override them in `lang/vendor/vue-mailbox/{locale}/mailbox.php`, or publish them with
+are not part of the shared prop. The texts of the notification toggle and the notifications (`new_messages`,
+`notifications_*`) arrive translated in the `labels` of the `vueMailboxNotifications` prop, so a host layout outside
+the mailbox routes shows them too. Override them in `lang/vendor/vue-mailbox/{locale}/mailbox.php`, or publish them with
 the `vue-mailbox-translations` tag.
 
 ## Changing texts
