@@ -116,7 +116,7 @@ function addresses(list: MailAddress[] | null): string {
                 />
                 <slot name="actions" />
                 <button type="button" :class="ui.button" @click="openFullscreen">{{ t('open_fullscreen') }}</button>
-                <NotificationToggle />
+                <NotificationToggle :mailbox-id="mailbox.id" />
             </div>
 
             <nav v-if="conversation?.length" :class="[ui.panel, 'p-0']" :aria-label="t('conversation')">

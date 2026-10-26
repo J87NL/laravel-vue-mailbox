@@ -40,7 +40,9 @@ class MailboxNotifications
                 'blocked' => __('vue-mailbox::mailbox.notifications_blocked'),
                 'blocked_hint' => __('vue-mailbox::mailbox.notifications_blocked_hint'),
                 'disable' => __('vue-mailbox::mailbox.notifications_disable'),
+                'disable_mailbox' => __('vue-mailbox::mailbox.notifications_disable_mailbox'),
                 'enable' => __('vue-mailbox::mailbox.notifications_enable'),
+                'enable_mailbox' => __('vue-mailbox::mailbox.notifications_enable_mailbox'),
                 'new_messages' => __('vue-mailbox::mailbox.new_messages'),
                 'no_subject' => __('mailbox::mailbox.no_subject'),
                 'off_hint' => __('vue-mailbox::mailbox.notifications_off_hint'),
@@ -52,20 +54,19 @@ class MailboxNotifications
     }
 
     /**
-     * @return array{count: int, cursor: int, messages: list<array{folder_id: int, folder_url: string, from_email: string|null, from_name: string|null, id: int, mailbox_id: int, mailbox_name: string, sent_at: string|null, subject: string|null, url: string}>}
+     * @param  list<int>|null  $mailboxIds
+     * @return array{count: int, cursor: int, mailboxes: list<int>, messages: list<array{folder_id: int, folder_url: string, from_email: string|null, from_name: string|null, id: int, mailbox_id: int, mailbox_name: string, sent_at: string|null, subject: string|null, url: string}>}
      */
-    public function since(Authenticatable $user, ?int $after): array
+    public function since(Authenticatable $user, ?int $after, ?array $mailboxIds = null): array
     {
         $cursor = (int) MailboxMessage::query()->max('id');
 
-        if (is_null($after) || $after >= $cursor) {
-            return $this->empty($cursor);
-        }
+        $mailboxes = $this->navigation->visible($user)
+            ->when(! is_null($mailboxIds), fn (Collection $visible): Collection => $visible->whereIn('id', $mailboxIds))
+            ->keyBy('id');
 
-        $mailboxes = $this->navigation->visible($user)->keyBy('id');
-
-        if ($mailboxes->isEmpty()) {
-            return $this->empty($cursor);
+        if (is_null($after) || $after >= $cursor || $mailboxes->isEmpty()) {
+            return $this->empty($cursor, $mailboxes->keys()->all());
         }
 
         $query = $this->unread($mailboxes, $user, $after, $cursor);
@@ -106,6 +107,7 @@ class MailboxNotifications
         return [
             'count' => $count,
             'cursor' => $cursor,
+            'mailboxes' => $mailboxes->keys()->all(),
             'messages' => $messages,
         ];
     }
@@ -147,13 +149,15 @@ class MailboxNotifications
     }
 
     /**
-     * @return array{count: int, cursor: int, messages: list<never>}
+     * @param  list<int>  $mailboxIds
+     * @return array{count: int, cursor: int, mailboxes: list<int>, messages: list<never>}
      */
-    private function empty(int $cursor): array
+    private function empty(int $cursor, array $mailboxIds): array
     {
         return [
             'count' => 0,
             'cursor' => $cursor,
+            'mailboxes' => $mailboxIds,
             'messages' => [],
         ];
     }

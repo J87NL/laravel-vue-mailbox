@@ -4,10 +4,12 @@ import { ui } from '@mailbox/ui'
 
 const props = defineProps<{
     folderId?: number | null
+    mailboxId?: number | null
 }>()
 
 const { hint, label, state, toggle } = useMailboxNotifications({
     folderId: () => props.folderId ?? null,
+    mailboxId: () => props.mailboxId ?? null,
 })
 </script>
 

@@ -21,6 +21,9 @@ it('answers the current cursor without messages on the first poll', function ():
         ->assertExactJson([
             'count' => 0,
             'cursor' => $message->id,
+            'mailboxes' => [
+                $mailbox->id,
+            ],
             'messages' => [],
         ]);
 });
@@ -75,6 +78,9 @@ it('returns only new unread inbox messages of mailboxes the user may read', func
         ->assertExactJson([
             'count' => 1,
             'cursor' => $last->id,
+            'mailboxes' => [
+                $team->id,
+            ],
             'messages' => [
                 [
                     'folder_id' => $inbox->id,
@@ -95,6 +101,82 @@ it('returns only new unread inbox messages of mailboxes the user may read', func
         ->assertOk()
         ->assertJsonPath('count', 0)
         ->assertJsonPath('messages', []);
+});
+
+it('only returns messages of the requested mailboxes the user may read', function (): void {
+    $team = mailbox();
+    $sales = mailbox([
+        'email' => 'sales@example.com',
+        'name' => 'Sales',
+    ]);
+    $hidden = mailbox([
+        'email' => 'board@example.com',
+        'name' => 'Board',
+    ]);
+    $teamInbox = folder($team);
+    $salesInbox = folder($sales);
+    $hiddenInbox = folder($hidden);
+    $user = member($team, AccessLevel::Read);
+    $sales->accesses()->create([
+        'accessor_id' => $user->id,
+        'accessor_type' => $user->getMorphClass(),
+        'level' => AccessLevel::Read,
+    ]);
+    $before = storedMessage($teamInbox, 1);
+    storedMessage($teamInbox, 2);
+    $wanted = storedMessage($salesInbox, 3);
+    storedMessage($hiddenInbox, 4);
+
+    $this->actingAs($user)
+        ->getJson(route('mailbox.notifications', [
+            'after' => $before->id,
+            'mailboxes' => [
+                $sales->id,
+                $hidden->id,
+                999,
+            ],
+        ]))
+        ->assertOk()
+        ->assertJsonPath('count', 1)
+        ->assertJsonPath('mailboxes', [
+            $sales->id,
+        ])
+        ->assertJsonPath('messages.0.id', $wanted->id);
+
+    $this->getJson(route('mailbox.notifications', [
+        'after' => $before->id,
+        'mailboxes' => [
+            $hidden->id,
+        ],
+    ]))
+        ->assertOk()
+        ->assertJsonPath('count', 0)
+        ->assertJsonPath('mailboxes', [])
+        ->assertJsonPath('messages', []);
+
+    $this->getJson(route('mailbox.notifications', [
+        'after' => $before->id,
+    ]))
+        ->assertOk()
+        ->assertJsonPath('count', 2)
+        ->assertJsonPath('mailboxes', [
+            $sales->id,
+            $team->id,
+        ]);
+});
+
+it('rejects mailbox ids that are not numbers', function (): void {
+    $mailbox = mailbox();
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->getJson(route('mailbox.notifications', [
+            'after' => 0,
+            'mailboxes' => [
+                'abc',
+            ],
+        ]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('mailboxes.0');
 });
 
 it('counts every new message but returns at most the newest ten', function (): void {

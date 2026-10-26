@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.1 - 2026-10-26
+
+- Browser notifications are switched per mailbox. The toggle on the folder page and the message view now switches the open mailbox only ("Meldingen aanzetten voor deze mailbox" / "Meldingen uitzetten voor deze mailbox", nl and en). `NotificationToggle` and `useMailboxNotifications()` take a `mailboxId`; without it they switch all mailboxes at once as before.
+- The choice is stored per browser as a map of mailbox ids in `localStorage` (`vue-mailbox.notifications`). The value `on` of 0.8.0 means all mailboxes the user may read and becomes that map on the first poll, so existing users keep their notifications. The tab does not poll when no mailbox has notifications on.
+- `mailbox.notifications` takes optional `mailboxes[]` ids and only returns messages of those mailboxes the user may read; ids of other mailboxes are ignored, ids that are not whole numbers answer `422`. The answer has a new `mailboxes` key with the ids it used.
+- Copied `Index` or `Show` pages pass `:mailbox-id="mailbox.id"` to the toggle. See `docs/upgrading.md`.
+
 ## 0.8.0 - 2026-10-26
 
 - Browser notifications for new mail while a page of the app is open (no service worker, no web push). The folder page and the message view have a toggle, the new `NotificationToggle` component ("Meldingen aanzetten" / "Meldingen uitzetten", disabled with "Meldingen geblokkeerd door browser" when the user denied the permission). It asks the browser for permission only on a click, never on load, and remembers the choice per browser in `localStorage` (`vue-mailbox.notifications`). See `docs/notifications.md`.

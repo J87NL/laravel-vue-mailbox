@@ -101,7 +101,7 @@ function switchMailbox(event: Event): void {
                     <button v-if="refreshUrl" type="button" :class="ui.button" :disabled="refreshing" @click="refresh">
                         {{ refreshing ? t('refreshing') : t('refresh') }}
                     </button>
-                    <NotificationToggle :folder-id="folder?.id ?? null" />
+                    <NotificationToggle :folder-id="folder?.id ?? null" :mailbox-id="mailbox.id" />
                     <Link :href="contactsUrl" :class="[ui.button, 'md:hidden']">{{ t('contacts') }}</Link>
                     <Link v-if="settingsUrl" :href="settingsUrl" :class="ui.button">{{ t('settings') }}</Link>
                     <Link v-if="composeUrl" :href="composeUrl" :class="[ui.primaryButton, 'md:hidden']">{{ t('new') }}</Link>

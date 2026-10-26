@@ -19,10 +19,19 @@ class NotificationController extends Controller
                 'integer',
                 'min:0',
             ],
+            'mailboxes' => [
+                'sometimes',
+                'array',
+            ],
+            'mailboxes.*' => [
+                'integer',
+                'min:1',
+            ],
         ]);
 
         $after = isset($data['after']) ? (int) $data['after'] : null;
+        $mailboxIds = isset($data['mailboxes']) ? array_values(array_map(intval(...), $data['mailboxes'])) : null;
 
-        return response()->json($notifications->since($request->user(), $after));
+        return response()->json($notifications->since($request->user(), $after, $mailboxIds));
     }
 }

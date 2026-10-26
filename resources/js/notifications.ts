@@ -29,6 +29,7 @@ export interface NewMailboxMessage {
 export interface NewMailboxMessages {
     count: number
     cursor: number
+    mailboxes: number[]
     messages: NewMailboxMessage[]
 }
 
@@ -36,13 +37,23 @@ export type MailboxNotificationState = 'unavailable' | 'blocked' | 'on' | 'off'
 
 export interface MailboxNotificationsOptions {
     folderId?: () => number | null
+    mailboxId?: () => number | null
 }
 
-const enabled = ref(false)
+interface MailboxNotificationsPreference {
+    all: boolean
+    excluded: number[]
+    mailboxes: number[]
+}
+
+const allMailboxes = ref(false)
+const enabledMailboxes = ref<number[]>([])
+const excludedMailboxes = ref<number[]>([])
 const permission = ref<NotificationPermission | 'unsupported'>('unsupported')
 const config = ref<MailboxNotificationsConfig | null>(null)
 
 let cursor: number | null = null
+let loaded = false
 let lastPoll = 0
 let polling = false
 let timer: ReturnType<typeof setInterval> | null = null
@@ -57,20 +68,76 @@ function currentPermission(): NotificationPermission | 'unsupported' {
     return supported() ? Notification.permission : 'unsupported'
 }
 
-function readPreference(): boolean {
+function readPreference(): MailboxNotificationsPreference {
+    const none: MailboxNotificationsPreference = { all: false, excluded: [], mailboxes: [] }
+
     try {
-        return window.localStorage.getItem(MAILBOX_NOTIFICATIONS_STORAGE_KEY) === 'on'
+        const value = window.localStorage.getItem(MAILBOX_NOTIFICATIONS_STORAGE_KEY)
+
+        if (value === 'on') {
+            return { all: true, excluded: [], mailboxes: [] }
+        }
+
+        if (!value || value === 'off') {
+            return none
+        }
+
+        const parsed: unknown = JSON.parse(value)
+
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return none
+        }
+
+        const entries = Object.entries(parsed as Record<string, unknown>)
+        const ids = (on: boolean): number[] => entries
+            .filter(([id, value]) => id !== '*' && value === on)
+            .map(([id]) => Number(id))
+            .filter((id) => Number.isInteger(id) && id > 0)
+
+        return {
+            all: (parsed as Record<string, unknown>)['*'] === true,
+            excluded: ids(false),
+            mailboxes: ids(true),
+        }
     } catch {
-        return false
+        return none
     }
 }
 
-function writePreference(on: boolean): void {
+function writePreference(): void {
     try {
-        window.localStorage.setItem(MAILBOX_NOTIFICATIONS_STORAGE_KEY, on ? 'on' : 'off')
+        if (allMailboxes.value) {
+            window.localStorage.setItem(
+                MAILBOX_NOTIFICATIONS_STORAGE_KEY,
+                JSON.stringify({ '*': true, ...Object.fromEntries(excludedMailboxes.value.map((id) => [String(id), false])) }),
+            )
+
+            return
+        }
+
+        window.localStorage.setItem(
+            MAILBOX_NOTIFICATIONS_STORAGE_KEY,
+            JSON.stringify(Object.fromEntries(enabledMailboxes.value.map((id) => [String(id), true]))),
+        )
     } catch {
         return
     }
+}
+
+function anyEnabled(): boolean {
+    return allMailboxes.value || enabledMailboxes.value.length > 0
+}
+
+function enabledFor(mailboxId: number | null): boolean {
+    if (mailboxId === null) {
+        return anyEnabled()
+    }
+
+    if (allMailboxes.value) {
+        return !excludedMailboxes.value.includes(mailboxId)
+    }
+
+    return enabledMailboxes.value.includes(mailboxId)
 }
 
 function label(key: string, replacements: Record<string, string | number> = {}): string {
@@ -86,7 +153,7 @@ function label(key: string, replacements: Record<string, string | number> = {}):
 function active(): boolean {
     permission.value = currentPermission()
 
-    return config.value !== null && enabled.value && permission.value === 'granted'
+    return config.value !== null && anyEnabled() && permission.value === 'granted'
 }
 
 function show(title: string, body: string, tag: string, url: string): void {
@@ -105,7 +172,7 @@ function show(title: string, body: string, tag: string, url: string): void {
 function announce(data: NewMailboxMessages): void {
     const looking = document.visibilityState === 'visible' && document.hasFocus()
     const folderId = currentFolder()
-    const shown = data.messages.filter((message) => !(looking && message.folder_id === folderId))
+    const shown = data.messages.filter((message) => enabledFor(message.mailbox_id) && !(looking && message.folder_id === folderId))
     const total = data.count - (data.messages.length - shown.length)
 
     if (shown.length === 0) {
@@ -141,8 +208,14 @@ async function poll(): Promise<void> {
     try {
         const url = new URL(config.value.url, window.location.origin)
 
+        const requestedAll = allMailboxes.value
+
         if (cursor !== null) {
             url.searchParams.set('after', String(cursor))
+        }
+
+        if (!requestedAll) {
+            enabledMailboxes.value.forEach((id) => url.searchParams.append('mailboxes[]', String(id)))
         }
 
         const response = await fetch(url, {
@@ -161,6 +234,20 @@ async function poll(): Promise<void> {
         const first = cursor === null
 
         cursor = data.cursor
+
+        if (requestedAll && allMailboxes.value) {
+            allMailboxes.value = false
+            enabledMailboxes.value = data.mailboxes.filter((id) => !excludedMailboxes.value.includes(id))
+            excludedMailboxes.value = []
+            writePreference()
+        }
+
+        if (!anyEnabled()) {
+            stop()
+            cursor = null
+
+            return
+        }
 
         if (first || !active()) {
             return
@@ -197,7 +284,7 @@ function stop(): void {
     timer = null
 }
 
-async function enable(): Promise<void> {
+async function enable(mailboxId: number | null): Promise<void> {
     if (!supported()) {
         return
     }
@@ -210,20 +297,52 @@ async function enable(): Promise<void> {
         return
     }
 
-    enabled.value = true
-    writePreference(true)
+    if (mailboxId === null) {
+        allMailboxes.value = true
+        excludedMailboxes.value = []
+    }
+
+    if (mailboxId !== null) {
+        excludedMailboxes.value = excludedMailboxes.value.filter((id) => id !== mailboxId)
+    }
+
+    if (mailboxId !== null && !allMailboxes.value && !enabledMailboxes.value.includes(mailboxId)) {
+        enabledMailboxes.value = [...enabledMailboxes.value, mailboxId]
+    }
+
+    writePreference()
     start()
 }
 
-function disable(): void {
-    enabled.value = false
-    writePreference(false)
+function disable(mailboxId: number | null): void {
+    if (mailboxId === null) {
+        allMailboxes.value = false
+        enabledMailboxes.value = []
+        excludedMailboxes.value = []
+    }
+
+    if (mailboxId !== null && allMailboxes.value) {
+        excludedMailboxes.value = [...excludedMailboxes.value, mailboxId]
+        writePreference()
+
+        return
+    }
+
+    enabledMailboxes.value = enabledMailboxes.value.filter((id) => id !== mailboxId)
+    writePreference()
+
+    if (anyEnabled()) {
+        return
+    }
+
     stop()
     cursor = null
 }
 
 export function useMailboxNotifications(options: MailboxNotificationsOptions = {}) {
     const page = usePage()
+
+    const mailboxId = computed(() => options.mailboxId?.() ?? null)
 
     const settings = computed(() => ((page.props as Record<string, unknown>)[MAILBOX_NOTIFICATIONS] as MailboxNotificationsConfig | null | undefined) ?? null)
 
@@ -236,7 +355,7 @@ export function useMailboxNotifications(options: MailboxNotificationsOptions = {
             return 'blocked'
         }
 
-        return enabled.value && permission.value === 'granted' ? 'on' : 'off'
+        return enabledFor(mailboxId.value) && permission.value === 'granted' ? 'on' : 'off'
     })
 
     const buttonLabel = computed(() => {
@@ -244,7 +363,9 @@ export function useMailboxNotifications(options: MailboxNotificationsOptions = {
             return label('blocked')
         }
 
-        return state.value === 'on' ? label('disable') : label('enable')
+        const suffix = mailboxId.value === null ? '' : '_mailbox'
+
+        return state.value === 'on' ? label(`disable${suffix}`) : label(`enable${suffix}`)
     })
 
     const hint = computed(() => {
@@ -257,18 +378,25 @@ export function useMailboxNotifications(options: MailboxNotificationsOptions = {
 
     async function toggle(): Promise<void> {
         if (state.value === 'on') {
-            disable()
+            disable(mailboxId.value)
 
             return
         }
 
-        await enable()
+        await enable(mailboxId.value)
     }
 
     onMounted(() => {
         users++
         config.value = settings.value
-        enabled.value = readPreference()
+        if (!loaded) {
+            const preference = readPreference()
+
+            loaded = true
+            allMailboxes.value = preference.all
+            excludedMailboxes.value = preference.excluded
+            enabledMailboxes.value = preference.mailboxes
+        }
         permission.value = currentPermission()
 
         if (options.folderId) {

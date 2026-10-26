@@ -3,6 +3,15 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.8.0 to 0.8.1: notifications per mailbox
+
+- Rebuild the frontend (`npm run build`). No migration, no config change.
+- Users who had notifications on keep them for every mailbox they may read; the stored `on` turns into a per-mailbox
+  choice on the first poll.
+- An app with copied `Index` or `Show` pages passes the mailbox to the toggle: `<NotificationToggle
+  :folder-id="folder?.id ?? null" :mailbox-id="mailbox.id" />` (folder page) or `<NotificationToggle
+  :mailbox-id="mailbox.id" />` (message view). Without `mailbox-id` the toggle switches all mailboxes at once.
+
 ## From 0.7 to 0.8: browser notifications
 
 - No migration and no config change. Rebuild the frontend (`npm run build`) so the toggle is bundled.
