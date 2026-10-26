@@ -3,6 +3,12 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.8.1 to 0.8.2: folders that are not synced
+
+- Needs `j87nl/laravel-mailbox` ^0.5.3. Rebuild the frontend (`npm run build`). No migration, no config change.
+- Hosts on the default pages get the muted folders and the notice without a change.
+- An app with a copied `Index` page adds the `syncNotice` prop and shows it above the list, for example `<div v-if="syncNotice" role="note">{{ syncNotice }}</div>`. A copied folder list can use `folder.syncs`.
+
 ## From 0.8.0 to 0.8.1: notifications per mailbox
 
 - Rebuild the frontend (`npm run build`). No migration, no config change.

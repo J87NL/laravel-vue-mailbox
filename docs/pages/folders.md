@@ -27,6 +27,18 @@ and `table` set to `null` and a `syncing` message, instead of answering `404`.
 When the opened folder was not synced in the last 60 seconds, the controller queues a `SyncFolderJob` for it. The page
 renders the messages already stored; the table picks up new mail on its next poll.
 
+## Folders that are not synced
+
+The core does not sync folders with the special use `\All`, `\Important` or `\Flagged` (Gmail's All Mail, Important and
+Starred, `mailbox.sync.skip_special_use`, see the core's
+[Skipped folders](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md#skipped-folders)). They stay in the
+list and can be opened, but only show messages cached before, and their unread count is 0.
+
+- Every entry of `folders` and the `folder` prop has `syncs`: `false` for such a folder.
+- `syncNotice` is the translated `vue-mailbox::mailbox.not_synced_hint` for such a folder, `null` otherwise. The default
+  page shows it above the list.
+- `FolderList` mutes the folder, adds a "Niet gesynct" badge (`not_synced`) and shows the hint as tooltip.
+
 ## Refreshing
 
 The folder view refreshes itself: the message table reloads every `vue-mailbox.poll_seconds` seconds while the tab is
@@ -56,13 +68,14 @@ screen gets no notification while the tab is visible and has focus. See [Browser
 |---|---|---|
 | `composeUrl` | `string \| null` | Compose URL, `null` without `workInMailbox` |
 | `contactsUrl` | `string` | Address book URL |
-| `folder` | `object \| null` | `id`, `label`, `name`, `role` of the open folder, `null` while syncing |
+| `folder` | `object \| null` | `id`, `label`, `name`, `role`, `syncs` of the open folder, `null` while syncing |
 | `folderForm` | `FormSchema \| null` | Form to add a folder, `null` without `workInMailbox` |
 | `folders` | `MailboxFolder[]` | Selectable folders of the mailbox, see below |
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
 | `mailboxes` | `MailboxSummary[]` | Active mailboxes the user can open, sorted by name, with the unread count of their inbox (`unseen`); empty when `vue-mailbox.mailbox_switcher` is `false` |
 | `refreshUrl` | `string \| null` | `mailbox.folders.refresh` URL of the open folder, `null` while syncing |
 | `settingsUrl` | `string \| null` | Settings URL, `null` without `manageMailbox` |
+| `syncNotice` | `string \| null` | Translated explanation for a folder that is not synced, otherwise `null` |
 | `syncing` | `string \| null` | Translated "syncing" notice while there is no folder yet |
 | `table` | `TableData \| null` | The message table, `null` while syncing |
 
@@ -87,6 +100,7 @@ shows a compact select at the top to switch to another mailbox. A host that list
 | `path` | Full IMAP path |
 | `role` | `inbox`, `drafts`, `sent`, `archive`, `junk`, `trash` or `custom` |
 | `depth` | Nesting depth, for indenting |
+| `syncs` | `false` when the core does not sync the folder |
 | `unseen` | Number of unread messages |
 | `url` | `mailbox.folders.show` URL of the folder |
 

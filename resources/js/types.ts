@@ -5,6 +5,7 @@ export interface MailboxFolder {
     path: string
     role: 'inbox' | 'drafts' | 'sent' | 'archive' | 'junk' | 'trash' | 'custom'
     depth: number
+    syncs: boolean
     unseen: number
     url: string
 }

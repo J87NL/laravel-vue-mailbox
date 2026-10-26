@@ -11,6 +11,8 @@ return [
     'new_messages' => ':count new messages',
     'no_mailbox_hint' => 'Ask an administrator to give you access to a mailbox.',
     'no_mailbox_title' => 'No mailbox has been set up for you yet',
+    'not_synced' => 'Not synced',
+    'not_synced_hint' => 'This folder is not kept up to date. The same messages are already in your inbox and labels.',
     'notifications_blocked' => 'Notifications blocked by browser',
     'notifications_blocked_hint' => 'Your browser blocks notifications from this site. Allow them in your browser\'s site settings.',
     'notifications_disable' => 'Turn off notifications',

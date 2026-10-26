@@ -11,6 +11,8 @@ return [
     'new_messages' => ':count nieuwe berichten',
     'no_mailbox_hint' => 'Vraag een beheerder om je toegang te geven tot een mailbox.',
     'no_mailbox_title' => 'Er is nog geen mailbox voor je ingesteld',
+    'not_synced' => 'Niet gesynct',
+    'not_synced_hint' => 'Deze map wordt niet bijgehouden. Dezelfde berichten staan al in je inbox en labels.',
     'notifications_blocked' => 'Meldingen geblokkeerd door browser',
     'notifications_blocked_hint' => 'Je browser blokkeert meldingen van deze site. Sta ze toe in de site-instellingen van je browser.',
     'notifications_disable' => 'Meldingen uitzetten',

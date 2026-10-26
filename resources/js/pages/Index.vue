@@ -17,13 +17,14 @@ const confirm = useMailboxConfirm()
 const props = defineProps<{
     composeUrl: string | null
     contactsUrl: string
-    folder: { id: number; label: string; name: string; role: string } | null
+    folder: { id: number; label: string; name: string; role: string; syncs: boolean } | null
     folderForm: FormSchema | null
     folders: MailboxFolder[]
     mailbox: MailboxSummary
     mailboxes: MailboxSummary[]
     refreshUrl?: string | null
     settingsUrl: string | null
+    syncNotice: string | null
     syncing: string | null
     table: TableData | null
 }>()
@@ -106,6 +107,10 @@ function switchMailbox(event: Event): void {
                     <Link v-if="settingsUrl" :href="settingsUrl" :class="ui.button">{{ t('settings') }}</Link>
                     <Link v-if="composeUrl" :href="composeUrl" :class="[ui.primaryButton, 'md:hidden']">{{ t('new') }}</Link>
                 </div>
+            </div>
+
+            <div v-if="syncNotice" :class="[ui.panel, 'bg-amber-50 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100']" role="note">
+                {{ syncNotice }}
             </div>
 
             <div v-if="syncing" :class="[ui.panel, 'text-center']">

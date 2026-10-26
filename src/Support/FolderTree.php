@@ -23,6 +23,7 @@ class FolderTree
                 'name' => $folder->name,
                 'path' => $folder->path,
                 'role' => $folder->role->value,
+                'syncs' => ! $folder->skipsSync(),
                 'unseen' => $folder->unseen_count,
                 'url' => route($routeName, [$mailbox, $folder]),
             ])

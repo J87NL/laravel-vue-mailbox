@@ -18,7 +18,7 @@ Everything below is imported through the `@mailbox` alias, which points to
 
 ## FolderList
 
-Renders `folders` as a list of Inertia links, indented by `depth`, with the unread count when it is above zero.
+Renders `folders` as a list of Inertia links, indented by `depth`, with the unread count when it is above zero. A folder with `syncs` set to `false` (not synced by the core, see [Folders](../pages/folders.md#folders-that-are-not-synced)) is muted, gets a "Niet gesynct" badge and a tooltip with the explanation, and stays clickable.
 
 | Prop | Type | Description |
 |---|---|---|
@@ -74,7 +74,7 @@ import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, Mai
 
 | Type | Fields |
 |---|---|
-| `MailboxFolder` | `id`, `label`, `name`, `path`, `role`, `depth`, `unseen`, `url` |
+| `MailboxFolder` | `id`, `label`, `name`, `path`, `role`, `depth`, `syncs`, `unseen`, `url` |
 | `MailboxSummary` | `id`, `name`, `email`, optional `url`, `synced_at`, `unseen` and `active_path` |
 | `MailAddress` | `email`, `name` |
 | `MailboxAttachment` | `filename` (nullable), `content_type`, `content_id` (nullable), `inline`, `url` |

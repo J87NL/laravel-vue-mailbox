@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.2 - 2026-10-26
+
+- Folders that the core does not sync (Gmail's All Mail, Important and Starred, `mailbox.sync.skip_special_use` in `j87nl/laravel-mailbox` 0.5.3) are marked. Every entry of the `folders` prop and the `folder` prop have a new boolean `syncs`, `false` when `MailboxFolder::skipsSync()` is true. The folder page has a new prop `syncNotice`: the translated explanation for such a folder, `null` otherwise.
+- `FolderList` shows these folders muted with a "Niet gesynct" badge and a tooltip with the explanation. They stay clickable. The default `Index` page shows the explanation above the list.
+- New translations `not_synced` and `not_synced_hint` in `vue-mailbox::mailbox` (nl and en).
+- Requires `j87nl/laravel-mailbox` ^0.5.3. Rebuild the frontend after updating. See `docs/upgrading.md`.
+
 ## 0.8.1 - 2026-10-26
 
 - Browser notifications are switched per mailbox. The toggle on the folder page and the message view now switches the open mailbox only ("Meldingen aanzetten voor deze mailbox" / "Meldingen uitzetten voor deze mailbox", nl and en). `NotificationToggle` and `useMailboxNotifications()` take a `mailboxId`; without it they switch all mailboxes at once as before.

@@ -69,9 +69,10 @@ import { useMailboxTranslations } from '@mailbox/translations';
 import type { MailboxFolder, MailboxSummary } from '@mailbox/types';
 
 defineProps<{
-    folder: { id: number; label: string; name: string; role: string } | null;
+    folder: { id: number; label: string; name: string; role: string; syncs: boolean } | null;
     folders: MailboxFolder[];
     mailbox: MailboxSummary;
+    syncNotice: string | null;
     table: TableData | null;
 }>();
 
@@ -82,6 +83,7 @@ const { t } = useMailboxTranslations();
     <div class="flex gap-4">
         <Head :title="mailbox.name" />
         <FolderList :folders="folders" :active-id="folder?.id" />
+        <p v-if="syncNotice" role="note">{{ syncNotice }}</p>
         <TableBuilder v-if="table" :table="table" :only="['table']" />
         <p v-else>{{ t('syncing') }}</p>
     </div>

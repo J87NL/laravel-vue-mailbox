@@ -109,6 +109,7 @@ class FolderController extends Controller
                 'label' => $folder->role->label() ?? $folder->name,
                 'name' => $folder->name,
                 'role' => $folder->role->value,
+                'syncs' => ! $folder->skipsSync(),
             ],
             'folderForm' => fn (): ?FormConfig => $canWork ? FolderForm::make($mailbox, route($routes.'folders.store', $mailbox)) : null,
             'folders' => fn (): array => $this->tree->for($mailbox),
@@ -120,6 +121,7 @@ class FolderController extends Controller
             'mailboxes' => fn (): array => config('vue-mailbox.mailbox_switcher', true) ? $this->tree->mailboxes() : [],
             'refreshUrl' => is_null($folder) ? null : route($routes.'folders.refresh', [$mailbox, $folder]),
             'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
+            'syncNotice' => ! is_null($folder) && $folder->skipsSync() ? __('vue-mailbox::mailbox.not_synced_hint') : null,
             'syncing' => is_null($folder) ? __('mailbox::mailbox.syncing') : null,
             'table' => is_null($folder) ? null : MessagesTable::build($folder->setRelation('mailbox', $mailbox)),
         ]);
