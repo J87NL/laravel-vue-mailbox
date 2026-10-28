@@ -207,3 +207,79 @@ it('does not warn about copies when there are none', function (): void {
         ->expectsOutputToContain('let your Inertia page resolver load mailbox/* pages')
         ->assertSuccessful();
 });
+
+it('adds the @mailbox alias to an alias array once', function (): void {
+    File::put(base_path('vite.config.ts'), implode("\n", [
+        "import { defineConfig } from 'vite';",
+        "import path from 'path';",
+        '',
+        'export default defineConfig({',
+        '    resolve: {',
+        '        alias: [',
+        "            { find: '@', replacement: path.resolve(__dirname, 'resources/js') },",
+        '        ],',
+        '    },',
+        '});',
+        '',
+    ]));
+
+    $this->artisan('mailbox:install')->assertSuccessful();
+    $this->artisan('mailbox:install')
+        ->expectsOutputToContain('already has the Vite aliases')
+        ->assertSuccessful();
+
+    expect(File::get(base_path('vite.config.ts')))->toBe(implode("\n", [
+        "import { defineConfig } from 'vite';",
+        "import path from 'path';",
+        "import { fileURLToPath } from 'node:url';",
+        '',
+        'export default defineConfig({',
+        '    resolve: {',
+        '        alias: [',
+        '            {',
+        "                find: '@mailbox',",
+        "                replacement: fileURLToPath(new URL('./vendor/j87nl/laravel-vue-mailbox/resources/js', import.meta.url)),",
+        '            },',
+        "            { find: '@', replacement: path.resolve(__dirname, 'resources/js') },",
+        '        ],',
+        '    },',
+        '});',
+        '',
+    ]));
+});
+
+it('fills an empty alias array and reuses an existing url import', function (): void {
+    File::put(base_path('vite.config.js'), implode("\n", [
+        "import { defineConfig } from 'vite';",
+        "import { URL } from 'url';",
+        '',
+        'export default defineConfig({',
+        '    resolve: {',
+        '        alias: [],',
+        '    },',
+        '});',
+        '',
+    ]));
+    File::delete(base_path('vite.config.ts'));
+
+    try {
+        $this->artisan('mailbox:install')->assertSuccessful();
+
+        $vite = File::get(base_path('vite.config.js'));
+
+        expect($vite)->toContain("import { fileURLToPath, URL } from 'url';")
+            ->and($vite)->not->toContain("from 'node:url'")
+            ->and($vite)->toContain(implode("\n", [
+                '        alias: [',
+                '            {',
+                "                find: '@mailbox',",
+            ]))
+            ->and($vite)->toContain(implode("\n", [
+                '            },',
+                '        ],',
+                '    },',
+            ]));
+    } finally {
+        File::delete(base_path('vite.config.js'));
+    }
+});

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 - 2026-10-28
+
+- `mailbox.index` lets in users who pass `accessAnyMailbox` or `manageAnyMailbox`. A user who passes an app-defined `manageMailboxes` but has no mailbox to open is now redirected to `mailbox.settings.index` instead of getting a 403. The route no longer has the `can:accessAnyMailbox` middleware; `FolderController::index()` checks both abilities. Gate the menu item on both, see `docs/navigation.md#menu-gate`.
+- `mailbox:install` adds the `@mailbox` alias to a Vite config whose `resolve.alias` is an array of `{ find, replacement }` entries, and imports `fileURLToPath` from `node:url` when needed. Before, it could only patch the object form. New `J87NL\VueMailbox\Support\ViteAliasArray`.
+- `docs/installation.md`: `composer require j87nl/laravel-vue-mailbox:^0.9 -W` and why (an app with older `tranquil-tools/*` locked otherwise silently gets 0.1.x), the alias array, an example for apps on `resolvePageComponent()` with `./Pages`, wrapping the package pages in the app layout (`page.layout ??= Layout`), the `confirm` provide, and the lazy registration of the HugeRTE editor with the plugins imported after it.
+- Allows `j87nl/laravel-mailbox` ^0.6 next to ^0.5.3, for its `access.user_query` and per-group `query`.
+- No migration, no config publish and no frontend rebuild needed. See `docs/upgrading.md`.
+
 ## 0.8.2 - 2026-10-26
 
 - Folders that the core does not sync (Gmail's All Mail, Important and Starred, `mailbox.sync.skip_special_use` in `j87nl/laravel-mailbox` 0.5.3) are marked. Every entry of the `folders` prop and the `folder` prop have a new boolean `syncs`, `false` when `MailboxFolder::skipsSync()` is true. The folder page has a new prop `syncNotice`: the translated explanation for such a folder, `null` otherwise.

@@ -17,7 +17,8 @@ The command:
 1. Publishes the tags `mailbox-config` (`config/mailbox.php`), `mailbox-migrations` (the core migrations) and
    `vue-mailbox-config` (`config/vue-mailbox.php`). Files that already exist are not overwritten.
 2. Adds the Vite alias `@mailbox` pointing to `./vendor/j87nl/laravel-vue-mailbox/resources/js` to
-   `vite.config.ts` (or `.js`, `.mjs`, `.mts`). Without a Vite config it warns and skips this step.
+   `vite.config.ts` (or `.js`, `.mjs`, `.mts`), in an object or an array (`[{ find, replacement }]`) of `resolve.alias`.
+   Without a Vite config it warns and skips this step.
 3. Adds the path `@mailbox/*` to `tsconfig.json`, when that file exists.
 4. Without `--pages`, reminds you to let your Inertia resolver load `mailbox/*` pages from `@mailbox/pages`, see
    [Installation](installation.md#3-load-the-pages-from-the-package).

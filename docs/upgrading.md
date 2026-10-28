@@ -3,6 +3,15 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.8 to 0.9: menu gate and alias array
+
+- No migration, no config change and no frontend rebuild.
+- `mailbox.index` now also lets in users who pass `manageAnyMailbox` and sends them to the settings when they have no
+  mailbox to open. When your app defines `manageMailboxes` itself, gate the menu item on `accessAnyMailbox` or
+  `manageAnyMailbox`, see [Navigation](navigation.md#menu-gate). With only `MAILBOX_ADMINS` nothing changes.
+- An app that registers the HugeRTE editor with a static import can switch to the lazy registration in
+  [Installation](installation.md#4-install-the-compose-editor) to keep about 1 MB out of its main bundle.
+
 ## From 0.8.1 to 0.8.2: folders that are not synced
 
 - Needs `j87nl/laravel-mailbox` ^0.5.3. Rebuild the frontend (`npm run build`). No migration, no config change.

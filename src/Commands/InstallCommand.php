@@ -7,6 +7,7 @@ namespace J87NL\VueMailbox\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use J87NL\VueMailbox\Support\ViteAliasArray;
 use J87NL\VueMailbox\VueMailboxServiceProvider;
 use TranquilTools\VueFormBuilder\Support\Installer\InstallsFrontendAliases;
 
@@ -36,9 +37,7 @@ class InstallCommand extends Command
 
         $this->components->info('Published the mailbox config and migrations.');
 
-        $this->installAliases([
-            '@mailbox' => self::SOURCE,
-        ]);
+        $this->installViteAlias();
 
         $this->installTsPaths([
             '@mailbox/*' => sprintf('%s/*', self::SOURCE),
@@ -53,6 +52,33 @@ class InstallCommand extends Command
         $this->components->info('Run php artisan migrate, schedule mailbox:sync and mailbox:prune-bodies, and let Tailwind scan the package.');
 
         return self::SUCCESS;
+    }
+
+    private function installViteAlias(): void
+    {
+        $path = $this->viteConfigPath();
+        $content = is_null($path) ? '' : File::get($path);
+        $aliasArray = app(ViteAliasArray::class);
+
+        if (! $aliasArray->isUsedIn($content)) {
+            $this->installAliases([
+                '@mailbox' => self::SOURCE,
+            ]);
+
+            return;
+        }
+
+        $file = basename((string) $path);
+
+        if (str_contains($content, "'@mailbox'") || str_contains($content, '"@mailbox"')) {
+            $this->components->info(sprintf('%s already has the Vite aliases.', $file));
+
+            return;
+        }
+
+        File::put((string) $path, $aliasArray->add($content, '@mailbox', self::SOURCE));
+
+        $this->components->info(sprintf('Vite aliases added to %s: @mailbox.', $file));
     }
 
     private function installPages(): void

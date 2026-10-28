@@ -10,12 +10,14 @@ Vue 3 / Inertia UI for [`j87nl/laravel-mailbox`](https://github.com/J87NL/larave
 ## Installation
 
 ```bash
-composer require j87nl/laravel-vue-mailbox
+composer require j87nl/laravel-vue-mailbox:^0.9 -W
 php artisan mailbox:install
 php artisan migrate
 ```
 
-`mailbox:install` publishes the core and Vue config and the migrations, and adds the `@mailbox` Vite alias (`./vendor/j87nl/laravel-vue-mailbox/resources/js`) and the `@mailbox/*` tsconfig path. Running it again changes nothing that is already there.
+Name the version and pass `-W`: with older `tranquil-tools/*` packages locked, a plain `composer require` silently installs an old 0.1.x release instead of updating them. See [Installation](docs/installation.md#1-install-via-composer).
+
+`mailbox:install` publishes the core and Vue config and the migrations, and adds the `@mailbox` Vite alias (`./vendor/j87nl/laravel-vue-mailbox/resources/js`, in an object or array form of `resolve.alias`) and the `@mailbox/*` tsconfig path. Running it again changes nothing that is already there.
 
 ### Pages
 
@@ -47,7 +49,7 @@ resolve: async (name) => {
 },
 ```
 
-An app on the `@inertiajs/vite` plugin without a `resolve` of its own adds this one (the plugin then leaves it alone), and an app with SSR uses the same resolver in `resources/js/ssr.ts`.
+The pages set no layout: wrap them in yours in the resolver (`page.layout ??= Layout`). An app on `resolvePageComponent()` with `./Pages` keeps it for its own pages and only adds the `mailbox/` branch, see [Installation](docs/installation.md#3-load-the-pages-from-the-package). Provide a confirmation dialog under the key `confirm`, or deleting a message, contact or mailbox does nothing. An app on the `@inertiajs/vite` plugin without a `resolve` of its own adds this one (the plugin then leaves it alone), and an app with SSR uses the same resolver in `resources/js/ssr.ts`.
 
 To replace one page, point its key in `config/vue-mailbox.php` (`vue-mailbox.pages.*`) at a page of your own. To copy every page into your app instead, run `php artisan mailbox:install --pages`: it copies them to `resources/js/pages/Mailbox` and points the default names in `config/vue-mailbox.php` at the copies (`Mailbox/Index`, ...). See [Installation](docs/installation.md), [Customizing pages](docs/frontend/customizing-pages.md) and, when you update from 0.4, [Upgrading](docs/upgrading.md).
 
@@ -58,14 +60,26 @@ npm install hugerte @hugerte/hugerte-vue
 ```
 
 ```ts
-import HugeRteEditor from '@form-builder/wysiwyg/HugeRteEditor.vue'
 import { registerWysiwygEditor } from '@form-builder/wysiwyg/registry'
-import 'hugerte/plugins/autolink'
-import 'hugerte/plugins/link'
-import 'hugerte/plugins/lists'
+import { defineAsyncComponent } from 'vue'
 
-registerWysiwygEditor('hugerte', HugeRteEditor)
+registerWysiwygEditor(
+    'hugerte',
+    defineAsyncComponent(async () => {
+        const editor = await import('@form-builder/wysiwyg/HugeRteEditor.vue')
+
+        await Promise.all([
+            import('hugerte/plugins/autolink'),
+            import('hugerte/plugins/link'),
+            import('hugerte/plugins/lists'),
+        ])
+
+        return editor
+    }),
+)
 ```
+
+Loading it lazily keeps about 1 MB out of the main bundle. The plugins are imported after the editor because they need `globalThis.hugerte`.
 
 The pages use plain Tailwind utility classes and no host UI kit. Let Tailwind scan the package so those classes are generated, e.g. in Tailwind 4:
 
@@ -103,7 +117,7 @@ The message view fills the viewport and has a Full screen button that opens the 
 
 ## Routes
 
-All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`) with the `web` and `auth` middleware. Menu links: `route('mailbox.index')` (show it with `@can('accessAnyMailbox')` / `$can('accessAnyMailbox')`; without an open mailbox it redirects managers to the settings and shows others the `mailbox/Empty` page) and `route('mailbox.settings.index')` (show it with `@can('manageAnyMailbox')`). Every route except the signed inline image route is gated with the core abilities (`accessAnyMailbox`, `accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`) or `manageAnyMailbox`, which this package defines unless the app already has it: `manageMailboxes`, or `manageMailbox` on at least one mailbox. The pages hide controls the user cannot use.
+All routes live under `config('vue-mailbox.routes.prefix')` (default `/mailbox`) with the `web` and `auth` middleware. Menu links: `route('mailbox.index')` (show it with `@canany(['accessAnyMailbox', 'manageAnyMailbox'])`; without an open mailbox it redirects users who pass `manageAnyMailbox` to the settings and shows others the `mailbox/Empty` page) and `route('mailbox.settings.index')` (show it with `@can('manageAnyMailbox')`). Every route except the signed inline image route is gated with the core abilities (`accessAnyMailbox`, `accessMailbox`, `workInMailbox`, `manageMailbox`, `manageMailboxes`) or `manageAnyMailbox`, which this package defines unless the app already has it: `manageMailboxes`, or `manageMailbox` on at least one mailbox. The pages hide controls the user cannot use.
 
 | Route | Ability |
 |---|---|

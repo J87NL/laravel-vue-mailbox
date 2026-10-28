@@ -30,6 +30,11 @@ class FolderController extends Controller
 
     public function index(): RedirectResponse|Response
     {
+        abort_unless(Gate::any([
+            'accessAnyMailbox',
+            'manageAnyMailbox',
+        ]), 403);
+
         $first = $this->tree->mailboxes()[0] ?? null;
 
         if (! is_null($first)) {

@@ -19,16 +19,18 @@ for example `composeUrl` for a reader.
 ## Menu links
 
 ```blade
-@can('accessAnyMailbox')
+@canany(['accessAnyMailbox', 'manageAnyMailbox'])
     <a href="{{ route('mailbox.index') }}">Mailbox</a>
-@endcan
+@endcanany
 
 @can('manageAnyMailbox')
     <a href="{{ route('mailbox.settings.index') }}">Mailbox settings</a>
 @endcan
 ```
 
-In a Vue page with an ability helper, use `$can('accessAnyMailbox')` and `$can('manageAnyMailbox')` in the same way.
+In a Vue page with an ability helper, use `$canAny(['accessAnyMailbox', 'manageAnyMailbox'])` and
+`$can('manageAnyMailbox')` in the same way. `manageAnyMailbox` in the first gate lets a user who passes an app-defined
+`manageMailboxes` without any mailbox reach the settings, see [Navigation](navigation.md#menu-gate).
 
 ## Mailbox routes
 
@@ -38,7 +40,7 @@ mailbox, so a message of another mailbox answers `404`.
 
 | Method | URI | Name | Ability |
 |---|---|---|---|
-| GET | `/` | `mailbox.index` | `accessAnyMailbox` |
+| GET | `/` | `mailbox.index` | `accessAnyMailbox` or `manageAnyMailbox` (checked in the controller) |
 | GET | `notifications?after=` | `mailbox.notifications` | `accessAnyMailbox`, `throttle:vue-mailbox-notifications` |
 | GET | `{mailbox}/folders/{folder?}` | `mailbox.folders.show` | `accessMailbox` |
 | POST | `{mailbox}/folders/{folder}/refresh` | `mailbox.folders.refresh` | `accessMailbox`, `throttle:vue-mailbox-refresh` |

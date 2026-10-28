@@ -240,6 +240,19 @@ it('sends a mailbox manager without an open mailbox to the mailbox settings', fu
         ->assertRedirect(route('mailbox.settings.index'));
 });
 
+it('sends a user who passes an app-defined manageMailboxes without any mailbox to the settings', function (): void {
+    Gate::define('manageMailboxes', fn (): bool => true);
+    mailbox();
+
+    $user = user();
+
+    expect(Gate::forUser($user)->allows('accessAnyMailbox'))->toBeFalse();
+
+    $this->actingAs($user)
+        ->get(route('mailbox.index'))
+        ->assertRedirect(route('mailbox.settings.index'));
+});
+
 it('shows an empty state instead of a 404 to a user without a mailbox who manages none', function (): void {
     Gate::define('accessAnyMailbox', fn (): bool => true);
 

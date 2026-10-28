@@ -52,8 +52,23 @@ The middleware also shares `vueMailboxNotifications` (`MailboxNotifications::PRO
 [browser notifications](notifications.md), so a toggle in the host layout keeps working outside the mailbox pages.
 
 A host that builds its menu on the server (such as j87.nl's `NavigationRegistry`) calls `MailboxNavigation` directly
-instead. Gate the menu on `accessAnyMailbox` as before; when the list is empty, fall back to a single link to
-`mailbox.index`, which sends a manager without a mailbox to the settings.
+instead. Gate the menu as described below; when the list is empty, fall back to a single link to `mailbox.index`, which
+sends a manager without a mailbox to the settings.
+
+## Menu gate
+
+Show the mailbox menu item to users who pass `accessAnyMailbox` or `manageAnyMailbox`:
+
+```blade
+@canany(['accessAnyMailbox', 'manageAnyMailbox'])
+    <a href="{{ route('mailbox.index') }}">Mailbox</a>
+@endcanany
+```
+
+`mailbox.index` lets both in. It redirects to the first mailbox the user can open, and a user without one who passes
+`manageAnyMailbox` to `mailbox.settings.index`. Gating on `accessAnyMailbox` alone is enough when only `MAILBOX_ADMINS`
+create mailboxes, because admins pass it. When your app defines `manageMailboxes` itself, a user can pass it without
+access to any mailbox; that user fails `accessAnyMailbox` and would not see the menu item to create the first mailbox.
 
 When the menu lists every mailbox, turn off the switcher on the folder page with `vue-mailbox.mailbox_switcher`
 set to `false`.

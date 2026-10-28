@@ -34,7 +34,8 @@ the [laravel-mailbox docs](https://github.com/J87NL/laravel-mailbox/blob/main/do
    `@mailbox` Vite alias.
 2. The package registers its routes under `/mailbox`, behind `web` and `auth`. Every route except the signed inline
    image route is gated with an ability the core package defines (`accessAnyMailbox`, `accessMailbox`,
-   `workInMailbox`, `manageMailbox`, `manageMailboxes`), or with `manageAnyMailbox` for the settings list, see
+   `workInMailbox`, `manageMailbox`, `manageMailboxes`), or with `manageAnyMailbox` for the settings list and, next to
+   `accessAnyMailbox`, for `mailbox.index`, see
    [core access control](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md).
 3. The controllers render Inertia pages (`mailbox/Index`, `mailbox/Show`, `mailbox/Compose`, ...). The pages stay in
    the package: your app's resolver loads names that start with `mailbox/` from `@mailbox/pages`. Point a name in the
@@ -42,12 +43,12 @@ the [laravel-mailbox docs](https://github.com/J87NL/laravel-mailbox/blob/main/do
 
 ## Quick example
 
-Link to the mailbox from your menu, for users who can open at least one mailbox:
+Link to the mailbox from your menu, for users who can open at least one mailbox or manage mailboxes:
 
 ```blade
-@can('accessAnyMailbox')
+@canany(['accessAnyMailbox', 'manageAnyMailbox'])
     <a href="{{ route('mailbox.index') }}">Mailbox</a>
-@endcan
+@endcanany
 ```
 
 `mailbox.index` redirects to the first mailbox the user can open. Without one it sends mailbox administrators and managers

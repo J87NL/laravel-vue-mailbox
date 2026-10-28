@@ -29,7 +29,6 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
 
         Route::middleware(config('vue-mailbox.routes.middleware'))->group(function (): void {
             Route::get('/', [FolderController::class, 'index'])
-                ->middleware('can:accessAnyMailbox')
                 ->name('index');
 
             Route::get('notifications', NotificationController::class)

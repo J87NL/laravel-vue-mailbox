@@ -14,8 +14,22 @@ this package.
 ## 1. Install via Composer
 
 ```bash
-composer require j87nl/laravel-vue-mailbox
+composer require j87nl/laravel-vue-mailbox:^0.9 -W
 ```
+
+Name the version and pass `-W` (`--with-all-dependencies`). This package requires
+`tranquil-tools/laravel-vue-form-builder` ^1.13 and `tranquil-tools/laravel-vue-table-builder` ^1.9, and the core
+requires `tranquil-tools/laravel-form-builder` ^1.8; `laravel-table-builder` comes along with the table builder. The
+0.1.x releases of this package still accept much older TranquilTools versions (`laravel-vue-form-builder` ^1.2). So
+when your app has older versions locked, a plain `composer require` does not update them but picks 0.1.x, without the
+pages and routes these docs describe. `-W` lets Composer update the locked TranquilTools
+packages along with it. Without `-W`, update them first:
+
+```bash
+composer update tranquil-tools/laravel-form-builder tranquil-tools/laravel-vue-form-builder tranquil-tools/laravel-table-builder tranquil-tools/laravel-vue-table-builder
+```
+
+Check the result with `composer show j87nl/laravel-vue-mailbox`.
 
 This package is the user interface. It pulls in
 [`j87nl/laravel-mailbox`](https://github.com/J87NL/laravel-mailbox), the core that holds the models, migrations,
@@ -37,6 +51,19 @@ php artisan migrate
 (`config/vue-mailbox.php`). It adds the `@mailbox` alias to your Vite config and the `@mailbox/*` path to
 `tsconfig.json`; both are needed for the package pages and for the components and types they import. Running it
 again changes nothing that is already there. See [Artisan commands](artisan-commands.md).
+
+The installer patches both forms of `resolve.alias`: an object (`alias: { '@': ... }`) and an array of
+`{ find, replacement }` entries (`alias: [{ find: '@', replacement: ... }]`). In the array form it adds:
+
+```ts
+alias: [
+    {
+        find: '@mailbox',
+        replacement: fileURLToPath(new URL('./vendor/j87nl/laravel-vue-mailbox/resources/js', import.meta.url)),
+    },
+    // your own entries
+],
+```
 
 If the installer cannot patch your Vite config, add the alias yourself:
 
@@ -119,12 +146,85 @@ step 2.
 - **No `resolve` of your own yet?** Apps on the `@inertiajs/vite` plugin (such as the Laravel 13 starter kits) often
   call `createInertiaApp()` without `resolve` or `pages`; the plugin then adds a resolver that only knows
   `./pages`. Add the `resolve` above: the plugin leaves a `createInertiaApp()` that has one alone.
+- **`resolvePageComponent` with `./Pages`?** Apps on the older Laravel starter kits resolve with
+  `resolvePageComponent()` from `laravel-vite-plugin/inertia-helpers` and keep their pages in `resources/js/Pages`
+  (capital P). Keep that for your own pages and add the `mailbox/` branch in front of it. `PageModule`, `findPage()`
+  and `mailboxPages` are the ones from the example above; only `appPages` changes to your `./Pages` glob:
+
+  ```ts
+  import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+
+  const appPages = import.meta.glob<DefineComponent>('./Pages/**/*.vue');
+
+  async function resolveMailboxPage(name: string): Promise<DefineComponent> {
+      const page = findPage(mailboxPages, name.slice('mailbox/'.length));
+
+      if (page === undefined) {
+          throw new Error(`Page not found: ${name}`);
+      }
+
+      return (await page()).default;
+  }
+
+  createInertiaApp({
+      resolve: (name) => (name.startsWith('mailbox/')
+          ? resolveMailboxPage(name)
+          : resolvePageComponent(`./Pages/${name}.vue`, appPages)),
+      // ...
+  });
+  ```
+
+  The package pages live in `@mailbox/pages` (lowercase), whatever the case of your own folder.
 - **SSR:** `resources/js/ssr.ts` resolves pages on its own. Give it the same resolver, for example by moving the globs
   and `pageFor()` to `resources/js/lib/pages.ts` and importing that in both `app.ts` and `ssr.ts`.
 
 The names are lowercase `mailbox/`, so they never collide with an app page in `resources/js/pages/Mailbox`. To replace
 one page, point its key in `config/vue-mailbox.php` at a page of your own; to copy all of them, see
 [Customizing pages](frontend/customizing-pages.md).
+
+### Wrap the pages in your layout
+
+The package pages set no Inertia layout, so without one they render without your menu and header. Give them your app
+layout in the resolver, and keep a layout a page sets itself. With `findPage()` and `mailboxPages` from above, widen
+`PageModule` and resolve the mailbox pages like this:
+
+```ts
+import Layout from './layouts/AppLayout.vue';
+
+type PageModule = { default: DefineComponent & { layout?: unknown } };
+
+async function resolveMailboxPage(name: string): Promise<DefineComponent> {
+    const loader = findPage(mailboxPages, name.slice('mailbox/'.length));
+
+    if (loader === undefined) {
+        throw new Error(`Page not found: ${name}`);
+    }
+
+    const page = (await loader()).default;
+    page.layout ??= Layout;
+
+    return page;
+}
+```
+
+The pages show no flash messages either; show the `success` and `error` flashes in your layout. See
+[Customizing pages](frontend/customizing-pages.md).
+
+### Provide a confirmation dialog
+
+Deleting a message, a contact or a mailbox asks for confirmation through a function your app provides under the key
+`confirm`. The pages never call `window.confirm`. Without the provide every confirmation answers `false`, so these
+deletes silently do nothing. Provide your own dialog in `setup` of `createInertiaApp()`:
+
+```ts
+createApp({ render: () => h(App, props) })
+    .use(plugin)
+    .provide('confirm', (message: string): Promise<boolean> => openConfirmDialog(message))
+    .mount(el);
+```
+
+`openConfirmDialog` stands for your app's modal; it resolves to `true` when the user agrees. See
+[Confirmations](frontend/components.md#confirmations).
 
 ## 4. Install the compose editor
 
@@ -134,17 +234,31 @@ The compose form uses the WYSIWYG editor set in the core config. It defaults to 
 npm install hugerte @hugerte/hugerte-vue
 ```
 
-Register it in your app entrypoint:
+Register it lazily in your app entrypoint, so the editor (about 1 MB) is only loaded when a compose form opens:
 
 ```ts
-import HugeRteEditor from '@form-builder/wysiwyg/HugeRteEditor.vue';
 import { registerWysiwygEditor } from '@form-builder/wysiwyg/registry';
-import 'hugerte/plugins/autolink';
-import 'hugerte/plugins/link';
-import 'hugerte/plugins/lists';
+import { defineAsyncComponent } from 'vue';
 
-registerWysiwygEditor('hugerte', HugeRteEditor);
+registerWysiwygEditor(
+    'hugerte',
+    defineAsyncComponent(async () => {
+        const editor = await import('@form-builder/wysiwyg/HugeRteEditor.vue');
+
+        await Promise.all([
+            import('hugerte/plugins/autolink'),
+            import('hugerte/plugins/link'),
+            import('hugerte/plugins/lists'),
+        ]);
+
+        return editor;
+    }),
+);
 ```
+
+The plugins must be imported after `HugeRteEditor.vue`: they register themselves on `globalThis.hugerte`, which the
+editor's own imports create. A static `import HugeRteEditor from ...` at the top of the entrypoint also works, but puts
+the whole editor in your main bundle; keep the plugin imports below it in that case.
 
 The editor must keep the `data-mailbox-cid` attribute on images, or quoted inline images are lost when you send a reply
 or forward. The default HugeRTE options in the core config allow it. See [Inline images](inline-images.md).
@@ -176,11 +290,13 @@ needs from it:
 - **Migrations.** `mailbox:install` publishes them; run `php artisan migrate`. Every page reads the core tables.
 - **[Admins](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md#bootstrap-an-admin)**
   (`MAILBOX_ADMINS`). Creating a mailbox on the [settings page](pages/settings.md) needs `manageMailboxes`, which only
-  admins pass unless your app defines that ability itself. `php artisan mailbox:add` always works.
+  admins pass unless your app defines that ability itself. `php artisan mailbox:add` always works. When your app
+  defines it, gate the menu on `accessAnyMailbox` or `manageAnyMailbox`, see [Navigation](navigation.md#menu-gate).
 - **[User model](https://github.com/J87NL/laravel-mailbox/blob/main/docs/configuration.md#user-model)**
   (`MAILBOX_USER_MODEL`), when your user model is not `App\Models\User`. The access form and the message history use it.
 - **[Access mode and groups](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md).** They decide who
-  passes the abilities the routes check, and which users and groups the access form offers.
+  passes the abilities the routes check, and which users and groups the access form offers. From core 0.6,
+  `access.user_query` and a group's `query` keep users or groups (for example customers) out of the access form.
 - **[Sync schedule](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md#schedule-the-sync)**
   (`mailbox:sync`) **and a queue worker.** The message list shows what the sync stored. The folder page also queues
   `SyncMailboxJob` and `SyncFolderJob` itself, and saving a mailbox queues a sync.
