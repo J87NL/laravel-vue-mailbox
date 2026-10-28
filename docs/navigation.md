@@ -69,6 +69,9 @@ Show the mailbox menu item to users who pass `accessAnyMailbox` or `manageAnyMai
 `manageAnyMailbox` to `mailbox.settings.index`. Gating on `accessAnyMailbox` alone is enough when only `MAILBOX_ADMINS`
 create mailboxes, because admins pass it. When your app defines `manageMailboxes` itself, a user can pass it without
 access to any mailbox; that user fails `accessAnyMailbox` and would not see the menu item to create the first mailbox.
+`manageAnyMailbox` is defined by this package: it passes with `manageMailboxes` or with `manageMailbox` on at least one
+mailbox. An app without this package gates its own mailbox link on `accessAnyMailbox` or `manageMailboxes` instead, see
+the core [abilities](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md#abilities).
 
 When the menu lists every mailbox, turn off the switcher on the folder page with `vue-mailbox.mailbox_switcher`
 set to `false`.

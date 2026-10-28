@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1 - 2026-10-28
+
+- Docs: `docs/installation.md` and `docs/navigation.md` state the menu gate as `@canany(['accessAnyMailbox', 'manageAnyMailbox'])`, say that `manageAnyMailbox` comes from this package and not from the core, and what an app without this package gates on. `docs/installation.md` notes that from `j87nl/laravel-mailbox` 0.7 a user filtered out by `access.user_query` passes no mailbox ability, also as admin or in open mode.
+- `composer.json` allows `j87nl/laravel-mailbox` 0.7 (`^0.5.3||^0.6||^0.7`), so the core with `access.user_query` for admins and open mode can be installed next to this package.
+- No migration, no config publish and no frontend rebuild needed.
+
 ## 0.9.0 - 2026-10-28
 
 - `mailbox.index` lets in users who pass `accessAnyMailbox` or `manageAnyMailbox`. A user who passes an app-defined `manageMailboxes` but has no mailbox to open is now redirected to `mailbox.settings.index` instead of getting a 403. The route no longer has the `can:accessAnyMailbox` middleware; `FolderController::index()` checks both abilities. Gate the menu item on both, see `docs/navigation.md#menu-gate`.

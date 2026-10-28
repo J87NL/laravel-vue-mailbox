@@ -291,12 +291,16 @@ needs from it:
 - **[Admins](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md#bootstrap-an-admin)**
   (`MAILBOX_ADMINS`). Creating a mailbox on the [settings page](pages/settings.md) needs `manageMailboxes`, which only
   admins pass unless your app defines that ability itself. `php artisan mailbox:add` always works. When your app
-  defines it, gate the menu on `accessAnyMailbox` or `manageAnyMailbox`, see [Navigation](navigation.md#menu-gate).
+  defines it, gate the menu on `@canany(['accessAnyMailbox', 'manageAnyMailbox'])`, see
+  [Navigation](navigation.md#menu-gate). `manageAnyMailbox` comes from this package, the core does not define it.
 - **[User model](https://github.com/J87NL/laravel-mailbox/blob/main/docs/configuration.md#user-model)**
   (`MAILBOX_USER_MODEL`), when your user model is not `App\Models\User`. The access form and the message history use it.
 - **[Access mode and groups](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md).** They decide who
   passes the abilities the routes check, and which users and groups the access form offers. From core 0.6,
-  `access.user_query` and a group's `query` keep users or groups (for example customers) out of the access form.
+  `access.user_query` and a group's `query` keep users or groups (for example customers) out of the access form. From
+  core 0.7, a user that `access.user_query` filters out passes none of the mailbox abilities, also as admin or in open
+  mode, so the menu, the routes and `manageAnyMailbox` keep them out without a `Gate::before` in your app. An app that
+  defines `manageMailboxes` itself applies the filter in that definition.
 - **[Sync schedule](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md#schedule-the-sync)**
   (`mailbox:sync`) **and a queue worker.** The message list shows what the sync stored. The folder page also queues
   `SyncMailboxJob` and `SyncFolderJob` itself, and saving a mailbox queues a sync.
