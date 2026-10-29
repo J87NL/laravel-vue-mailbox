@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Actions\GrantAccess;
 use J87NL\Mailbox\Actions\TestConnection;
 use J87NL\Mailbox\Enums\AccessLevel;
@@ -259,4 +260,78 @@ it('changes the level of existing access through the form', function (): void {
     expect(MailboxAccess::query()
         ->where('accessor_id', $colleague->id)
         ->sole()->level)->toBe(AccessLevel::Write);
+});
+
+it('lists an inactive mailbox for its manager and lets them reactivate it', function (): void {
+    Bus::fake([SyncMailboxJob::class, SyncFolderJob::class]);
+    $mailbox = mailbox(['active' => false]);
+    $manager = member($mailbox, AccessLevel::Manage);
+
+    $this->actingAs($manager)
+        ->get(route('mailbox.settings.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->has('table.data', 1)
+            ->where('table.data.0.id', $mailbox->id)
+            ->where('table.data.0.active', false));
+
+    $this->actingAs($manager)
+        ->get(route('mailbox.settings.edit', $mailbox))
+        ->assertOk();
+
+    $this->actingAs($manager)
+        ->put(route('mailbox.settings.update', $mailbox), [
+            ...newMailboxForm(),
+            'email' => $mailbox->email,
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect($mailbox->refresh()->active)->toBeTrue();
+});
+
+it('keeps the manager of an inactive mailbox out of its folders and its sync', function (): void {
+    Bus::fake([SyncMailboxJob::class, SyncFolderJob::class]);
+    $mailbox = mailbox(['active' => false]);
+    $folder = folder($mailbox);
+    $manager = member($mailbox, AccessLevel::Manage);
+
+    $this->actingAs($manager)
+        ->get(route('mailbox.folders.show', [$mailbox, $folder]))
+        ->assertForbidden();
+
+    $this->actingAs($manager)
+        ->post(route('mailbox.folders.refresh', [$mailbox, $folder]))
+        ->assertForbidden();
+
+    $this->actingAs($manager)
+        ->get(route('mailbox.index'))
+        ->assertRedirect(route('mailbox.settings.index'));
+
+    Bus::assertNothingDispatched();
+});
+
+it('lets the creator of an inactive mailbox open its settings', function (): void {
+    Bus::fake([SyncMailboxJob::class, SyncFolderJob::class]);
+    Gate::define('manageMailboxes', fn (User $user): bool => $user->email === 'office-manager@example.com');
+    $creator = user(['email' => 'office-manager@example.com']);
+
+    $this->actingAs($creator)
+        ->post(route('mailbox.settings.store'), [
+            ...newMailboxForm(),
+            'active' => '0',
+        ]);
+
+    $mailbox = Mailbox::query()
+        ->sole();
+
+    expect($mailbox->active)->toBeFalse();
+
+    $this->actingAs($creator)
+        ->get(route('mailbox.settings.edit', $mailbox))
+        ->assertOk();
+
+    $this->actingAs($creator)
+        ->get(route('mailbox.folders.show', $mailbox))
+        ->assertForbidden();
 });

@@ -234,6 +234,45 @@ it('allows each route group only from its minimum level', function (string $rout
     ]);
 })->with(routeMatrix());
 
+it('allows only the manage routes on an inactive mailbox, and every route to admins', function (string $route, string $minimum, string $level): void {
+    Bus::fake();
+    config()->set('mailbox.access.admins', ['admin@example.com']);
+
+    $mailbox = mailbox(['active' => false]);
+    storedMessage(folder($mailbox), 1);
+    member($mailbox, AccessLevel::Manage);
+    $this->connector->remote($mailbox)->folder('INBOX')->setMessages([
+        new FakeMessage(1, [], "From: a@example.org\r\nSubject: Hi\r\n\r\nBody"),
+    ]);
+
+    $user = actor($level, $mailbox);
+    [$method, $url] = endpoint($route, $mailbox);
+
+    $response = is_null($user)
+        ? $this->{$method}($url)
+        : $this->actingAs($user)->{$method}($url);
+
+    if ($level === 'guest') {
+        $response->assertRedirect(route('login'));
+
+        return;
+    }
+
+    $inactiveMinimum = in_array($minimum, ['manage', 'admin'], true) ? $minimum : 'admin';
+
+    if (LEVELS[$level] < LEVELS[$inactiveMinimum]) {
+        $response->assertForbidden();
+
+        return;
+    }
+
+    expect($response->status())->not->toBeIn([
+        401,
+        403,
+        500,
+    ]);
+})->with(routeMatrix());
+
 it('does not resolve a message through another mailbox', function (): void {
     $mine = mailbox();
     $other = mailbox(['name' => 'Other']);
@@ -252,6 +291,13 @@ it('lets a host gate its settings link on managing any mailbox', function (): vo
         ->and(Gate::forUser(member($mailbox, AccessLevel::Manage))->allows('manageAnyMailbox'))->toBeTrue()
         ->and(Gate::forUser(user(['email' => 'admin@example.com']))->allows('manageAnyMailbox'))->toBeTrue()
         ->and(Gate::forUser(user())->allows('manageAnyMailbox'))->toBeFalse();
+});
+
+it('lets a manager of only an inactive mailbox into the settings list', function (): void {
+    $mailbox = mailbox(['active' => false]);
+
+    expect(Gate::forUser(member($mailbox, AccessLevel::Manage))->allows('manageAnyMailbox'))->toBeTrue()
+        ->and(Gate::forUser(member($mailbox, AccessLevel::Write))->allows('manageAnyMailbox'))->toBeFalse();
 });
 
 it('only authorizes the mailboxes table for users who manage a mailbox', function (): void {
