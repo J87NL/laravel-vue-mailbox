@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.3 - 2026-10-29
+
+- `composer.json` allows `j87nl/laravel-mailbox` 0.9 (`^0.5.3||^0.6||^0.7||^0.8||^0.9`). Core 0.9 marks its MCP tools as open world and adds `MailboxMcp::readTools()`; nothing changes in the UI. See `docs/upgrading.md`.
+- Docs: `docs/installation.md` names the supported core versions (0.5.3 up to 0.9).
+- No migration, no config publish and no frontend rebuild needed.
+
 ## 0.9.2 - 2026-10-29
 
 - `composer.json` allows `j87nl/laravel-mailbox` 0.8 (`^0.5.3||^0.6||^0.7||^0.8`). With core 0.8 a user with `Manage` on an inactive mailbox, through their own row or a group, passes `manageAnyMailbox`, sees the mailbox in the `MailboxesTable`, opens `mailbox.settings.edit` and can set it active again through `mailbox.settings.update`, also without `MAILBOX_ADMINS`. The folder, message, compose, refresh and notification routes still refuse them, and `mailbox.index` sends them to the settings when they have no active mailbox. A non-admin creator of an inactive mailbox now reaches its edit page through the `Manage` row `store` grants. No code change in this package was needed.

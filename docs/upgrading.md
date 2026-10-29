@@ -3,6 +3,13 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.9.2 to 0.9.3: core 0.9
+
+- No migration, no config change and no frontend rebuild.
+- Allows `j87nl/laravel-mailbox` 0.9. Core 0.9 marks its MCP tools as open world and adds `MailboxMcp::readTools()`;
+  the UI is unchanged. An app that serves the core MCP tools should read the core's
+  [Keep mail away from write tools](https://github.com/J87NL/laravel-mailbox/blob/main/docs/mcp.md#keep-mail-away-from-write-tools).
+
 ## From 0.9.1 to 0.9.2: managers of inactive mailboxes
 
 - No migration, no config change and no frontend rebuild.

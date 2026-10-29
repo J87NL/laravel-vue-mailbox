@@ -8,7 +8,7 @@
 - `tranquil-tools/laravel-vue-form-builder` ^1.13 and `tranquil-tools/laravel-vue-table-builder` ^1.9, with their
   `@form-builder` and `@table-builder` Vite aliases set up as their own docs describe
 
-`j87nl/laravel-mailbox` ^0.5 and both TranquilTools packages are Composer dependencies, so they are installed with
+`j87nl/laravel-mailbox` (0.5.3 up to 0.9) and both TranquilTools packages are Composer dependencies, so they are installed with
 this package.
 
 ## 1. Install via Composer
