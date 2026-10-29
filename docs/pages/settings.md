@@ -10,12 +10,21 @@ Inside a host layout that pads its content itself, the pages can drop their own 
 Route `mailbox.settings.index` (`GET settings`) renders the `vue-mailbox.pages.settings_index` page, default
 `mailbox/Settings/Index`. It needs `manageAnyMailbox`: `manageMailboxes`, or `manageMailbox` on at least one mailbox.
 Other users get a 403, so gate your menu link on the same ability. The table only lists the mailboxes the user can
-manage (`manageMailbox`).
+manage (`manageMailbox`), inactive ones included.
 
 | Prop | Type | Description |
 |---|---|---|
 | `createUrl` | `string \| null` | "New mailbox" URL, `null` without `manageMailboxes` |
 | `table` | `TableData` | The `MailboxesTable`, see [Tables](../tables.md#mailboxestable) |
+
+## Inactive mailboxes
+
+From `j87nl/laravel-mailbox` 0.8, a user with `Manage` on an inactive mailbox (their own access row or a group) still
+passes `manageMailbox` on it. They see it in the mailbox list, open its edit page, change its access and set it active
+again, also when `MAILBOX_ADMINS` is empty. Its folder, message and compose routes need `accessMailbox` or
+`workInMailbox`, which on an inactive mailbox only admins pass, so the manager gets a 403 there and `mailbox.index` does
+not offer it. Users with `Read` or `Write` on it get nothing. With core 0.7 or older, only admins reach an inactive
+mailbox.
 
 ## Create and edit
 
@@ -41,8 +50,9 @@ saved.
   manage the new mailbox otherwise (an app that lets non-admins pass `manageMailboxes`), `store` grants them `Manage`
   on it with the core `GrantAccess`, so they land on its edit page instead of a 403 and can share it from there.
   When the grant fails, the new mailbox is deleted again. The connection test and the queued sync run outside any
-  database transaction. The core still lets only admins manage an **inactive** mailbox, so a non-admin creator of an
-  inactive mailbox gets the row but a 403 on the edit page, unless the app defines `manageMailbox` itself.
+  database transaction. The same holds for a new **inactive** mailbox: with core 0.8 the creator manages it through
+  that row (see [Inactive mailboxes](#inactive-mailboxes)). With core 0.7 or older they get the row but a 403 on the
+  edit page, unless the app defines `manageMailbox` itself.
 - `update` redirects back with a `success` flash message.
 - `destroy` (`manageMailboxes` and `manageMailbox` on that mailbox) deletes the mailbox and redirects to the mailbox list.
 

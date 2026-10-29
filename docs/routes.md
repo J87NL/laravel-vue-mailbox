@@ -9,7 +9,9 @@ Every route except the signed inline image route checks a Gate ability. The core
 `accessAnyMailbox`, `accessMailbox` (read), `workInMailbox` (write), `manageMailbox` (manage) and `manageMailboxes`
 (admin). This package adds `manageAnyMailbox` for the settings list: it passes with `manageMailboxes`, or with
 `manageMailbox` on at least one mailbox. Like the core abilities it is only defined when your app has not defined it
-itself, and it follows your own `manageMailboxes` and `manageMailbox` definitions. What each level means, and how the access mode, admins and access rows decide who passes, is
+itself, and it follows your own `manageMailboxes` and `manageMailbox` definitions. With core 0.8 a manager of an
+inactive mailbox passes `manageMailbox` and the settings routes on it, but not the read and write routes, see
+[Inactive mailboxes](pages/settings.md#inactive-mailboxes). What each level means, and how the access mode, admins and access rows decide who passes, is
 documented in the core [access control](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md) docs. The
 tables below show which route needs which ability.
 

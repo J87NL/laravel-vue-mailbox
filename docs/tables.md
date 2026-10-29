@@ -90,7 +90,8 @@ MailboxesTable::build();
 | Row link | `mailbox.settings.edit` |
 
 Only a user who passes `manageAnyMailbox` may load the table. It only contains mailboxes for which the user passes
-`manageMailbox`.
+`manageMailbox`, inactive ones included: with core 0.8 a manager of an inactive mailbox sees it here and can set it
+active again, see [Inactive mailboxes](pages/settings.md#inactive-mailboxes).
 
 ## MailboxAccessTable
 

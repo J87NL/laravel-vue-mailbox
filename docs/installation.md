@@ -300,7 +300,9 @@ needs from it:
   `access.user_query` and a group's `query` keep users or groups (for example customers) out of the access form. From
   core 0.7, a user that `access.user_query` filters out passes none of the mailbox abilities, also as admin or in open
   mode, so the menu, the routes and `manageAnyMailbox` keep them out without a `Gate::before` in your app. An app that
-  defines `manageMailboxes` itself applies the filter in that definition.
+  defines `manageMailboxes` itself applies the filter in that definition. From core 0.8, a user with `Manage` on an
+  inactive mailbox keeps its settings, so they can set it active again without `MAILBOX_ADMINS`, see
+  [Inactive mailboxes](pages/settings.md#inactive-mailboxes).
 - **[Sync schedule](https://github.com/J87NL/laravel-mailbox/blob/main/docs/installation.md#schedule-the-sync)**
   (`mailbox:sync`) **and a queue worker.** The message list shows what the sync stored. The folder page also queues
   `SyncMailboxJob` and `SyncFolderJob` itself, and saving a mailbox queues a sync.

@@ -3,6 +3,14 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.9.1 to 0.9.2: managers of inactive mailboxes
+
+- No migration, no config change and no frontend rebuild.
+- Allows `j87nl/laravel-mailbox` 0.8. With it, a user with `Manage` on an inactive mailbox sees it in the settings
+  list and can open its settings and set it active again, without `MAILBOX_ADMINS`. Its folders, messages and compose
+  stay closed to everybody but admins. See [Inactive mailboxes](pages/settings.md#inactive-mailboxes).
+- An app that defines `manageMailbox` itself only to let creators or managers into an inactive mailbox can drop it.
+
 ## From 0.8 to 0.9: menu gate and alias array
 
 - No migration, no config change and no frontend rebuild.
