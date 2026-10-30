@@ -5,6 +5,8 @@ declare(strict_types=1);
 return [
     'close' => 'Sluiten',
     'conversation' => 'Gesprek',
+    'fetch_older' => 'Oudere berichten ophalen',
+    'fetching_older' => 'Bezig met ophalen…',
     'flagged' => 'Gemarkeerd',
     'has_attachments' => 'Heeft bijlagen',
     'message_frame_title' => 'Bericht',

@@ -3,6 +3,24 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.9 to 0.10: older messages
+
+- Needs `j87nl/laravel-mailbox` ^0.10. Publish the core migrations again and migrate, it adds
+  `mailbox_folders.message_count`:
+
+  ```bash
+  php artisan vendor:publish --tag=mailbox-migrations
+  php artisan migrate
+  ```
+
+- Rebuild the frontend (`npm run build`). No config change.
+- The folder page gets an "Oudere berichten ophalen" button when the server holds more mail in the folder than is
+  stored, for example mail from before `mailbox.sync.initial_days`. It shows after the next completed sync of the
+  folder has filled `message_count`. See [Older messages](pages/folders.md#older-messages).
+- An app with a copied `Index` page adds the `olderMessagesUrl` prop and a button that posts to it, see the default
+  `pages/Index.vue`. A copied page that sets its own `only` on reloads adds `olderMessagesUrl` where the button
+  should follow.
+
 ## From 0.9.2 to 0.9.3: core 0.9
 
 - No migration, no config change and no frontend rebuild.

@@ -46,6 +46,7 @@ mailbox, so a message of another mailbox answers `404`.
 | GET | `notifications?after=` | `mailbox.notifications` | `accessAnyMailbox`, `throttle:vue-mailbox-notifications` |
 | GET | `{mailbox}/folders/{folder?}` | `mailbox.folders.show` | `accessMailbox` |
 | POST | `{mailbox}/folders/{folder}/refresh` | `mailbox.folders.refresh` | `accessMailbox`, `throttle:vue-mailbox-refresh` |
+| POST | `{mailbox}/folders/{folder}/older` | `mailbox.folders.older` | `accessMailbox`, `throttle:vue-mailbox-refresh` |
 | GET | `{mailbox}/messages/{message}` | `mailbox.messages.show` | `accessMailbox` |
 | GET | `{mailbox}/messages/{message}/attachments/{index}` | `mailbox.attachments.download` | `accessMailbox` |
 | GET | `{mailbox}/contacts` | `mailbox.contacts.index` | `accessMailbox` |

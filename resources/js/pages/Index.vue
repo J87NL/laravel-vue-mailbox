@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import Form from '@form-builder/components/Form.vue'
 import type { FormSchema } from '@form-builder/types/form-builder'
 import TableBuilder from '@table-builder/components/TableBuilder.vue'
@@ -22,6 +22,7 @@ const props = defineProps<{
     folders: MailboxFolder[]
     mailbox: MailboxSummary
     mailboxes: MailboxSummary[]
+    olderMessagesUrl?: string | null
     refreshUrl?: string | null
     settingsUrl: string | null
     syncNotice: string | null
@@ -49,6 +50,90 @@ function refresh(): void {
         },
     })
 }
+
+const OLDER_RELOAD_DELAY = 5000
+
+const OLDER_RELOAD_ATTEMPTS = 4
+
+const fetchingOlder = ref(false)
+
+let olderReload: ReturnType<typeof setTimeout> | undefined
+
+let olderRequest = 0
+
+function stopFetchingOlder(): void {
+    olderRequest++
+    clearTimeout(olderReload)
+    olderReload = undefined
+    fetchingOlder.value = false
+}
+
+function fetchOlder(): void {
+    if (!props.olderMessagesUrl || fetchingOlder.value) {
+        return
+    }
+
+    fetchingOlder.value = true
+
+    const request = ++olderRequest
+
+    router.post(props.olderMessagesUrl, {}, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            if (request !== olderRequest) {
+                return
+            }
+
+            scheduleOlderReload(request, OLDER_RELOAD_ATTEMPTS, props.table?.pagination?.total, props.olderMessagesUrl)
+        },
+        onError: () => {
+            if (request !== olderRequest) {
+                return
+            }
+
+            stopFetchingOlder()
+        },
+    })
+}
+
+function scheduleOlderReload(request: number, attempts: number, total: number | undefined, olderUrl: string | null | undefined): void {
+    olderReload = setTimeout(() => {
+        router.reload({
+            only: ['table', 'folders', 'olderMessagesUrl'],
+            onSuccess: () => {
+                if (request !== olderRequest) {
+                    return
+                }
+
+                const changed = props.table?.pagination?.total !== total || props.olderMessagesUrl !== olderUrl
+
+                if (changed || attempts <= 1) {
+                    stopFetchingOlder()
+
+                    return
+                }
+
+                scheduleOlderReload(request, attempts - 1, total, olderUrl)
+            },
+            onError: () => {
+                if (request !== olderRequest) {
+                    return
+                }
+
+                stopFetchingOlder()
+            },
+        })
+    }, OLDER_RELOAD_DELAY)
+}
+
+watch(() => props.folder?.id, () => {
+    stopFetchingOlder()
+})
+
+onBeforeUnmount(() => {
+    clearTimeout(olderReload)
+})
 
 function switchMailbox(event: Event): void {
     const id = Number((event.target as HTMLSelectElement).value)
@@ -101,6 +186,9 @@ function switchMailbox(event: Event): void {
                     </select>
                     <button v-if="refreshUrl" type="button" :class="ui.button" :disabled="refreshing" @click="refresh">
                         {{ refreshing ? t('refreshing') : t('refresh') }}
+                    </button>
+                    <button v-if="olderMessagesUrl || fetchingOlder" type="button" :class="ui.button" :disabled="fetchingOlder" @click="fetchOlder">
+                        {{ fetchingOlder ? t('fetching_older') : t('fetch_older') }}
                     </button>
                     <NotificationToggle :folder-id="folder?.id ?? null" :mailbox-id="mailbox.id" />
                     <Link :href="contactsUrl" :class="[ui.button, 'md:hidden']">{{ t('contacts') }}</Link>

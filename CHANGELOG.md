@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0 - 2026-10-30
+
+- **Requires `j87nl/laravel-mailbox` ^0.10.** This release drops support for core 0.5.3 up to 0.9 and needs the core 0.10 migration: publish the core migrations again and migrate.
+- New route `mailbox.folders.older` (`POST {mailbox}/folders/{folder}/older`, `accessMailbox`, `throttle:vue-mailbox-refresh`): queues the core `FetchOlderMessagesJob` for the folder and returns to it. A folder that is not selectable, not synced or `older_exhausted` answers `404`. See `docs/routes.md`.
+- New lazy prop `olderMessagesUrl` on `mailbox/Index`: the `mailbox.folders.older` URL when the core's `message_count` of the open folder is higher than its stored messages and the folder is not `older_exhausted`, `null` otherwise and for folders that are not selectable or not synced. One count query for the open folder only, and only when the prop is asked for.
+- The folder page shows "Oudere berichten ophalen" (`fetch_older`, `ui.button`) in the toolbar when `olderMessagesUrl` is set. A click posts to it and shows "Bezig met ophalen…" (`fetching_older`). After a successful post the page reloads `table`, `folders` and `olderMessagesUrl` every five seconds, at most four times, until the table total or `olderMessagesUrl` changes. A failed post or another folder ends the pending state. Before, a folder could show unread mail from before the sync window in its count while its list stayed empty. See `docs/pages/folders.md#older-messages`.
+- `composer.json` requires `j87nl/laravel-mailbox` `^0.10` (was `^0.5.3||^0.6||^0.7||^0.8||^0.9`): the route and prop use `FetchOlderMessagesJob`, `message_count` and `older_exhausted` from core 0.10.
+- **Migration:** publish the core migrations again and migrate (`php artisan vendor:publish --tag=mailbox-migrations` and `php artisan migrate`) to add `mailbox_folders.message_count`. Rebuild the frontend (`npm run build`). See `docs/upgrading.md`.
+
 ## 0.9.4 - 2026-10-30
 
 - `FolderList` shows hover and the active folder with a translucent background, so both stay visible on a gray host page. The active folder no longer lightens on hover.

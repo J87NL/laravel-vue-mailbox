@@ -1,7 +1,7 @@
 # Translations
 
 The default pages are fully translated. They read their texts from the core translation file `mailbox::mailbox` and
-this package's own file `vue-mailbox::mailbox` (for texts that only the UI uses, such as `refresh`, `open_fullscreen`,
+this package's own file `vue-mailbox::mailbox` (for texts that only the UI uses, such as `refresh`, `fetch_older`, `fetching_older`, `open_fullscreen`,
 `close`, `conversation`, `flagged`, `switch_mailbox`, `has_attachments` and `message_frame_title`). Both ship in Dutch (`nl`) and English (`en`). The
 locale is the app locale.
 

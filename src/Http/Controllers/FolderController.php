@@ -13,6 +13,7 @@ use Inertia\Response;
 use J87NL\Mailbox\Actions\CreateFolder;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Forms\FolderForm;
+use J87NL\Mailbox\Jobs\FetchOlderMessagesJob;
 use J87NL\Mailbox\Jobs\SyncFolderJob;
 use J87NL\Mailbox\Jobs\SyncMailboxJob;
 use J87NL\Mailbox\Models\Mailbox;
@@ -75,6 +76,15 @@ class FolderController extends Controller
         return redirect()->route(config('vue-mailbox.routes.name').'folders.show', [$mailbox, $folder]);
     }
 
+    public function older(Mailbox $mailbox, MailboxFolder $folder): RedirectResponse
+    {
+        abort_if(! $folder->selectable || $folder->skipsSync() || $folder->older_exhausted, 404);
+
+        FetchOlderMessagesJob::dispatch($folder->id);
+
+        return redirect()->route(config('vue-mailbox.routes.name').'folders.show', [$mailbox, $folder]);
+    }
+
     public function store(Request $request, Mailbox $mailbox, CreateFolder $createFolder): RedirectResponse
     {
         $data = (new FolderForm($mailbox, ''))->validate($request);
@@ -101,6 +111,15 @@ class FolderController extends Controller
         return $mailbox->folderWithRole(FolderRole::Inbox);
     }
 
+    private function hasOlderMessages(?MailboxFolder $folder): bool
+    {
+        if (is_null($folder) || ! $folder->selectable || $folder->skipsSync() || $folder->older_exhausted) {
+            return false;
+        }
+
+        return (int) $folder->message_count > $folder->messages()->count();
+    }
+
     private function render(Mailbox $mailbox, ?MailboxFolder $folder): Response
     {
         $routes = config('vue-mailbox.routes.name');
@@ -124,6 +143,7 @@ class FolderController extends Controller
                 'name' => $mailbox->name,
             ],
             'mailboxes' => fn (): array => config('vue-mailbox.mailbox_switcher', true) ? $this->tree->mailboxes() : [],
+            'olderMessagesUrl' => fn (): ?string => $this->hasOlderMessages($folder) ? route($routes.'folders.older', [$mailbox, $folder]) : null,
             'refreshUrl' => is_null($folder) ? null : route($routes.'folders.refresh', [$mailbox, $folder]),
             'settingsUrl' => Gate::allows('manageMailbox', $mailbox) ? route($routes.'settings.edit', $mailbox) : null,
             'syncNotice' => ! is_null($folder) && $folder->skipsSync() ? __('vue-mailbox::mailbox.not_synced_hint') : null,

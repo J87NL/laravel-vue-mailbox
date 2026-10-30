@@ -57,6 +57,28 @@ RateLimiter::for('vue-mailbox-refresh', fn (Request $request): Limit => Limit::p
 returns to the folder. With a `sync` queue the new mail shows right away; with a queue worker it shows on the next poll.
 The core job is unique per folder for 120 seconds, so repeated clicks do not stack syncs.
 
+## Older messages
+
+The core sync only goes back `mailbox.sync.initial_days` (90) days on the first sync of a folder. When the server holds
+more messages in the open folder than are stored (the core's `message_count`, filled by the sync from the folder
+status, against the stored rows) and the core has not marked the folder `older_exhausted`, `olderMessagesUrl` holds the `mailbox.folders.older` URL and the default page shows
+an "Oudere berichten ophalen" button (`fetch_older`, `ui.button`) in the toolbar. A folder that is not synced never
+offers it.
+
+The button posts to `mailbox.folders.older` (`POST {mailbox}/folders/{folder}/older`, `accessMailbox`, the same
+`vue-mailbox-refresh` limiter as Refresh, so both count towards one limit). It queues the core
+`FetchOlderMessagesJob` for the folder and returns to the folder. The job stores the next `mailbox.sync.older_batch_size`
+(100) older messages, newest first, without browser notifications, and waits for a running sync of the folder. See
+the core's [Older messages](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md#older-messages).
+
+A folder that is not selectable, not synced or `older_exhausted` answers the route with `404` and queues nothing.
+
+While the job runs the button reads "Bezig met ophalen…" (`fetching_older`) and is disabled. After a successful post
+the page reloads `table`, `folders` and `olderMessagesUrl` every five seconds, at most four times, and stops as soon as
+the table total or `olderMessagesUrl` changes. A failed post, or opening another folder, ends the pending state; the button disappears once everything is stored or the core
+marked the folder `older_exhausted` (nothing older on the server, also when only messages flagged `\Deleted` are left),
+and otherwise fetches the next batch on the next click.
+
 ## Notifications
 
 The toolbar has a toggle for browser notifications on new mail in this mailbox while the app is open. A new message in the folder on
@@ -73,14 +95,15 @@ screen gets no notification while the tab is visible and has focus. See [Browser
 | `folders` | `MailboxFolder[]` | Selectable folders of the mailbox, see below |
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
 | `mailboxes` | `MailboxSummary[]` | Active mailboxes the user can open, sorted by name, with the unread count of their inbox (`unseen`); empty when `vue-mailbox.mailbox_switcher` is `false` |
+| `olderMessagesUrl` | `string \| null` | `mailbox.folders.older` URL when the server holds older messages of the open folder than are stored and the folder is not `older_exhausted`, otherwise `null`, see [Older messages](#older-messages) |
 | `refreshUrl` | `string \| null` | `mailbox.folders.refresh` URL of the open folder, `null` while syncing |
 | `settingsUrl` | `string \| null` | Settings URL, `null` without `manageMailbox` |
 | `syncNotice` | `string \| null` | Translated explanation for a folder that is not synced, otherwise `null` |
 | `syncing` | `string \| null` | Translated "syncing" notice while there is no folder yet |
 | `table` | `TableData \| null` | The message table, `null` while syncing |
 
-`folderForm`, `folders` and `mailboxes` are lazy closures. A partial reload that asks only for `table` does not compute
-them, so polling the message list does not query the folder list again.
+`folderForm`, `folders`, `mailboxes` and `olderMessagesUrl` are lazy closures. A partial reload that asks only for
+`table` does not compute them, so polling the message list does not query the folder list again.
 
 ### Mailbox switcher
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 return [
     'close' => 'Close',
     'conversation' => 'Conversation',
+    'fetch_older' => 'Fetch older messages',
+    'fetching_older' => 'Fetching…',
     'flagged' => 'Flagged',
     'has_attachments' => 'Has attachments',
     'message_frame_title' => 'Message',
