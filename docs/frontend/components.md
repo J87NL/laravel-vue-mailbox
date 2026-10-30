@@ -18,7 +18,7 @@ Everything below is imported through the `@mailbox` alias, which points to
 
 ## FolderList
 
-Renders `folders` as a list of Inertia links, indented by `depth`, with the unread count when it is above zero. A folder with `syncs` set to `false` (not synced by the core, see [Folders](../pages/folders.md#folders-that-are-not-synced)) is muted, gets a "Niet gesynct" badge and a tooltip with the explanation, and stays clickable.
+Renders `folders` as a list of Inertia links, indented by `depth`, with the unread count when it is above zero. A folder with `syncs` set to `false` (not synced by the core, see [Folders](../pages/folders.md#folders-that-are-not-synced)) is muted, gets a "Niet gesynct" badge and a tooltip with the explanation, and stays clickable. Hover and the highlighted folder use a translucent background (`bg-gray-900/5`, `bg-gray-900/10`, white in dark mode), so both stay visible on any page background of the host.
 
 | Prop | Type | Description |
 |---|---|---|
@@ -92,7 +92,7 @@ import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, Mai
 | `button` | Secondary buttons and links |
 | `primaryButton` | Primary actions (compose, reply) |
 | `dangerButton` | Delete buttons |
-| `select` | The "Move to" select |
+| `select` | The "Move to" select and the mailbox switcher. Keeps `pr-8` free for the caret of `@tailwindcss/forms`; keep a right padding in an override |
 | `panel` | Bordered content panels |
 | `toolbar` | A wrapping row of buttons |
 | `muted` | Secondary text |

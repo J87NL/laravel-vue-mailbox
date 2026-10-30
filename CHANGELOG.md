@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.4 - 2026-10-30
+
+- `FolderList` shows hover and the active folder with a translucent background, so both stay visible on a gray host page. The active folder no longer lightens on hover.
+- `ui.select` keeps room on the right (`pr-8`) for the caret, which ran through the text of the mailbox switcher and the "Move to" select with `@tailwindcss/forms`.
+- Docs: `docs/frontend/components.md` describes the folder states and the right padding of `ui.select`.
+- No migration and no config publish. Rebuild the frontend (`npm run build`).
+
 ## 0.9.3 - 2026-10-29
 
 - `composer.json` allows `j87nl/laravel-mailbox` 0.9 (`^0.5.3||^0.6||^0.7||^0.8||^0.9`). Core 0.9 marks its MCP tools as open world and adds `MailboxMcp::readTools()`; nothing changes in the UI. See `docs/upgrading.md`.
