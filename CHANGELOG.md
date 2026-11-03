@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.0 - 2026-11-03
+
+- **Requires `j87nl/laravel-mailbox` ^0.11** for message templates, `MarkJunk` and `mailboxes.confirm_delete`. Publish the core migrations again and migrate.
+- **Migration:** publish the core migrations again and migrate (`php artisan vendor:publish --tag=mailbox-migrations` and `php artisan migrate`). Rebuild the frontend (`npm run build`). See `docs/upgrading.md`.
+
 ## 0.10.0 - 2026-10-30
 
 - **Requires `j87nl/laravel-mailbox` ^0.10.** This release drops support for core 0.5.3 up to 0.9 and needs the core 0.10 migration: publish the core migrations again and migrate.
