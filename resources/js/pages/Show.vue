@@ -16,6 +16,7 @@ defineProps<{
     composeUrl: string | null
     contactUrl: string | null
     conversation?: ConversationEntry[]
+    folderRole?: MailboxFolder['role']
     folders: MailboxFolder[]
     hasRemoteImages: boolean
     history: AuditEntry[]
@@ -111,6 +112,7 @@ function addresses(list: MailAddress[] | null): string {
                     :actions-url="actionsUrl"
                     :compose-url="composeUrl"
                     :contact-url="contactUrl"
+                    :folder-role="folderRole"
                     :folders="folders"
                     :message="message"
                 />
@@ -191,6 +193,7 @@ function addresses(list: MailAddress[] | null): string {
                             :actions-url="actionsUrl"
                             :compose-url="composeUrl"
                             :contact-url="contactUrl"
+                            :folder-role="folderRole"
                             :folders="folders"
                             :message="message"
                         />

@@ -12,8 +12,10 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\HtmlString;
 use J87NL\Mailbox\Actions\ArchiveMessages;
 use J87NL\Mailbox\Actions\DeleteMessages;
+use J87NL\Mailbox\Actions\MarkJunk;
 use J87NL\Mailbox\Actions\MarkMessages;
 use J87NL\Mailbox\Actions\MoveMessages;
+use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\Mailbox\Support\DisplayTime;
@@ -157,6 +159,28 @@ final class MessagesTable extends AbstractTable
                 choices: $this->moveChoices(),
                 choicesLabel: __('mailbox::mailbox.folder'),
             );
+
+        $this->junkAction($table);
+    }
+
+    private function junkAction(TableBuilder $table): void
+    {
+        $mailbox = $this->folder->mailbox;
+
+        if ($this->folder->role === FolderRole::Junk) {
+            $table->bulkAction(__('mailbox::mailbox.mark_not_junk'), before: fn (array $ids): int => app(MarkJunk::class)->notJunk($mailbox, $this->messages($ids), auth()->user()));
+
+            return;
+        }
+
+        if (in_array($this->folder->role, [
+            FolderRole::Drafts,
+            FolderRole::Sent,
+        ], true)) {
+            return;
+        }
+
+        $table->bulkAction(__('mailbox::mailbox.mark_junk'), before: fn (array $ids): int => app(MarkJunk::class)->junk($mailbox, $this->messages($ids), auth()->user()));
     }
 
     /**

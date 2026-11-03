@@ -159,11 +159,17 @@ core action, see [message actions](https://github.com/J87NL/laravel-mailbox/blob
 
 | Field | Rules |
 |---|---|
-| `action` | required, one of `archive`, `delete`, `flag`, `move`, `read`, `unflag`, `unread` |
+| `action` | required, one of `archive`, `delete`, `flag`, `junk`, `move`, `not_junk`, `read`, `unflag`, `unread` |
 | `ids` | required array of message ids, at most 500 |
 | `folder_id` | required when `action` is `move`, a folder of the same mailbox |
 
 Ids of messages in other mailboxes are ignored. A `folder_id` of another mailbox answers `404`.
+
+`junk` ("Markeer als spam") and `not_junk` ("Geen spam") call the core `MarkJunk`: `junk` sets the IMAP keyword
+`$Junk` and moves the messages to the junk folder, `not_junk` sets `$NotJunk` and moves them to the inbox. Both are
+written to the audit trail (`marked_junk`, `marked_not_junk`). `junk` on a message in Sent or Drafts and `not_junk` on a message outside the junk
+folder answer `422`, like the buttons that are not offered there. See the core
+[spam action](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md#spam).
 
 After `flag`, `read` and `unflag` the user goes back to the previous page. After the other actions the user lands on
 the folder of the first matched message, or on the inbox when none of the ids matched.

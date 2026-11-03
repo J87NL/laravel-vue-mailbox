@@ -7,12 +7,16 @@ namespace J87NL\VueMailbox\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use J87NL\Mailbox\Actions\ArchiveMessages;
 use J87NL\Mailbox\Actions\DeleteMessages;
+use J87NL\Mailbox\Actions\MarkJunk;
 use J87NL\Mailbox\Actions\MarkMessages;
 use J87NL\Mailbox\Actions\MoveMessages;
+use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\Mailbox;
+use J87NL\Mailbox\Models\MailboxMessage;
 
 class MessageActionController extends Controller
 {
@@ -25,7 +29,9 @@ class MessageActionController extends Controller
                     'archive',
                     'delete',
                     'flag',
+                    'junk',
                     'move',
+                    'not_junk',
                     'read',
                     'unflag',
                     'unread',
@@ -50,10 +56,14 @@ class MessageActionController extends Controller
         $back = $messages->first()?->folder;
         $user = $request->user();
 
+        abort_unless($this->fitsFolders($data['action'], $messages), 422);
+
         match ($data['action']) {
             'archive' => app(ArchiveMessages::class)->handle($mailbox, $messages, $user),
             'delete' => app(DeleteMessages::class)->handle($mailbox, $messages, $user),
             'flag' => app(MarkMessages::class)->flag($messages, $user),
+            'junk' => app(MarkJunk::class)->junk($mailbox, $messages, $user),
+            'not_junk' => app(MarkJunk::class)->notJunk($mailbox, $messages, $user),
             'move' => app(MoveMessages::class)->handle($messages, $mailbox->folders()->findOrFail($data['folder_id']), $user),
             'read' => app(MarkMessages::class)->read($messages, $user),
             'unflag' => app(MarkMessages::class)->unflag($messages, $user),
@@ -70,5 +80,24 @@ class MessageActionController extends Controller
         }
 
         return redirect()->route(config('vue-mailbox.routes.name').'folders.show', array_filter([$mailbox, $back]));
+    }
+
+    /**
+     * @param  Collection<int, MailboxMessage>  $messages
+     */
+    private function fitsFolders(string $action, Collection $messages): bool
+    {
+        if ($action === 'junk') {
+            return ! $messages->contains(fn (MailboxMessage $message): bool => in_array($message->folder->role, [
+                FolderRole::Drafts,
+                FolderRole::Sent,
+            ], true));
+        }
+
+        if ($action === 'not_junk') {
+            return $messages->every(fn (MailboxMessage $message): bool => $message->folder->role === FolderRole::Junk);
+        }
+
+        return true;
     }
 }

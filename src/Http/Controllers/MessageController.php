@@ -58,6 +58,7 @@ class MessageController extends Controller
             'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
             'conversation' => $this->conversation($mailbox, $message),
             'contactUrl' => $canWork && ! is_null($message->from_email) ? route($routes.'messages.contact', [$mailbox, $message]) : null,
+            'folderRole' => $message->folder->role->value,
             'folders' => $tree->for($mailbox),
             'history' => $this->history($message),
             'imageOrigin' => $request->getSchemeAndHttpHost(),

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { MailboxFolder } from '../types'
 import { useMailboxConfirm } from '../confirm'
 import { useMailboxTranslations } from '../translations'
@@ -10,6 +10,7 @@ const props = defineProps<{
     actionsUrl: string | null
     composeUrl: string | null
     contactUrl: string | null
+    folderRole?: MailboxFolder['role']
     folders: MailboxFolder[]
     message: {
         id: number
@@ -21,6 +22,18 @@ const { t } = useMailboxTranslations()
 const confirm = useMailboxConfirm()
 
 const moveTarget = ref<number | ''>('')
+
+const junkAction = computed((): 'junk' | 'not_junk' | null => {
+    if (props.folderRole === 'junk') {
+        return 'not_junk'
+    }
+
+    if (props.folderRole === 'sent' || props.folderRole === 'drafts') {
+        return null
+    }
+
+    return 'junk'
+})
 
 async function act(action: string, extra: Record<string, unknown> = {}): Promise<void> {
     if (!props.actionsUrl) {
@@ -62,6 +75,7 @@ function replyUrl(mode: string): string {
         </template>
         <template v-if="actionsUrl">
             <button type="button" :class="ui.button" @click="act('archive')">{{ t('archive') }}</button>
+            <button v-if="junkAction" type="button" :class="ui.button" @click="act(junkAction)">{{ t(junkAction === 'junk' ? 'mark_junk' : 'mark_not_junk') }}</button>
             <button type="button" :class="ui.dangerButton" @click="act('delete')">{{ t('delete') }}</button>
             <button type="button" :class="ui.button" @click="act('unread')">{{ t('mark_unread') }}</button>
             <button type="button" :class="ui.button" @click="act(message.is_flagged ? 'unflag' : 'flag')">

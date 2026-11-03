@@ -40,6 +40,8 @@ Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk act
 | Mark as read | core `MarkMessages::read()` |
 | Mark as unread | core `MarkMessages::unread()` |
 | Move to folder | core `MoveMessages`, with a choice of the other selectable folders of the mailbox |
+| Mark as spam | core `MarkJunk::junk()`; not in the junk, sent and drafts folders |
+| Not spam | core `MarkJunk::notJunk()`; only in the junk folder |
 
 Bulk actions only touch messages of the table's folder.
 

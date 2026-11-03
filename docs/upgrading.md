@@ -3,7 +3,7 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
-## From 0.10 to 0.11: core 0.11
+## From 0.10 to 0.11: core 0.11 and spam
 
 - Needs `j87nl/laravel-mailbox` ^0.11. Publish the core migrations again and migrate, it adds `mailbox_templates` and
   `mailboxes.confirm_delete`:
@@ -14,6 +14,7 @@ Run `composer update j87nl/laravel-vue-mailbox` and read the section for every v
   ```
 
 - Rebuild the frontend (`npm run build`). `settings_template` is optional in a published config.
+- The message view and the message list get "Markeer als spam" and, in the junk folder, "Geen spam".
 
 ## From 0.9 to 0.10: older messages
 
