@@ -78,3 +78,9 @@ per user. A shorter term returns `[]`.
 core [`GrantAccess`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/access.md#granting-and-revoking) action and
 redirect back. When the core refuses a change, for example revoking the last manager, the error is set on `accessor`.
 The default page shows that error above the access table.
+
+## Delete confirmation
+
+The general section of the form has "Bevestigen bij verwijderen" (`confirm_delete`, off by default). When it is on,
+deleting messages from the message view or the bulk action asks for confirmation through the host's `confirm` dialog.
+When it is off, they are deleted right away. Deleting a contact, access row or mailbox always asks.

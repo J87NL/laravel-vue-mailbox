@@ -56,6 +56,7 @@ class MessageController extends Controller
             'attachments' => $this->attachments($mailbox, $message),
             'backUrl' => route($routes.'folders.show', [$mailbox, $message->folder]),
             'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
+            'confirmDelete' => $mailbox->confirm_delete,
             'conversation' => $this->conversation($mailbox, $message),
             'contactUrl' => $canWork && ! is_null($message->from_email) ? route($routes.'messages.contact', [$mailbox, $message]) : null,
             'folderRole' => $message->folder->role->value,

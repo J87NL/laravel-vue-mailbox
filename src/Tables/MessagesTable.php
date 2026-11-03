@@ -142,7 +142,7 @@ final class MessagesTable extends AbstractTable
 
         $table
             ->bulkAction(__('mailbox::mailbox.archive'), before: fn (array $ids): int => app(ArchiveMessages::class)->handle($mailbox, $this->messages($ids), auth()->user()))
-            ->bulkAction(__('mailbox::mailbox.delete'), before: fn (array $ids): int => app(DeleteMessages::class)->handle($mailbox, $this->messages($ids), auth()->user()), confirm: __('mailbox::mailbox.delete_confirm'))
+            ->bulkAction(__('mailbox::mailbox.delete'), before: fn (array $ids): int => app(DeleteMessages::class)->handle($mailbox, $this->messages($ids), auth()->user()), confirm: $mailbox->confirm_delete ? __('mailbox::mailbox.delete_confirm') : false)
             ->bulkAction(__('mailbox::mailbox.mark_read'), before: function (array $ids): void {
                 app(MarkMessages::class)->read($this->messages($ids), auth()->user());
             })

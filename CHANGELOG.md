@@ -4,6 +4,7 @@
 
 - **Requires `j87nl/laravel-mailbox` ^0.11** for message templates, `MarkJunk` and `mailboxes.confirm_delete`. Publish the core migrations again and migrate.
 - Spam: `mailbox.messages.actions` accepts `junk` and `not_junk` (core `MarkJunk`). The message view shows "Markeer als spam", or "Geen spam" in the junk folder (none in Sent and Drafts), based on the new `folderRole` prop. The message list has the same as bulk action. See `docs/pages/folders.md#message-actions`.
+- **Behaviour change:** deleting messages, from the message view and the bulk action, only asks for confirmation when the mailbox has "Bevestigen bij verwijderen" (`confirm_delete`) on. It is off by default, also for existing mailboxes. New `confirmDelete` prop on the message view. See `docs/pages/settings.md#delete-confirmation`.
 - **Migration:** publish the core migrations again and migrate (`php artisan vendor:publish --tag=mailbox-migrations` and `php artisan migrate`). Rebuild the frontend (`npm run build`). See `docs/upgrading.md`.
 
 ## 0.10.0 - 2026-10-30

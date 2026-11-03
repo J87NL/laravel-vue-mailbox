@@ -21,6 +21,7 @@ leaves the read state alone.
 | `attachments` | `MailboxAttachment[]` | Downloadable attachments, see below |
 | `backUrl` | `string` | URL of the message's folder |
 | `composeUrl` | `string \| null` | Compose URL, `null` without `workInMailbox` |
+| `confirmDelete` | `boolean` | The mailbox's `confirm_delete`: Delete asks for confirmation first |
 | `contactUrl` | `string \| null` | "Add to address book" URL, `null` without `workInMailbox` or without a sender address |
 | `conversation` | `ConversationEntry[]` | The messages of the conversation, oldest first, see below; empty when the conversation view is off or the message is alone |
 | `folderRole` | `string` | Role of the message's folder (`inbox`, `junk`, …), picks the spam button |
@@ -105,7 +106,7 @@ The default page offers, depending on the URLs it gets:
 - Reply, Reply all and Forward, linking to `composeUrl` with `?reply={id}&mode=reply|reply_all|forward`. See
   [Compose, reply and forward](compose.md).
 - Archive, "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), Delete (with a
-  confirmation), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
+  confirmation only when `confirmDelete` is true), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
   `actionsUrl`. See [Message actions](folders.md#message-actions).
 - Add to address book, posted to `contactUrl`.
 - Full screen, see above.

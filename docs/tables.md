@@ -36,7 +36,7 @@ Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk act
 | Bulk action | Does |
 |---|---|
 | Archive | core `ArchiveMessages` |
-| Delete | core `DeleteMessages`, with a confirmation |
+| Delete | core `DeleteMessages`, with a confirmation only when the mailbox has `confirm_delete` on |
 | Mark as read | core `MarkMessages::read()` |
 | Mark as unread | core `MarkMessages::unread()` |
 | Move to folder | core `MoveMessages`, with a choice of the other selectable folders of the mailbox |

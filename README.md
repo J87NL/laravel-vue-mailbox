@@ -49,7 +49,7 @@ resolve: async (name) => {
 },
 ```
 
-The pages set no layout: wrap them in yours in the resolver (`page.layout ??= Layout`). An app on `resolvePageComponent()` with `./Pages` keeps it for its own pages and only adds the `mailbox/` branch, see [Installation](docs/installation.md#3-load-the-pages-from-the-package). Provide a confirmation dialog under the key `confirm`, or deleting a message, contact or mailbox does nothing. An app on the `@inertiajs/vite` plugin without a `resolve` of its own adds this one (the plugin then leaves it alone), and an app with SSR uses the same resolver in `resources/js/ssr.ts`.
+The pages set no layout: wrap them in yours in the resolver (`page.layout ??= Layout`). An app on `resolvePageComponent()` with `./Pages` keeps it for its own pages and only adds the `mailbox/` branch, see [Installation](docs/installation.md#3-load-the-pages-from-the-package). Provide a confirmation dialog under the key `confirm`, or deleting a contact or mailbox (and a message, when the mailbox asks for confirmation) does nothing. An app on the `@inertiajs/vite` plugin without a `resolve` of its own adds this one (the plugin then leaves it alone), and an app with SSR uses the same resolver in `resources/js/ssr.ts`.
 
 To replace one page, point its key in `config/vue-mailbox.php` (`vue-mailbox.pages.*`) at a page of your own. To copy every page into your app instead, run `php artisan mailbox:install --pages`: it copies them to `resources/js/pages/Mailbox` and points the default names in `config/vue-mailbox.php` at the copies (`Mailbox/Index`, ...). See [Installation](docs/installation.md), [Customizing pages](docs/frontend/customizing-pages.md) and, when you update from 0.4, [Upgrading](docs/upgrading.md).
 
@@ -91,7 +91,7 @@ Then follow the core package README for admins, the sync schedule, the queue wor
 
 ## Pages and props
 
-The default pages read their texts from the Inertia prop `vue_mailbox_translations` (the core `mailbox::mailbox` file, nl and en) through `useMailboxTranslations()` from `@mailbox/translations`. The empty state texts come from this package's own `vue-mailbox::mailbox` file (nl and en) and arrive as props. Deletes ask for confirmation through the function the host provides under the Vue injection key `confirm` (`app.provide('confirm', (message) => Promise<boolean>)`), never `window.confirm`; without it they do nothing. The prop is shared only on the mailbox routes; a host page outside them that needs it adds the `J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations` middleware.
+The default pages read their texts from the Inertia prop `vue_mailbox_translations` (the core `mailbox::mailbox` file, nl and en) through `useMailboxTranslations()` from `@mailbox/translations`. The empty state texts come from this package's own `vue-mailbox::mailbox` file (nl and en) and arrive as props. Deletes ask for confirmation (messages only when the mailbox has "Bevestigen bij verwijderen" on) through the function the host provides under the Vue injection key `confirm` (`app.provide('confirm', (message) => Promise<boolean>)`), never `window.confirm`; without it they do nothing. The prop is shared only on the mailbox routes; a host page outside them that needs it adds the `J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations` middleware.
 
 | Page (`vue-mailbox.pages.*`) | Props |
 |---|---|

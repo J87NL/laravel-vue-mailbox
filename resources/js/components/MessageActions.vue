@@ -9,6 +9,7 @@ import { ui } from '../ui'
 const props = defineProps<{
     actionsUrl: string | null
     composeUrl: string | null
+    confirmDelete?: boolean
     contactUrl: string | null
     folderRole?: MailboxFolder['role']
     folders: MailboxFolder[]
@@ -40,7 +41,7 @@ async function act(action: string, extra: Record<string, unknown> = {}): Promise
         return
     }
 
-    if (action === 'delete' && !(await confirm(t('message_delete_confirm')))) {
+    if (action === 'delete' && props.confirmDelete && !(await confirm(t('message_delete_confirm')))) {
         return
     }
 

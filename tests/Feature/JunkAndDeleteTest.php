@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use DirectoryTree\ImapEngine\Testing\FakeMessage;
 use Illuminate\Support\Facades\Bus;
+use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Enums\AuditAction;
 use J87NL\Mailbox\Enums\FolderRole;
@@ -100,4 +101,30 @@ it('offers mark as spam outside the junk folder and not spam inside it as bulk a
         FolderRole::Sent,
         null,
     ],
+]);
+
+it('asks for a delete confirmation only when the mailbox is set to', function (bool $confirm): void {
+    $mailbox = mailbox(['confirm_delete' => $confirm]);
+    $folder = folder($mailbox);
+    $message = storedMessage($folder, 1, [
+        'body_html' => '<p>Hi</p>',
+        'body_loaded_at' => now(),
+    ]);
+    $writer = member($mailbox, AccessLevel::Write);
+
+    $delete = collect($this->actingAs($writer)
+        ->get(route('mailbox.folders.show', [$mailbox, $folder]))
+        ->viewData('page')['props']['table']['bulkActions'])
+        ->firstWhere('label', __('mailbox::mailbox.delete'));
+
+    expect((bool) $delete['confirm'])->toBe($confirm);
+
+    $this->actingAs($writer)
+        ->get(route('mailbox.messages.show', [$mailbox, $message]))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('confirmDelete', $confirm)
+            ->where('folderRole', 'inbox'));
+})->with([
+    'off' => [false],
+    'on' => [true],
 ]);

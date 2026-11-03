@@ -14,6 +14,7 @@ defineProps<{
     attachments: MailboxAttachment[]
     backUrl: string
     composeUrl: string | null
+    confirmDelete?: boolean
     contactUrl: string | null
     conversation?: ConversationEntry[]
     folderRole?: MailboxFolder['role']
@@ -111,6 +112,7 @@ function addresses(list: MailAddress[] | null): string {
                 <MessageActions
                     :actions-url="actionsUrl"
                     :compose-url="composeUrl"
+                    :confirm-delete="confirmDelete"
                     :contact-url="contactUrl"
                     :folder-role="folderRole"
                     :folders="folders"
@@ -192,6 +194,7 @@ function addresses(list: MailAddress[] | null): string {
                         <MessageActions
                             :actions-url="actionsUrl"
                             :compose-url="composeUrl"
+                            :confirm-delete="confirmDelete"
                             :contact-url="contactUrl"
                             :folder-role="folderRole"
                             :folders="folders"
