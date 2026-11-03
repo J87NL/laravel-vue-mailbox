@@ -24,7 +24,7 @@
         "spatie/laravel-package-tools": "^1.16",
         "spatie/laravel-query-builder": "^6.0|^7.0",
         "tranquil-tools/laravel-vue-form-builder": "^1.13",
-        "tranquil-tools/laravel-vue-table-builder": "^1.9"
+        "tranquil-tools/laravel-vue-table-builder": "^1.14"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",

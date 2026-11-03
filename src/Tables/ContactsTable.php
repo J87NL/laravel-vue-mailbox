@@ -9,10 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxContact;
-use TranquilTools\TableBuilder\AbstractTable;
 use TranquilTools\TableBuilder\TableBuilder;
 
-final class ContactsTable extends AbstractTable
+final class ContactsTable extends MailboxTable
 {
     public function __construct(
         private readonly Mailbox $mailbox,
@@ -70,10 +69,7 @@ final class ContactsTable extends AbstractTable
         }
 
         $table
-            ->rowAction(
-                __('mailbox::mailbox.edit'),
-                url: fn (MailboxContact $contact): string => route($routes.'contacts.edit', [$this->mailbox, $contact]),
-            )
+            ->rowLink(fn (MailboxContact $contact): string => route($routes.'contacts.edit', [$this->mailbox, $contact]))
             ->rowAction(
                 __('mailbox::mailbox.delete'),
                 url: fn (MailboxContact $contact): string => route($routes.'contacts.destroy', [$this->mailbox, $contact]),

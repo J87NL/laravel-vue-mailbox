@@ -5,6 +5,11 @@ them as the `table` or `accessTable` prop. Bulk actions run through the TableBui
 each table checks the mailbox abilities in its `authorize()` hook, and the tables with bulk actions (`MessagesTable`,
 `ContactsTable`) also in `authorizeBulkAction()`.
 
+Every table extends `J87NL\VueMailbox\Tables\MailboxTable`, which sets the cell and header classes to the compact
+`px-3 py-2`. A row link opens the row on a click anywhere on the row, and with Tab and Enter through the hidden link
+that TableBuilder 1.14 puts in the first cell. `MailboxAccessTable` has no row link, an access entry has no screen of
+its own.
+
 Column labels and texts come from the core translation file `mailbox::mailbox`; the paperclip label comes from
 `vue-mailbox::mailbox.has_attachments`.
 
@@ -72,8 +77,9 @@ ContactsTable::build($mailbox);
 | Global search | `name`, `email`, `organisation` |
 | Per page | 50 |
 
-Viewing needs `accessMailbox`. With `workInMailbox` each row has Edit and Delete (with a confirmation) actions, and the
-table has a "Delete selected" bulk action.
+Viewing needs `accessMailbox`. With `workInMailbox` a row links to `mailbox.contacts.edit` and has a Delete action
+(with a confirmation), and the table has a "Delete selected" bulk action. Without it the rows have no link, the edit
+route needs `workInMailbox` too.
 
 ## MailboxesTable
 

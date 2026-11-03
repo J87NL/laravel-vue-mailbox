@@ -19,10 +19,9 @@ use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\Mailbox\Support\DisplayTime;
-use TranquilTools\TableBuilder\AbstractTable;
 use TranquilTools\TableBuilder\TableBuilder;
 
-final class MessagesTable extends AbstractTable
+final class MessagesTable extends MailboxTable
 {
     private const NAME = 'messages';
 

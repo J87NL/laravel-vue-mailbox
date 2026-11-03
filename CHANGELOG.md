@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.0 - 2026-11-03
+
+- **Requires `tranquil-tools/laravel-vue-table-builder` ^1.14** for row links that Tab and Enter reach.
+- The tables are compact: every table extends the new `J87NL\VueMailbox\Tables\MailboxTable`, which sets the cell and header classes to `px-3 py-2`.
+- A contact row opens the contact form (`mailbox.contacts.edit`) on a click or with Tab and Enter, only with `workInMailbox`, the ability that route needs. The separate Edit row action is gone. The message, mailbox and template rows keep their row links; `MailboxAccessTable` has none. See `docs/tables.md`.
+
 ## 0.11.0 - 2026-11-03
 
 - **Requires `j87nl/laravel-mailbox` ^0.11** for message templates, `MarkJunk` and `mailboxes.confirm_delete`. Publish the core migrations again and migrate.

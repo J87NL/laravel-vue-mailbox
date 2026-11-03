@@ -9,10 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxTemplate;
-use TranquilTools\TableBuilder\AbstractTable;
 use TranquilTools\TableBuilder\TableBuilder;
 
-final class MailboxTemplatesTable extends AbstractTable
+final class MailboxTemplatesTable extends MailboxTable
 {
     public function __construct(
         private readonly Mailbox $mailbox,

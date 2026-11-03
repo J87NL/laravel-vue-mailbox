@@ -9,10 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Access\MailboxAccessResolver;
 use J87NL\Mailbox\Models\Mailbox;
-use TranquilTools\TableBuilder\AbstractTable;
 use TranquilTools\TableBuilder\TableBuilder;
 
-class MailboxesTable extends AbstractTable
+class MailboxesTable extends MailboxTable
 {
     public function authorize(Request $request): bool
     {

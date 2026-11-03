@@ -38,6 +38,12 @@ it('lets writers manage the address book and readers only look', function (): vo
 
     expect($contact->refresh()->name)->toBe('Anna B');
 
+    $this->actingAs($writer)
+        ->get(route('mailbox.contacts.index', $mailbox))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('table.rowLinks', [route('mailbox.contacts.edit', [$mailbox, $contact])]));
+
     $this->actingAs(member($mailbox, AccessLevel::Read))
         ->get(route('mailbox.contacts.index', $mailbox))
         ->assertOk()
@@ -45,6 +51,7 @@ it('lets writers manage the address book and readers only look', function (): vo
             ->component('mailbox/Contacts/Index')
             ->where('createUrl', null)
             ->where('table.rowActions', [])
+            ->where('table.rowLinks', [])
             ->where('table.bulkActions', []));
 
     $this->actingAs($writer)

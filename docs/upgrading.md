@@ -3,6 +3,13 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.11 to 0.12: compact tables and contact row links
+
+- Needs `tranquil-tools/laravel-vue-table-builder` ^1.14. Rebuild the frontend (`npm run build`) so the tables pick up
+  the keyboard row links and the compact `px-3 py-2` cells.
+- The contacts table has no Edit row action any more, a click on the row opens the contact. A page that overrides
+  `mailbox/Contacts/Index` and reads that action from `table.rowActions` uses `table.rowLinks` instead.
+
 ## From 0.10 to 0.11: templates, spam and delete without confirmation
 
 - Needs `j87nl/laravel-mailbox` ^0.11. Publish the core migrations again and migrate, it adds `mailbox_templates` and

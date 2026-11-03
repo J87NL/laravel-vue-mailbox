@@ -10,10 +10,9 @@ use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Contracts\ResolvesAccessors;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAccess;
-use TranquilTools\TableBuilder\AbstractTable;
 use TranquilTools\TableBuilder\TableBuilder;
 
-final class MailboxAccessTable extends AbstractTable
+final class MailboxAccessTable extends MailboxTable
 {
     /**
      * @var array<string, string>|null

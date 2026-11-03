@@ -3,7 +3,8 @@
 Every mailbox has its own address book. The contacts feed the recipient suggestions of the compose form, see
 [Address suggestions](compose.md#address-suggestions).
 
-Readers (`accessMailbox`) can view the list. Writers (`workInMailbox`) can add, edit and delete contacts.
+Readers (`accessMailbox`) can view the list. Writers (`workInMailbox`) can add, edit and delete contacts; a click on a
+row, or Tab and Enter on it, opens the contact form.
 
 ## List
 
