@@ -18,6 +18,7 @@ return [
         'index' => 'mailbox/Index',
         'settings_edit' => 'mailbox/Settings/Edit',
         'settings_index' => 'mailbox/Settings/Index',
+        'settings_template' => 'mailbox/Settings/Template',
         'show' => 'mailbox/Show',
     ],
 

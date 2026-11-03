@@ -3,8 +3,10 @@
 ## 0.11.0 - 2026-11-03
 
 - **Requires `j87nl/laravel-mailbox` ^0.11** for message templates, `MarkJunk` and `mailboxes.confirm_delete`. Publish the core migrations again and migrate.
+- Message templates: the mailbox settings page has a "Berichtsjablonen" section (`templatesTable`, `templateCreateUrl`) with the new `MailboxTemplatesTable` and the routes `mailbox.settings.templates.create|store|edit|update|destroy` (`manageMailbox`). The new page `settings_template` (default `mailbox/Settings/Template`) edits a template with the core `TemplateForm`, the placeholders listed below the editor. Compose gets the `templates` prop and a "Sjabloon kiezen" select. Choosing one calls the new `mailbox.templates.render` (`GET {mailbox}/templates/{template}/render`, `workInMailbox`), which fills the placeholders with the core `RenderTemplate` for the first recipient and the current subject, and puts the result above the body. The subject is only filled when it is empty. See `docs/pages/compose.md#templates` and `docs/pages/settings.md#message-templates`.
 - Spam: `mailbox.messages.actions` accepts `junk` and `not_junk` (core `MarkJunk`). The message view shows "Markeer als spam", or "Geen spam" in the junk folder (none in Sent and Drafts), based on the new `folderRole` prop. The message list has the same as bulk action. See `docs/pages/folders.md#message-actions`.
 - **Behaviour change:** deleting messages, from the message view and the bulk action, only asks for confirmation when the mailbox has "Bevestigen bij verwijderen" (`confirm_delete`) on. It is off by default, also for existing mailboxes. New `confirmDelete` prop on the message view. See `docs/pages/settings.md#delete-confirmation`.
+- The compose header wraps on narrow screens, so the template select and Cancel stay visible.
 - **Migration:** publish the core migrations again and migrate (`php artisan vendor:publish --tag=mailbox-migrations` and `php artisan migrate`). Rebuild the frontend (`npm run build`). See `docs/upgrading.md`.
 
 ## 0.10.0 - 2026-10-30

@@ -15,6 +15,7 @@ use J87NL\Mailbox\Actions\SuggestAddresses;
 use J87NL\Mailbox\Forms\ComposeForm;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
+use J87NL\Mailbox\Models\MailboxTemplate;
 use J87NL\VueMailbox\Support\ComposeDefaults;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Support\ForwardedAttachments;
@@ -64,6 +65,7 @@ class ComposeController extends Controller
                 'name' => $mailbox->name,
             ],
             'mode' => $mode,
+            'templates' => $this->templates($mailbox, $source),
         ]);
     }
 
@@ -94,6 +96,30 @@ class ComposeController extends Controller
     public function addresses(Request $request, Mailbox $mailbox, SuggestAddresses $suggest): JsonResponse
     {
         return response()->json($suggest->handle($mailbox, $request->string('q')->limit(100, '')->value()));
+    }
+
+    /**
+     * @return list<array{id: int, name: string, url: string}>
+     */
+    private function templates(Mailbox $mailbox, ?MailboxMessage $source): array
+    {
+        return $mailbox->templates()
+            ->orderBy('name')
+            ->get([
+                'id',
+                'name',
+            ])
+            ->map(fn (MailboxTemplate $template): array => [
+                'id' => $template->id,
+                'name' => $template->name,
+                'url' => route(config('vue-mailbox.routes.name').'templates.render', array_filter([
+                    'mailbox' => $mailbox,
+                    'reply' => $source?->id,
+                    'template' => $template,
+                ])),
+            ])
+            ->values()
+            ->all();
     }
 
     private function message(Mailbox $mailbox, int $id): ?MailboxMessage

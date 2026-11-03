@@ -12,6 +12,8 @@ use J87NL\VueMailbox\Http\Controllers\MessageController;
 use J87NL\VueMailbox\Http\Controllers\NotificationController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxAccessController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxSettingsController;
+use J87NL\VueMailbox\Http\Controllers\Settings\MailboxTemplateController;
+use J87NL\VueMailbox\Http\Controllers\TemplateController;
 use J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations;
 use J87NL\VueMailbox\VueMailboxServiceProvider;
 
@@ -57,6 +59,11 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                         ->name('accessors');
                     Route::post('{mailbox}/access', [MailboxAccessController::class, 'store'])->name('access.store');
                     Route::delete('{mailbox}/access/{access}', [MailboxAccessController::class, 'destroy'])->name('access.destroy');
+                    Route::get('{mailbox}/templates/create', [MailboxTemplateController::class, 'create'])->name('templates.create');
+                    Route::post('{mailbox}/templates', [MailboxTemplateController::class, 'store'])->name('templates.store');
+                    Route::get('{mailbox}/templates/{template}', [MailboxTemplateController::class, 'edit'])->name('templates.edit');
+                    Route::put('{mailbox}/templates/{template}', [MailboxTemplateController::class, 'update'])->name('templates.update');
+                    Route::delete('{mailbox}/templates/{template}', [MailboxTemplateController::class, 'destroy'])->name('templates.destroy');
                 });
             });
 
@@ -83,6 +90,7 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                         Route::post('messages/actions', MessageActionController::class)->name('messages.actions');
                         Route::get('compose', [ComposeController::class, 'create'])->name('compose.create');
                         Route::get('addresses', [ComposeController::class, 'addresses'])->name('addresses');
+                        Route::get('templates/{template}/render', TemplateController::class)->name('templates.render');
                         Route::get('contacts/create', [ContactController::class, 'create'])->name('contacts.create');
                         Route::post('contacts', [ContactController::class, 'store'])->name('contacts.store');
                         Route::get('contacts/{contact}/edit', [ContactController::class, 'edit'])->name('contacts.edit');

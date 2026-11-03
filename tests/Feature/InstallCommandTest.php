@@ -63,6 +63,7 @@ it('keeps the package-owned page names without --pages', function (): void {
         'index' => 'mailbox/Index',
         'settings_edit' => 'mailbox/Settings/Edit',
         'settings_index' => 'mailbox/Settings/Index',
+        'settings_template' => 'mailbox/Settings/Template',
         'show' => 'mailbox/Show',
     ]);
 });
@@ -82,6 +83,7 @@ it('publishes the default pages on request and points the config at the copies',
             'index' => 'Mailbox/Index',
             'settings_edit' => 'Mailbox/Settings/Edit',
             'settings_index' => 'Mailbox/Settings/Index',
+            'settings_template' => 'Mailbox/Settings/Template',
             'show' => 'Mailbox/Show',
         ]);
 });

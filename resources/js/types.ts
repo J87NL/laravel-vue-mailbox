@@ -49,3 +49,9 @@ export interface ConversationEntry {
     subject: string | null
     url: string
 }
+
+export interface MailboxTemplate {
+    id: number
+    name: string
+    url: string
+}

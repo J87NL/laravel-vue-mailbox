@@ -38,6 +38,8 @@ Routes `mailbox.settings.create` (`manageMailboxes`) and `mailbox.settings.edit`
 | `backUrl` | `string` | The mailbox list |
 | `destroyUrl` | `string \| null` | Delete URL, only with `manageMailboxes` when editing |
 | `form` | `FormSchema` | The core `MailboxForm` |
+| `templateCreateUrl` | `string \| null` | `mailbox.settings.templates.create`, `null` when creating |
+| `templatesTable` | `TableData \| null` | The `MailboxTemplatesTable`, `null` when creating |
 | `title` | `string` | The mailbox name, or "New mailbox" |
 
 The form and saving are handled by the core
@@ -79,8 +81,28 @@ core [`GrantAccess`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/acc
 redirect back. When the core refuses a change, for example revoking the last manager, the error is set on `accessor`.
 The default page shows that error above the access table.
 
+## Message templates
+
+The edit page has a "Berichtsjablonen" section between the form and the access section: the `templatesTable` and a
+"Nieuw sjabloon" link. Managing templates needs `manageMailbox`, like the rest of the settings. Inserting them in
+compose needs `workInMailbox`, see [Templates](compose.md#templates).
+
+The create and edit routes render the `vue-mailbox.pages.settings_template` page, default `mailbox/Settings/Template`,
+with the core [`TemplateForm`](https://github.com/J87NL/laravel-mailbox/blob/main/docs/templates.md): name, optional
+subject and body in the compose editor, with the available placeholders below it.
+
+| Prop | Type | Description |
+|---|---|---|
+| `backUrl` | `string` | The edit page of the mailbox |
+| `destroyUrl` | `string \| null` | Delete URL, `null` when creating |
+| `form` | `FormSchema` | The core `TemplateForm` |
+| `title` | `string` | The template name, or "Nieuw sjabloon" |
+
+Saving goes through the core `SaveTemplate`, which sanitizes the body. Store, update and destroy redirect to the edit
+page of the mailbox with a `success` flash message.
+
 ## Delete confirmation
 
 The general section of the form has "Bevestigen bij verwijderen" (`confirm_delete`, off by default). When it is on,
 deleting messages from the message view or the bulk action asks for confirmation through the host's `confirm` dialog.
-When it is off, they are deleted right away. Deleting a contact, access row or mailbox always asks.
+When it is off, they are deleted right away. Deleting a contact, template, access row or mailbox always asks.

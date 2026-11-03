@@ -1,0 +1,49 @@
+<script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3'
+import Form from '@form-builder/components/Form.vue'
+import type { FormSchema } from '@form-builder/types/form-builder'
+import { useMailboxConfirm } from '@mailbox/confirm'
+import { useMailboxPagePadding } from '@mailbox/padding'
+import { useMailboxTranslations } from '@mailbox/translations'
+import { ui } from '@mailbox/ui'
+
+const props = defineProps<{
+    backUrl: string
+    destroyUrl: string | null
+    form: FormSchema
+    title: string
+}>()
+
+const { t } = useMailboxTranslations()
+const confirm = useMailboxConfirm()
+const padded = useMailboxPagePadding()
+
+async function destroy(): Promise<void> {
+    if (!props.destroyUrl || !(await confirm(t('template_delete_confirm')))) {
+        return
+    }
+
+    router.delete(props.destroyUrl)
+}
+</script>
+
+<template>
+    <Head :title="title" />
+
+    <div class="flex h-full flex-1 flex-col gap-4" :class="{ 'p-4': padded }">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold">{{ title }}</h1>
+                <p :class="ui.muted">{{ t('templates') }}</p>
+            </div>
+            <div :class="ui.toolbar">
+                <button v-if="destroyUrl" type="button" :class="ui.dangerButton" @click="destroy">{{ t('delete') }}</button>
+                <Link :href="backUrl" :class="ui.button">{{ t('back') }}</Link>
+            </div>
+        </div>
+
+        <section :class="ui.panel">
+            <Form :schema="form" />
+        </section>
+    </div>
+</template>

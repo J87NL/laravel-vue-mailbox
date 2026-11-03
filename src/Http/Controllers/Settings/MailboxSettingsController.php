@@ -20,6 +20,7 @@ use J87NL\Mailbox\Forms\MailboxForm;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\VueMailbox\Tables\MailboxAccessTable;
 use J87NL\VueMailbox\Tables\MailboxesTable;
+use J87NL\VueMailbox\Tables\MailboxTemplatesTable;
 use Throwable;
 
 class MailboxSettingsController extends Controller
@@ -40,6 +41,8 @@ class MailboxSettingsController extends Controller
             'backUrl' => route($this->routes().'settings.index'),
             'destroyUrl' => null,
             'form' => MailboxForm::make(route($this->routes().'settings.store')),
+            'templateCreateUrl' => null,
+            'templatesTable' => null,
             'title' => __('mailbox::mailbox.new_mailbox'),
         ]);
     }
@@ -72,6 +75,8 @@ class MailboxSettingsController extends Controller
             'backUrl' => route($this->routes().'settings.index'),
             'destroyUrl' => Gate::allows('manageMailboxes') ? route($this->routes().'settings.destroy', $mailbox) : null,
             'form' => MailboxForm::make(route($this->routes().'settings.update', $mailbox), $mailbox),
+            'templateCreateUrl' => route($this->routes().'settings.templates.create', $mailbox),
+            'templatesTable' => MailboxTemplatesTable::build($mailbox),
             'title' => $mailbox->name,
         ]);
     }

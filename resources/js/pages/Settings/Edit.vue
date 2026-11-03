@@ -16,6 +16,8 @@ const props = defineProps<{
     backUrl: string
     destroyUrl: string | null
     form: FormSchema
+    templateCreateUrl?: string | null
+    templatesTable?: TableData | null
     title: string
 }>()
 
@@ -48,6 +50,17 @@ async function destroy(): Promise<void> {
 
         <section :class="ui.panel">
             <Form :schema="form" />
+        </section>
+
+        <section v-if="templatesTable" :class="ui.panel">
+            <div class="mb-4 flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="mb-1 text-lg font-semibold">{{ t('templates') }}</h2>
+                    <p :class="ui.muted">{{ t('templates_help') }}</p>
+                </div>
+                <Link v-if="templateCreateUrl" :href="templateCreateUrl" :class="ui.button">{{ t('new_template') }}</Link>
+            </div>
+            <TableBuilder :table="templatesTable" :confirm="confirm" />
         </section>
 
         <section v-if="accessTable && accessForm" :class="ui.panel">

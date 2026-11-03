@@ -27,4 +27,5 @@ return [
     'refresh' => 'Refresh',
     'refreshing' => 'Refreshing…',
     'switch_mailbox' => 'Switch mailbox',
+    'template_insert_failed' => 'The template could not be inserted. Please try again.',
 ];

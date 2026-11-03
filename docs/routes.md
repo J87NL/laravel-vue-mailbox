@@ -37,7 +37,7 @@ In a Vue page with an ability helper, use `$canAny(['accessAnyMailbox', 'manageA
 ## Mailbox routes
 
 All routes below run behind `config('vue-mailbox.routes.middleware')` (default `web`, `auth`). In this group the
-`{mailbox}` parameter only matches numbers. Nested models (`{folder}`, `{message}`, `{contact}`) are scoped to the
+`{mailbox}` parameter only matches numbers. Nested models (`{folder}`, `{message}`, `{contact}`, `{template}`) are scoped to the
 mailbox, so a message of another mailbox answers `404`.
 
 | Method | URI | Name | Ability |
@@ -55,6 +55,7 @@ mailbox, so a message of another mailbox answers `404`.
 | GET | `{mailbox}/compose` | `mailbox.compose.create` | `workInMailbox` |
 | POST | `{mailbox}/compose` | `mailbox.compose.store` | `workInMailbox` |
 | GET | `{mailbox}/addresses` | `mailbox.addresses` | `workInMailbox` |
+| GET | `{mailbox}/templates/{template}/render` | `mailbox.templates.render` | `workInMailbox` |
 | GET | `{mailbox}/contacts/create` | `mailbox.contacts.create` | `workInMailbox` |
 | POST | `{mailbox}/contacts` | `mailbox.contacts.store` | `workInMailbox` |
 | GET | `{mailbox}/contacts/{contact}/edit` | `mailbox.contacts.edit` | `workInMailbox` |
@@ -87,6 +88,11 @@ read the raw message the core cached on that first fetch (core `cache.raw_hours`
 | GET | `settings/{mailbox}/accessors` | `mailbox.settings.accessors` | `manageMailbox`, throttled |
 | POST | `settings/{mailbox}/access` | `mailbox.settings.access.store` | `manageMailbox` |
 | DELETE | `settings/{mailbox}/access/{access}` | `mailbox.settings.access.destroy` | `manageMailbox` |
+| GET | `settings/{mailbox}/templates/create` | `mailbox.settings.templates.create` | `manageMailbox` |
+| POST | `settings/{mailbox}/templates` | `mailbox.settings.templates.store` | `manageMailbox` |
+| GET | `settings/{mailbox}/templates/{template}` | `mailbox.settings.templates.edit` | `manageMailbox` |
+| PUT | `settings/{mailbox}/templates/{template}` | `mailbox.settings.templates.update` | `manageMailbox` |
+| DELETE | `settings/{mailbox}/templates/{template}` | `mailbox.settings.templates.destroy` | `manageMailbox` |
 
 `mailbox.settings.accessors` is the search behind the access form, limited to 60 requests per minute per user
 (`VueMailboxServiceProvider::ACCESSOR_SEARCH_LIMITER`).

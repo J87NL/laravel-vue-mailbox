@@ -38,6 +38,12 @@ function endpoint(string $name, Mailbox $mailbox): array
         ]);
     $access = MailboxAccess::query()
         ->where('mailbox_id', $mailbox->id)->firstOrFail();
+    $template = $mailbox->templates()
+        ->firstOrCreate([
+            'name' => 'Welcome',
+        ], [
+            'body' => '<p>Hi {voornaam}</p>',
+        ]);
 
     return match ($name) {
         'folders.show' => [
@@ -124,6 +130,30 @@ function endpoint(string $name, Mailbox $mailbox): array
             'delete',
             route('mailbox.settings.access.destroy', [$mailbox, $access]),
         ],
+        'templates.render' => [
+            'get',
+            route('mailbox.templates.render', [$mailbox, $template]),
+        ],
+        'settings.templates.create' => [
+            'get',
+            route('mailbox.settings.templates.create', $mailbox),
+        ],
+        'settings.templates.store' => [
+            'post',
+            route('mailbox.settings.templates.store', $mailbox),
+        ],
+        'settings.templates.edit' => [
+            'get',
+            route('mailbox.settings.templates.edit', [$mailbox, $template]),
+        ],
+        'settings.templates.update' => [
+            'put',
+            route('mailbox.settings.templates.update', [$mailbox, $template]),
+        ],
+        'settings.templates.destroy' => [
+            'delete',
+            route('mailbox.settings.templates.destroy', [$mailbox, $template]),
+        ],
         'settings.create' => [
             'get',
             route('mailbox.settings.create'),
@@ -180,6 +210,12 @@ function routeMatrix(): array
         'settings.access.store' => 'manage',
         'settings.access.destroy' => 'manage',
         'settings.accessors' => 'manage',
+        'templates.render' => 'write',
+        'settings.templates.create' => 'manage',
+        'settings.templates.store' => 'manage',
+        'settings.templates.edit' => 'manage',
+        'settings.templates.update' => 'manage',
+        'settings.templates.destroy' => 'manage',
         'settings.create' => 'admin',
         'settings.store' => 'admin',
         'settings.destroy' => 'admin',

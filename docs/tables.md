@@ -112,3 +112,20 @@ MailboxAccessTable::build($mailbox);
 | Row action | Remove, with a confirmation, to `mailbox.settings.access.destroy` |
 
 Viewing needs `manageMailbox`. An accessor the resolver has no label for shows as `{type} #{id}`.
+
+## MailboxTemplatesTable
+
+```php
+MailboxTemplatesTable::build($mailbox);
+```
+
+| Setting | Value |
+|---|---|
+| Columns | Template name (sortable), Subject |
+| Sort | `name` |
+| Search, column toggle | off |
+| Per page | 50 |
+| Row link | `mailbox.settings.templates.edit` |
+| Row action | Delete, with a confirmation, to `mailbox.settings.templates.destroy` |
+
+Viewing needs `manageMailbox`. See [Message templates](pages/settings.md#message-templates).

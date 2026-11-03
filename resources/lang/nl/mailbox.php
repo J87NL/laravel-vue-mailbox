@@ -27,4 +27,5 @@ return [
     'refresh' => 'Vernieuwen',
     'refreshing' => 'Vernieuwen…',
     'switch_mailbox' => 'Andere mailbox',
+    'template_insert_failed' => 'Het sjabloon kon niet worden ingevoegd. Probeer het opnieuw.',
 ];

@@ -28,6 +28,22 @@ longer exists on the server, the user is sent back to its folder with an `error`
 | `form` | `FormSchema` | The core `ComposeForm`, prefilled for the mode |
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
 | `mode` | `string` | `new` without a source message, otherwise `reply`, `reply_all` or `forward` (default `reply`) |
+| `templates` | `MailboxTemplate[]` | The mailbox's templates by name: `id`, `name` and `url` (the render route, with `reply` when there is a source message) |
+
+## Templates
+
+With templates, the page shows a "Sjabloon kiezen" select next to Cancel. Choosing one calls its `url`
+(`GET {mailbox}/templates/{template}/render`, `mailbox.templates.render`, `workInMailbox`) with the first `to` address
+and the current subject as `to` and `subject`, and the core `RenderTemplate` fills the placeholders. The answer is JSON:
+`{"subject": string|null, "body": string}`.
+
+- The body goes above what is in the editor. An empty first paragraph (the line above the signature) is replaced.
+- The subject is only filled when the subject field is still empty.
+- `{voornaam}` and `{naam}` take the name of the original sender when replying to that address, otherwise the name in
+  the address book for `to`. Without a name they stay in the text, so the user sees what is left to fill in.
+- When the request fails, the page shows "Het sjabloon kon niet worden ingevoegd" (`template_insert_failed`).
+
+Templates are managed in the mailbox settings, see [Message templates](settings.md#message-templates).
 
 ## The form
 

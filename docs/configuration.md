@@ -42,6 +42,7 @@ The inline image route always uses `['web', 'signed']`, whatever `middleware` ho
     'index' => 'mailbox/Index',
     'settings_edit' => 'mailbox/Settings/Edit',
     'settings_index' => 'mailbox/Settings/Index',
+    'settings_template' => 'mailbox/Settings/Template',
     'show' => 'mailbox/Show',
 ],
 ```
@@ -64,6 +65,7 @@ to the copy (`mailbox/Index` becomes `Mailbox/Index`). A name you changed yourse
 | `contacts_edit` | new and edit contact | [Address book](pages/contacts.md) |
 | `settings_index` | mailbox list in the settings | [Mailbox settings](pages/settings.md) |
 | `settings_edit` | new and edit mailbox, with access | [Mailbox settings](pages/settings.md) |
+| `settings_template` | new and edit message template; a published config without it uses the default | [Mailbox settings](pages/settings.md#message-templates) |
 
 ## Message list
 
