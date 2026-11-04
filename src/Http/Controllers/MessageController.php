@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace J87NL\VueMailbox\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -15,6 +16,7 @@ use J87NL\Mailbox\Actions\MarkMessages;
 use J87NL\Mailbox\Html\MessageHtml;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAuditEntry;
+use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Support\InlineUrls;
@@ -125,8 +127,9 @@ class MessageController extends Controller
             return [];
         }
 
-        $before = $this->neighbours($mailbox, $message, earlier: true);
-        $after = $this->neighbours($mailbox, $message, earlier: false);
+        $allMailFolderIds = $this->allMailFolderIds($mailbox);
+        $before = $this->neighbours($mailbox, $message, $allMailFolderIds, earlier: true);
+        $after = $this->neighbours($mailbox, $message, $allMailFolderIds, earlier: false);
         $ids = [
             ...array_reverse($before),
             $message->id,
@@ -169,9 +172,26 @@ class MessageController extends Controller
     }
 
     /**
+     * @return array<int, int>
+     */
+    private function allMailFolderIds(Mailbox $mailbox): array
+    {
+        return MailboxFolder::query()
+            ->where('mailbox_id', $mailbox->id)
+            ->whereNotNull('flags')
+            ->get([
+                'id',
+                'flags',
+            ])
+            ->filter(fn (MailboxFolder $folder): bool => $folder->isAllMail())
+            ->modelKeys();
+    }
+
+    /**
+     * @param  array<int, int>  $allMailFolderIds
      * @return list<int>
      */
-    private function neighbours(Mailbox $mailbox, MailboxMessage $message, bool $earlier): array
+    private function neighbours(Mailbox $mailbox, MailboxMessage $message, array $allMailFolderIds, bool $earlier): array
     {
         $sentAt = $message->sent_at;
 
@@ -179,6 +199,20 @@ class MessageController extends Controller
             ->where('mailbox_id', $mailbox->id)
             ->where('thread_key', $message->thread_key)
             ->whereKeyNot($message->id)
+            ->when(! is_null($message->message_id), fn (Builder $query): Builder => $query->where(function (Builder $copies) use ($message): void {
+                $copies->whereNull('message_id')
+                    ->orWhere('message_id', '!=', $message->message_id);
+            }))
+            ->when($allMailFolderIds !== [], fn (Builder $query): Builder => $query->where(function (Builder $copies) use ($allMailFolderIds): void {
+                $copies->whereNotIn('mailbox_folder_id', $allMailFolderIds)
+                    ->orWhereNotExists(function (QueryBuilder $elsewhere) use ($allMailFolderIds): void {
+                        $elsewhere->selectRaw('1')
+                            ->from('mailbox_messages', 'elsewhere')
+                            ->whereColumn('elsewhere.mailbox_id', 'mailbox_messages.mailbox_id')
+                            ->whereColumn('elsewhere.message_id', 'mailbox_messages.message_id')
+                            ->whereNotIn('elsewhere.mailbox_folder_id', $allMailFolderIds);
+                    });
+            }))
             ->where(function (Builder $query) use ($earlier, $message, $sentAt): void {
                 if (is_null($sentAt)) {
                     $query->whereNull('sent_at')

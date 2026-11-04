@@ -70,7 +70,9 @@ delete and move go to the folder. The host's confirm dialog, which the delete ac
 ## Conversation
 
 When the mailbox has the conversation view on (core setting `conversation_view`), `conversation` lists up to 50
-messages of the mailbox with the same conversation key, across folders, oldest first. For a longer conversation it is
+messages of the mailbox with the same conversation key, across folders, oldest first. Each message is listed once: a
+copy with the same `Message-ID` as the open message is left out, and so is a copy in Gmail's All Mail of a message
+that is also cached in another folder. For a longer conversation it is
 a window around the open message, so the open message is always in it. Each entry has `id`, `subject`,
 `from` (name or address), `folder` (translated role or name), `sent_at` (ISO 8601), `url` and `current`. The default
 page shows them above the message, with the open message marked. See the core

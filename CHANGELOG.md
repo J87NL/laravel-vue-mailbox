@@ -3,6 +3,7 @@
 ## 0.13.0 - 2026-11-04
 
 - **Requires `j87nl/laravel-mailbox` ^0.12**, which syncs Gmail's All Mail within `sync.initial_days`. All Mail now shows as synced, with its unread count and the "Oudere berichten ophalen" button.
+- The conversation on the message page lists each message once: a copy with the same `Message-ID` as the open message is left out, and so is a copy in Gmail's All Mail of a message that is also cached in another folder. Before, with All Mail synced, every Gmail message showed up twice.
 - Tests that used All Mail as the example of a skipped folder use Important.
 
 ## 0.12.0 - 2026-11-03

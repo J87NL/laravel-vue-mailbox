@@ -32,6 +32,7 @@ function conversationFolder(bool $conversationView): array
         ]),
         'answer' => storedMessage($sent, 1, [
             'is_seen' => true,
+            'message_id' => 'answer@example.org',
             'sent_at' => now()->subDays(2),
             'subject' => 'Re: Question',
             'thread_key' => 'root@example.org',
@@ -154,6 +155,45 @@ it('lists the messages of the conversation on the message page', function (): vo
     $this->get(route('mailbox.messages.show', [$mailbox, $messages['other']]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('conversation', []));
+});
+
+it('lists each message of the conversation once when Gmail keeps a copy in All Mail', function (): void {
+    [$inbox, $messages] = conversationFolder(true);
+    $mailbox = $inbox->mailbox;
+    $allMail = folder($mailbox, '[Gmail]/All Mail', FolderRole::Archive, ['flags' => ['\\All']]);
+    $copies = collect(['root', 'answer', 'follow_up'])
+        ->mapWithKeys(fn (string $key, int $index): array => [$key => storedMessage($allMail, 10 + $index, $messages[$key]->only([
+            'message_id',
+            'sent_at',
+            'subject',
+            'thread_key',
+        ]))]);
+    $archived = storedMessage($allMail, 20, [
+        'message_id' => 'archived@example.org',
+        'sent_at' => now()->subDays(4),
+        'thread_key' => 'root@example.org',
+    ]);
+    $reader = member($mailbox, AccessLevel::Read);
+
+    $this->actingAs($reader)
+        ->get(route('mailbox.messages.show', [$mailbox, $messages['follow_up']]))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('conversation', fn ($entries): bool => collect($entries)->pluck('id')->all() === [
+                $archived->id,
+                $messages['root']->id,
+                $messages['answer']->id,
+                $messages['follow_up']->id,
+            ]));
+
+    $this->actingAs($reader)
+        ->get(route('mailbox.messages.show', [$mailbox, $copies['follow_up']]))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('conversation', fn ($entries): bool => collect($entries)->pluck('id')->all() === [
+                $archived->id,
+                $messages['root']->id,
+                $messages['answer']->id,
+                $copies['follow_up']->id,
+            ]));
 });
 
 it('lists no conversation on the message page when the view is off', function (): void {
