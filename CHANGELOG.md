@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.0 - 2026-11-04
+
+- **Requires `j87nl/laravel-mailbox` ^0.12**, which syncs Gmail's All Mail within `sync.initial_days`. All Mail now shows as synced, with its unread count and the "Oudere berichten ophalen" button.
+- Tests that used All Mail as the example of a skipped folder use Important.
+
 ## 0.12.0 - 2026-11-03
 
 - **Requires `tranquil-tools/laravel-vue-table-builder` ^1.14** for row links that Tab and Enter reach.

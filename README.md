@@ -109,7 +109,7 @@ The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['ta
 
 The folder page shows only the folders of the open mailbox, with a compact mailbox switcher when the user has several (`vue-mailbox.mailbox_switcher`, default `true`). To list every mailbox in the host menu, use `J87NL\VueMailbox\Support\MailboxNavigation::for($user)` or the `ShareMailboxNavigation` middleware, which shares it as the `mailboxNavigation` prop (`id`, `name`, `email`, `unseen`, `url`, `active_path`); see `docs/navigation.md`.
 
-Folders the core does not sync (Gmail's All Mail, Important and Starred) have `syncs: false`: the folder list mutes them with a "Niet gesynct" badge and the folder page shows `syncNotice` above the list.
+Folders the core does not sync (by default Gmail's Important and Starred; All Mail syncs since core 0.12) have `syncs: false`: the folder list mutes them with a "Niet gesynct" badge and the folder page shows `syncNotice` above the list.
 
 Browser notifications: the folder page and the message view have a "Meldingen aanzetten voor deze mailbox" toggle, so notifications are switched per mailbox (stored per browser). Once the user turns it on (the browser asks for permission then, never on load), the open tab polls `mailbox.notifications` every `poll_seconds` and shows a notification per new unread inbox message of the mailboxes that have notifications on and the user may read (one "N nieuwe berichten" notification above three). Clicking it opens the message. No service worker: it only works while a tab of the app is open. See `docs/notifications.md`.
 

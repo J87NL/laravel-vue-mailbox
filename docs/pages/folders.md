@@ -29,8 +29,8 @@ renders the messages already stored; the table picks up new mail on its next pol
 
 ## Folders that are not synced
 
-The core does not sync folders with the special use `\All`, `\Important` or `\Flagged` (Gmail's All Mail, Important and
-Starred, `mailbox.sync.skip_special_use`, see the core's
+The core does not sync folders with a special use in `mailbox.sync.skip_special_use`, by default `\Important` and
+`\Flagged` (Gmail's Important and Starred; since core 0.12 Gmail's All Mail syncs, unless `\All` is added), see the core's
 [Skipped folders](https://github.com/J87NL/laravel-mailbox/blob/main/docs/sync.md#skipped-folders)). They stay in the
 list and can be opened, but only show messages cached before, and their unread count is 0.
 

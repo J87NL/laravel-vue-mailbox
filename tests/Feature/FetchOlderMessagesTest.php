@@ -62,8 +62,8 @@ it('offers older messages only when the server holds more than the folder stored
 
 it('does not offer older messages in a folder that is not synced', function (): void {
     $mailbox = mailbox();
-    $folder = folder($mailbox, 'All Mail', FolderRole::Custom, [
-        'flags' => ['\\All'],
+    $folder = folder($mailbox, 'Important', FolderRole::Custom, [
+        'flags' => ['\\Important'],
         'message_count' => 10,
     ]);
 
@@ -71,6 +71,20 @@ it('does not offer older messages in a folder that is not synced', function (): 
         ->get(route('mailbox.folders.show', [$mailbox, $folder]))
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('olderMessagesUrl', null));
+});
+
+it('offers older messages in Gmail All Mail', function (): void {
+    $mailbox = mailbox();
+    $folder = folder($mailbox, 'All Mail', FolderRole::Archive, [
+        'flags' => ['\\All'],
+        'message_count' => 10,
+    ]);
+    storedMessage($folder, 1);
+
+    $this->actingAs(member($mailbox, AccessLevel::Read))
+        ->get(route('mailbox.folders.show', [$mailbox, $folder]))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->whereNot('olderMessagesUrl', null));
 });
 
 it('stops offering older messages once the folder is exhausted', function (): void {
@@ -98,6 +112,6 @@ it('refuses fetching older messages of a folder that does not offer them', funct
     Bus::assertNotDispatched(FetchOlderMessagesJob::class);
 })->with([
     'not selectable' => [['selectable' => false]],
-    'not synced' => [['flags' => ['\\All']]],
+    'not synced' => [['flags' => ['\\Important']]],
     'exhausted' => [['older_exhausted' => true]],
 ]);

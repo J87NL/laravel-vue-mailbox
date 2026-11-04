@@ -3,6 +3,13 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.12 to 0.13: Gmail All Mail
+
+- Needs `j87nl/laravel-mailbox` ^0.12, which syncs Gmail's All Mail within `sync.initial_days`. Read its
+  [upgrade notes](https://github.com/J87NL/laravel-mailbox/blob/main/docs/upgrading.md). All Mail no longer gets the
+  "Niet gesynct" badge, shows its server unread count and offers "Oudere berichten ophalen".
+- Nothing to publish or build.
+
 ## From 0.11 to 0.12: compact tables and contact row links
 
 - Needs `tranquil-tools/laravel-vue-table-builder` ^1.14. Rebuild the frontend (`npm run build`) so the tables pick up
