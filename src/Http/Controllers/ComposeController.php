@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use J87NL\Mailbox\Actions\SendMessage;
@@ -21,6 +22,7 @@ use J87NL\VueMailbox\Support\FolderListQuery;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Support\ForwardedAttachments;
 use J87NL\VueMailbox\Support\MessageBodyLoader;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class ComposeController extends Controller
 {
@@ -86,7 +88,13 @@ class ComposeController extends Controller
         $replyTo = $this->message($mailbox, (int) ($data['reply_to_message'] ?? 0));
         $data['quote_source'] = $forwardOf ?? $replyTo;
 
-        $send->handle($mailbox, $data, $request->user(), $replyTo);
+        try {
+            $send->handle($mailbox, $data, $request->user(), $replyTo);
+        } catch (TransportExceptionInterface $e) {
+            throw ValidationException::withMessages([
+                'body' => __('vue-mailbox::mailbox.send_failed', ['error' => $e->getMessage()]),
+            ]);
+        }
 
         return redirect()
             ->route(config('vue-mailbox.routes.name').'folders.show', [

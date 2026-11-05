@@ -2,6 +2,7 @@
 
 ## 0.13.1 - 2026-11-05
 
+- A message the mail server refuses (for example `550 5.7.1` for suspected spam) no longer ends in a server error page. Nothing is sent, the compose form keeps the message and shows the server's answer on the body field (new translation `send_failed`). See `docs/pages/compose.md#sending`.
 - Back from a message keeps the search, filters, sort and page of the message list. The row link carries the list's `messages_*` query parameters, and the message page passes them on to `backUrl`, `composeUrl`, `actionsUrl` and the conversation links. The redirects after sending a reply and after an action keep them too, and "Load images" keeps the current query. See `docs/pages/messages.md#back-to-the-list`.
 
 ## 0.13.0 - 2026-11-04

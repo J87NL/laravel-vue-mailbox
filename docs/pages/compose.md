@@ -101,6 +101,9 @@ audit entry) is documented there.
 - A removal key that is not an attachment of the forwarded message fails validation, and nothing is sent.
 - When a kept forwarded attachment can no longer be fetched from the server, the form fails with an error on
   `attachments`.
+- When the mail server refuses the message (an SMTP error such as `550 5.7.1` for suspected spam), nothing is sent and
+  the form fails with an error on `body` that quotes the server's answer (`vue-mailbox::mailbox.send_failed`). The
+  composed message stays in the form. Before, the user got a server error page.
 - After a reply or forward the user lands on the folder of the original message. After a new message the user lands
   on the inbox. Both carry a `success` flash message. The form posts to `mailbox.compose.store` with the list query of
   the message list, so the redirect keeps its search, filters, sort and page. See

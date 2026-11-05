@@ -26,6 +26,7 @@ return [
     'open_fullscreen' => 'Volledig scherm',
     'refresh' => 'Vernieuwen',
     'refreshing' => 'Vernieuwen…',
+    'send_failed' => 'Bericht niet verzonden. De mailserver gaf: :error',
     'switch_mailbox' => 'Andere mailbox',
     'template_insert_failed' => 'Het sjabloon kon niet worden ingevoegd. Probeer het opnieuw.',
 ];

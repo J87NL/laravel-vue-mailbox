@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Response;
 use Inertia\Testing\AssertableInertia;
 use J87NL\Mailbox\Enums\AccessLevel;
+use J87NL\Mailbox\Models\MailboxAuditEntry;
 use J87NL\Mailbox\Models\MailboxContact;
 use J87NL\VueMailbox\Support\InlineUrls;
+use Symfony\Component\Mailer\Exception\UnexpectedResponseException;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\DataPart;
@@ -133,6 +135,25 @@ it('offers the original attachments when forwarding and sends the kept ones', fu
     expect(array_map(fn (DataPart $part): string => (string) $part->getFilename(), $sent->getAttachments()))->toBe(['offer.pdf'])
         ->and($sent->getAttachments()[0]->getBody())->toBe('PDF-OFFER')
         ->and(array_map(fn (Address $address): string => $address->getAddress(), $sent->getTo()))->toBe(['colleague@example.org']);
+});
+
+it('keeps the composed message and shows the server answer when the mail server refuses it', function (): void {
+    Bus::fake();
+    $mailbox = mailbox(['append_sent' => false]);
+    $this->connector->transport->failure = new UnexpectedResponseException('Expected response code "250" but got code "550", with message "550 5.7.1 Likely spam".');
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->from(route('mailbox.compose.create', $mailbox))
+        ->post(route('mailbox.compose.store', $mailbox), [
+            'body' => '<p>Hello</p>',
+            'subject' => 'Hello',
+            'to' => ['anna@example.org'],
+        ])
+        ->assertRedirect(route('mailbox.compose.create', $mailbox))
+        ->assertSessionHasErrors(['body' => __('vue-mailbox::mailbox.send_failed', ['error' => 'Expected response code "250" but got code "550", with message "550 5.7.1 Likely spam".'])]);
+
+    expect($this->connector->transport->sent)->toBe([])
+        ->and(MailboxAuditEntry::query()->count())->toBe(0);
 });
 
 it('rejects removal keys that are not attachments of the forwarded message', function (): void {
