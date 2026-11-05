@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 import FolderList from '@mailbox/components/FolderList.vue'
 import MessageActions from '@mailbox/components/MessageActions.vue'
@@ -39,6 +39,7 @@ defineProps<{
 }>()
 
 const { t } = useMailboxTranslations()
+const page = usePage()
 
 const dialog = ref<HTMLElement | null>(null)
 const fullscreen = ref(false)
@@ -92,6 +93,14 @@ onBeforeUnmount(() => {
         releaseOutside()
     }
 })
+
+function imagesUrl(): string {
+    const url = new URL(page.url, window.location.origin)
+
+    url.searchParams.set('images', '1')
+
+    return `${url.pathname}${url.search}`
+}
 
 function addresses(list: MailAddress[] | null): string {
     return (list ?? []).map((address) => address.name ? `${address.name} <${address.email}>` : address.email).join(', ')
@@ -163,7 +172,7 @@ function addresses(list: MailAddress[] | null): string {
 
                 <p v-if="hasRemoteImages" class="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100">
                     {{ t('remote_images_blocked') }}
-                    <Link href="?images=1" class="underline" preserve-scroll>{{ t('load_images') }}</Link>
+                    <Link :href="imagesUrl()" class="underline" preserve-scroll>{{ t('load_images') }}</Link>
                 </p>
 
                 <MessageFrame :html="html" :image-origin="imageOrigin" :remote-images="remoteImages" />

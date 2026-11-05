@@ -28,7 +28,7 @@ MessagesTable::build($folder);
 | Global search | `subject`, `from_email`, `from_name` |
 | Per page | `config('vue-mailbox.per_page')`, default 50 |
 | Poll | `config('vue-mailbox.poll_seconds')`, default 30 |
-| Row link | `mailbox.messages.show` |
+| Row link | `mailbox.messages.show`, with the current `messages_*` query parameters (search, filters, sort, page) |
 | Row class | `font-semibold` for unread messages (for a conversation: when any message in it is unread) |
 
 The subject is prefixed with `⚑` for flagged and `↩` for answered messages, and shows `—` when empty. A message with

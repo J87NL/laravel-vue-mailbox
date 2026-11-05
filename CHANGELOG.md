@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.1 - 2026-11-05
+
+- Back from a message keeps the search, filters, sort and page of the message list. The row link carries the list's `messages_*` query parameters, and the message page passes them on to `backUrl`, `composeUrl`, `actionsUrl` and the conversation links. The redirects after sending a reply and after an action keep them too, and "Load images" keeps the current query. See `docs/pages/messages.md#back-to-the-list`.
+
 ## 0.13.0 - 2026-11-04
 
 - **Requires `j87nl/laravel-mailbox` ^0.12**, which syncs Gmail's All Mail within `sync.initial_days`. All Mail now shows as synced, with its unread count and the "Oudere berichten ophalen" button.

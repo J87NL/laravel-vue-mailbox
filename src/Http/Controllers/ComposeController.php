@@ -17,6 +17,7 @@ use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\Mailbox\Models\MailboxTemplate;
 use J87NL\VueMailbox\Support\ComposeDefaults;
+use J87NL\VueMailbox\Support\FolderListQuery;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Support\ForwardedAttachments;
 use J87NL\VueMailbox\Support\MessageBodyLoader;
@@ -48,13 +49,15 @@ class ComposeController extends Controller
             return $loader->backToFolder($source);
         }
 
+        $listQuery = FolderListQuery::from($request);
+
         return Inertia::render(config('vue-mailbox.pages.compose'), [
             'backUrl' => $source
-                ? route($routes.'messages.show', [$mailbox, $source])
+                ? route($routes.'messages.show', [$mailbox, $source, ...$listQuery])
                 : route($routes.'folders.show', $mailbox),
             'folders' => $tree->for($mailbox),
             'form' => ComposeForm::make(
-                route($routes.'compose.store', $mailbox),
+                route($routes.'compose.store', [$mailbox, ...$listQuery]),
                 $defaults->for($mailbox, $source, $mode),
                 route($routes.'addresses', $mailbox),
                 $source && $mode === 'forward' ? $this->forwarded->describe($mailbox, $source) : [],
@@ -86,10 +89,13 @@ class ComposeController extends Controller
         $send->handle($mailbox, $data, $request->user(), $replyTo);
 
         return redirect()
-            ->route(config('vue-mailbox.routes.name').'folders.show', array_filter([
-                $mailbox,
-                $data['quote_source']?->folder,
-            ]))
+            ->route(config('vue-mailbox.routes.name').'folders.show', [
+                ...array_filter([
+                    $mailbox,
+                    $data['quote_source']?->folder,
+                ]),
+                ...FolderListQuery::from($request),
+            ])
             ->with('success', __('mailbox::mailbox.sent'));
     }
 

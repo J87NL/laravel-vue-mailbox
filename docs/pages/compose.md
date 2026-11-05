@@ -23,7 +23,7 @@ longer exists on the server, the user is sent back to its folder with an `error`
 
 | Prop | Type | Description |
 |---|---|---|
-| `backUrl` | `string` | The source message, or the mailbox's inbox for a new message |
+| `backUrl` | `string` | The source message with the list query, or the mailbox's inbox for a new message |
 | `folders` | `MailboxFolder[]` | Folder list, see [Folders and message list](folders.md#folder-list) |
 | `form` | `FormSchema` | The core `ComposeForm`, prefilled for the mode |
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
@@ -102,7 +102,9 @@ audit entry) is documented there.
 - When a kept forwarded attachment can no longer be fetched from the server, the form fails with an error on
   `attachments`.
 - After a reply or forward the user lands on the folder of the original message. After a new message the user lands
-  on the inbox. Both carry a `success` flash message.
+  on the inbox. Both carry a `success` flash message. The form posts to `mailbox.compose.store` with the list query of
+  the message list, so the redirect keeps its search, filters, sort and page. See
+  [Back to the list](messages.md#back-to-the-list).
 
 ## Address suggestions
 

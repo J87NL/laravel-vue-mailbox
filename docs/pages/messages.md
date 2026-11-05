@@ -13,13 +13,20 @@ message and redirects to its folder with an `error` flash message.
 When a user with `workInMailbox` opens an unread message, it is marked as read. A reader with only `accessMailbox`
 leaves the read state alone.
 
+## Back to the list
+
+The message list puts its own query parameters (every key that starts with `messages_`: search and filters, sort,
+page) on the row link. The message page passes them on to `backUrl`, `composeUrl`, `actionsUrl` and the conversation
+links, so Back, the redirect after an action and the redirect after sending a reply land on the same list with the same
+search. Other query parameters, such as `images`, are not passed on. "Load images" keeps the current query.
+
 ## Props
 
 | Prop | Type | Description |
 |---|---|---|
 | `actionsUrl` | `string \| null` | `mailbox.messages.actions` URL, `null` without `workInMailbox` |
 | `attachments` | `MailboxAttachment[]` | Downloadable attachments, see below |
-| `backUrl` | `string` | URL of the message's folder |
+| `backUrl` | `string` | URL of the message's folder, with the list query (see below) |
 | `composeUrl` | `string \| null` | Compose URL, `null` without `workInMailbox` |
 | `confirmDelete` | `boolean` | The mailbox's `confirm_delete`: Delete asks for confirmation first |
 | `contactUrl` | `string \| null` | "Add to address book" URL, `null` without `workInMailbox` or without a sender address |

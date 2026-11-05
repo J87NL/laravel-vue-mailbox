@@ -19,11 +19,12 @@ use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\Mailbox\Support\DisplayTime;
+use J87NL\VueMailbox\Support\FolderListQuery;
 use TranquilTools\TableBuilder\TableBuilder;
 
 final class MessagesTable extends MailboxTable
 {
-    private const NAME = 'messages';
+    public const NAME = 'messages';
 
     public function __construct(
         private readonly MailboxFolder $folder,
@@ -116,6 +117,8 @@ final class MessagesTable extends MailboxTable
 
     public function configure(TableBuilder $table): void
     {
+        $listQuery = FolderListQuery::from(request());
+
         $table
             ->name(self::NAME)
             ->defaultSortDesc('sent_at')
@@ -127,7 +130,11 @@ final class MessagesTable extends MailboxTable
             ->column('from_name', __('mailbox::mailbox.from'), canBeHidden: false, highlight: true, as: fn (?string $name, MailboxMessage $message): string => $this->sender($name, $message))
             ->column('subject', __('mailbox::mailbox.subject'), canBeHidden: false, as: fn (?string $subject, MailboxMessage $message): HtmlString|string => $this->subject($subject, $message))
             ->column('sent_at', __('mailbox::mailbox.received'), sortable: true, as: fn (mixed $value, MailboxMessage $message): string => $this->received($message))
-            ->rowLink(fn (MailboxMessage $message): string => route(config('vue-mailbox.routes.name').'messages.show', [$this->folder->mailbox, $message]))
+            ->rowLink(fn (MailboxMessage $message): string => route(config('vue-mailbox.routes.name').'messages.show', [
+                $this->folder->mailbox,
+                $message,
+                ...$listQuery,
+            ]))
             ->rowClass(fn (MailboxMessage $message): string => $this->isUnread($message) ? 'font-semibold' : '')
             ->poll((int) config('vue-mailbox.poll_seconds', 30))
             ->emptyState(title: __('mailbox::mailbox.empty'))

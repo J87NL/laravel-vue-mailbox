@@ -18,6 +18,7 @@ use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAuditEntry;
 use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
+use J87NL\VueMailbox\Support\FolderListQuery;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Support\InlineUrls;
 use J87NL\VueMailbox\Support\MessageBodyLoader;
@@ -51,15 +52,16 @@ class MessageController extends Controller
         }
 
         $routes = config('vue-mailbox.routes.name');
+        $listQuery = FolderListQuery::from($request);
 
         return Inertia::render(config('vue-mailbox.pages.show'), [
             ...$this->body($message, $request->boolean('images')),
-            'actionsUrl' => $canWork ? route($routes.'messages.actions', $mailbox) : null,
+            'actionsUrl' => $canWork ? route($routes.'messages.actions', [$mailbox, ...$listQuery]) : null,
             'attachments' => $this->attachments($mailbox, $message),
-            'backUrl' => route($routes.'folders.show', [$mailbox, $message->folder]),
-            'composeUrl' => $canWork ? route($routes.'compose.create', $mailbox) : null,
+            'backUrl' => route($routes.'folders.show', [$mailbox, $message->folder, ...$listQuery]),
+            'composeUrl' => $canWork ? route($routes.'compose.create', [$mailbox, ...$listQuery]) : null,
             'confirmDelete' => $mailbox->confirm_delete,
-            'conversation' => $this->conversation($mailbox, $message),
+            'conversation' => $this->conversation($mailbox, $message, $listQuery),
             'contactUrl' => $canWork && ! is_null($message->from_email) ? route($routes.'messages.contact', [$mailbox, $message]) : null,
             'folderRole' => $message->folder->role->value,
             'folders' => $tree->for($mailbox),
@@ -119,9 +121,10 @@ class MessageController extends Controller
     }
 
     /**
+     * @param  array<string, mixed>  $listQuery
      * @return list<array{current: bool, folder: string, from: string, id: int, sent_at: ?string, subject: ?string, url: string}>
      */
-    private function conversation(Mailbox $mailbox, MailboxMessage $message): array
+    private function conversation(Mailbox $mailbox, MailboxMessage $message, array $listQuery): array
     {
         if (! $mailbox->conversation_view || is_null($message->thread_key)) {
             return [];
@@ -165,7 +168,7 @@ class MessageController extends Controller
                 'id' => $item->id,
                 'sent_at' => $item->sent_at?->toIso8601String(),
                 'subject' => $item->subject,
-                'url' => route(config('vue-mailbox.routes.name').'messages.show', [$mailbox, $item]),
+                'url' => route(config('vue-mailbox.routes.name').'messages.show', [$mailbox, $item, ...$listQuery]),
             ])
             ->values()
             ->all();

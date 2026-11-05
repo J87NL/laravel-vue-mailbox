@@ -63,7 +63,12 @@ function addContact(): void {
 }
 
 function replyUrl(mode: string): string {
-    return `${props.composeUrl}?reply=${props.message.id}&mode=${mode}`
+    const url = new URL(props.composeUrl ?? '', window.location.origin)
+
+    url.searchParams.set('reply', String(props.message.id))
+    url.searchParams.set('mode', mode)
+
+    return `${url.pathname}${url.search}`
 }
 </script>
 

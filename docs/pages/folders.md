@@ -172,7 +172,8 @@ folder answer `422`, like the buttons that are not offered there. See the core
 [spam action](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md#spam).
 
 After `flag`, `read` and `unflag` the user goes back to the previous page. After the other actions the user lands on
-the folder of the first matched message, or on the inbox when none of the ids matched.
+the folder of the first matched message, or on the inbox when none of the ids matched, with the list query parameters
+(`messages_*`) of the request kept. See [Back to the list](messages.md#back-to-the-list).
 
 ```ts
 import { router } from '@inertiajs/vue3';

@@ -17,6 +17,7 @@ use J87NL\Mailbox\Actions\MoveMessages;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
+use J87NL\VueMailbox\Support\FolderListQuery;
 
 class MessageActionController extends Controller
 {
@@ -79,7 +80,10 @@ class MessageActionController extends Controller
             return back();
         }
 
-        return redirect()->route(config('vue-mailbox.routes.name').'folders.show', array_filter([$mailbox, $back]));
+        return redirect()->route(config('vue-mailbox.routes.name').'folders.show', [
+            ...array_filter([$mailbox, $back]),
+            ...FolderListQuery::from($request),
+        ]);
     }
 
     /**
