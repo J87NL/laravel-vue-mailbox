@@ -17,6 +17,13 @@ Run `composer update j87nl/laravel-vue-mailbox` and read the section for every v
 
 - The mailbox settings page shows the "Spamfilter" select of the core `MailboxForm`, `off` by default. Nothing changes
   for a mailbox until it is set to another mode and the app binds a classifier.
+- Rebuild the frontend (`npm run build`). The settings page gets the "Vertrouwde afzenders" section, the message list
+  and message page the spam badges, "Geen spam" on suggested messages and the "Voorstellen" filter.
+- An app with copied pages: `Show` passes the new `spamSuggested` prop to `MessageActions` and shows the `spam` badge,
+  and `Settings/Edit` adds the trusted senders section with `spamAllowlistTable` and `spamAllowlistForm` (see the
+  default pages).
+- The new routes `mailbox.settings.spam-allowlist.store` and `.destroy` need `manageMailbox`. An app that lists the
+  package routes for its own permission sync adds them.
 
 ## From 0.12 to 0.13: Gmail All Mail
 

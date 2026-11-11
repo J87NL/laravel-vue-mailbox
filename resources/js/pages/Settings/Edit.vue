@@ -16,6 +16,8 @@ const props = defineProps<{
     backUrl: string
     destroyUrl: string | null
     form: FormSchema
+    spamAllowlistForm?: FormSchema | null
+    spamAllowlistTable?: TableData | null
     templateCreateUrl?: string | null
     templatesTable?: TableData | null
     title: string
@@ -61,6 +63,15 @@ async function destroy(): Promise<void> {
                 <Link v-if="templateCreateUrl" :href="templateCreateUrl" :class="ui.button">{{ t('new_template') }}</Link>
             </div>
             <TableBuilder :table="templatesTable" :confirm="confirm" />
+        </section>
+
+        <section v-if="spamAllowlistTable && spamAllowlistForm" :class="ui.panel">
+            <h2 class="mb-1 text-lg font-semibold">{{ t('spam_allowlist') }}</h2>
+            <p :class="[ui.muted, 'mb-4']">{{ t('spam_allowlist_help') }}</p>
+            <TableBuilder :table="spamAllowlistTable" :confirm="confirm" />
+            <div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+                <Form :schema="spamAllowlistForm" />
+            </div>
         </section>
 
         <section v-if="accessTable && accessForm" :class="ui.panel">

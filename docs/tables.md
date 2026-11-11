@@ -130,6 +130,24 @@ MailboxAccessTable::build($mailbox);
 
 Viewing needs `manageMailbox`. An accessor the resolver has no label for shows as `{type} #{id}`.
 
+## SpamAllowlistTable
+
+```php
+SpamAllowlistTable::build($mailbox);
+```
+
+| Setting | Value |
+|---|---|
+| Rows | The allowlist entries of the mailbox and the global ones (`mailbox_id` `null`) |
+| Columns | E-mail address or domain (sortable), Source ("Handmatig", "Geen spam", "Standaard"), Applies to ("Deze mailbox" or "Alle mailboxen") |
+| Sort | `pattern` |
+| Global search | `pattern` |
+| Column toggle | off |
+| Per page | 50 |
+| Row action | Delete, with a confirmation, to `mailbox.settings.spam-allowlist.destroy`; only on entries of this mailbox |
+
+Viewing needs `manageMailbox`. See [Trusted senders](pages/settings.md#trusted-senders).
+
 ## MailboxTemplatesTable
 
 ```php

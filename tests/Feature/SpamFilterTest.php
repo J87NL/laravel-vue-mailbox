@@ -184,3 +184,100 @@ it('filters the message list on the messages the spam filter suggested', functio
     expect(MessagesTable::build($inbox)->toArray()['filters']->pluck('key')->all())->toBe(['spam_status'])
         ->and(MessagesTable::build(folder($off))->toArray()['filters']->all())->toBe([]);
 });
+
+it('lets only a manager of the mailbox add and remove trusted senders', function (): void {
+    $mailbox = mailbox();
+    $other = mailbox(['name' => 'Other']);
+    $foreign = MailboxSpamAllowlistEntry::query()
+        ->create([
+            'mailbox_id' => $other->id,
+            'pattern' => 'foreign@example.org',
+            'source' => SpamAllowlistSource::Manual,
+        ]);
+    $global = MailboxSpamAllowlistEntry::query()
+        ->create([
+            'mailbox_id' => null,
+            'pattern' => 'partner.example',
+            'source' => SpamAllowlistSource::Default,
+        ]);
+    $writer = member($mailbox, AccessLevel::Write);
+    $manager = member($mailbox, AccessLevel::Manage);
+
+    $this->actingAs($writer)
+        ->post(route('mailbox.settings.spam-allowlist.store', $mailbox), ['pattern' => 'boss@example.org'])
+        ->assertForbidden();
+
+    $this->actingAs($manager)
+        ->post(route('mailbox.settings.spam-allowlist.store', $mailbox), ['pattern' => '@'])
+        ->assertSessionHasErrors('pattern');
+
+    $this->actingAs($manager)
+        ->post(route('mailbox.settings.spam-allowlist.store', $mailbox), ['pattern' => ' @Example.ORG '])
+        ->assertSessionHasNoErrors();
+
+    $entry = MailboxSpamAllowlistEntry::query()
+        ->where('mailbox_id', $mailbox->id)
+        ->sole();
+
+    expect($entry->pattern)->toBe('example.org')
+        ->and($entry->source)->toBe(SpamAllowlistSource::Manual);
+
+    $this->actingAs($writer)
+        ->delete(route('mailbox.settings.spam-allowlist.destroy', [$mailbox, $entry->id]))
+        ->assertForbidden();
+
+    foreach ([
+        $foreign,
+        $global,
+    ] as $outOfReach) {
+        $this->actingAs($manager)
+            ->delete(route('mailbox.settings.spam-allowlist.destroy', [$mailbox, $outOfReach->id]))
+            ->assertNotFound();
+    }
+
+    $this->actingAs($manager)
+        ->delete(route('mailbox.settings.spam-allowlist.destroy', [$mailbox, $entry->id]))
+        ->assertRedirect();
+
+    expect(MailboxSpamAllowlistEntry::query()
+        ->orderBy('id')
+        ->pluck('pattern')
+        ->all())->toBe([
+            'foreign@example.org',
+            'partner.example',
+        ]);
+});
+
+it('lists the trusted senders of the mailbox and the global ones read-only on the settings page', function (): void {
+    $mailbox = mailbox();
+    $own = MailboxSpamAllowlistEntry::query()
+        ->create([
+            'mailbox_id' => $mailbox->id,
+            'pattern' => 'boss@example.org',
+            'source' => SpamAllowlistSource::NotJunk,
+        ]);
+    MailboxSpamAllowlistEntry::query()
+        ->create([
+            'mailbox_id' => null,
+            'pattern' => 'partner.example',
+            'source' => SpamAllowlistSource::Default,
+        ]);
+    MailboxSpamAllowlistEntry::query()
+        ->create([
+            'mailbox_id' => mailbox(['name' => 'Other'])->id,
+            'pattern' => 'foreign@example.org',
+            'source' => SpamAllowlistSource::Manual,
+        ]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Manage))
+        ->get(route('mailbox.settings.edit', $mailbox))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('form.fields', fn (mixed $fields): bool => str_contains((string) json_encode($fields), '"name":"spam_filter_mode"'))
+            ->where('spamAllowlistForm.action', route('mailbox.settings.spam-allowlist.store', $mailbox))
+            ->has('spamAllowlistTable.data', 2)
+            ->where('spamAllowlistTable.data.0.pattern', 'boss@example.org')
+            ->where('spamAllowlistTable.rowActions.0.0.url', route('mailbox.settings.spam-allowlist.destroy', [$mailbox, $own->id]))
+            ->where('spamAllowlistTable.data.1.pattern', 'partner.example')
+            ->where('spamAllowlistTable.data.1.mailbox_id', 'Every mailbox')
+            ->where('spamAllowlistTable.rowActions.1', []));
+});

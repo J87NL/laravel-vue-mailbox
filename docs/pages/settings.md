@@ -38,6 +38,8 @@ Routes `mailbox.settings.create` (`manageMailboxes`) and `mailbox.settings.edit`
 | `backUrl` | `string` | The mailbox list |
 | `destroyUrl` | `string \| null` | Delete URL, only with `manageMailboxes` when editing |
 | `form` | `FormSchema` | The core `MailboxForm` |
+| `spamAllowlistForm` | `FormSchema \| null` | The `SpamAllowlistForm` to add a trusted sender, `null` when creating |
+| `spamAllowlistTable` | `TableData \| null` | The `SpamAllowlistTable`, `null` when creating |
 | `templateCreateUrl` | `string \| null` | `mailbox.settings.templates.create`, `null` when creating |
 | `templatesTable` | `TableData \| null` | The `MailboxTemplatesTable`, `null` when creating |
 | `title` | `string` | The mailbox name, or "New mailbox" |
@@ -113,3 +115,30 @@ The form has the "Spamfilter" select of the core `MailboxForm` (`spam_filter_mod
 `auto`, `off` by default). The core does the filtering, see its
 [spam filter docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/spam-filter.md). Without a classifier bound
 in the app, no mode does anything.
+
+## Trusted senders
+
+The edit page has a "Vertrouwde afzenders" section between the templates and the access section: the
+`spamAllowlistTable` and the `spamAllowlistForm`. It manages the core
+[allowlist](https://github.com/J87NL/laravel-mailbox/blob/main/docs/spam-filter.md#the-allowlist) of the mailbox: mail
+from these addresses and domains skips the classifier. It shows for every mailbox, whatever its spam filter mode, and
+needs `manageMailbox`, like the rest of the settings.
+
+`POST settings/{mailbox}/spam-allowlist` (`mailbox.settings.spam-allowlist.store`) validates the
+`J87NL\VueMailbox\Forms\SpamAllowlistForm`:
+
+| Field | Description |
+|---|---|
+| `pattern` | Required, at most 255 characters: an e-mail address or a domain with a dot (`name@example.org`, `example.org` or `@example.org`) |
+
+It adds the pattern to the mailbox's allowlist with the core `SpamAllowlist::add()`, source `manual`. The core trims and
+lowercases it and drops a leading `@`; a pattern that is already on the list keeps its entry and source.
+
+`DELETE settings/{mailbox}/spam-allowlist/{entry}` (`mailbox.settings.spam-allowlist.destroy`) removes one entry of
+the mailbox with `SpamAllowlist::remove()`. An entry of another mailbox, or a global one, answers `404`. Both redirect
+back with a `success` flash message.
+
+Entries with a `null` `mailbox_id` apply to every mailbox. The table lists them too, marked "Alle mailboxen", but
+read-only: the package offers no screen to add or remove them, because no mailbox setting is the right place for a
+rule that covers every mailbox. The app manages them with `SpamAllowlist` (for example a seeder with source `default`).
+Entries the users add with "Geen spam" show with source "Geen spam".

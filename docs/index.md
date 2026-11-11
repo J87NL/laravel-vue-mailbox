@@ -5,7 +5,7 @@ database and sends mail through them.
 
 This package adds the routes, controllers and Inertia pages around that core: a folder list, a message list, a message
 view in a sandboxed iframe, compose, reply and forward, an address book per mailbox, and mailbox settings with access
-management. Forms are built with the TranquilTools FormBuilder and tables with the TableBuilder.
+management and the trusted senders of the spam filter. Forms are built with the TranquilTools FormBuilder and tables with the TableBuilder.
 
 ## How the packages fit together
 

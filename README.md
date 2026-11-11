@@ -1,6 +1,6 @@
 # J87 Laravel Vue Mailbox
 
-Vue 3 / Inertia UI for [`j87nl/laravel-mailbox`](https://github.com/J87NL/laravel-mailbox): folder list, message list (TableBuilder), message view in a sandboxed iframe, compose/reply/forward (FormBuilder) and mailbox settings with access management. The tables use compact cells and rows that open with a click or with Tab and Enter, see [Tables](docs/tables.md).
+Vue 3 / Inertia UI for [`j87nl/laravel-mailbox`](https://github.com/J87NL/laravel-mailbox): folder list, message list (TableBuilder), message view in a sandboxed iframe, compose/reply/forward (FormBuilder) and mailbox settings with access management and the trusted senders of the spam filter. The tables use compact cells and rows that open with a click or with Tab and Enter, see [Tables](docs/tables.md).
 
 ## Requirements
 
