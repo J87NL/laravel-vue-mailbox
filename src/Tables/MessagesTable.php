@@ -196,7 +196,7 @@ final class MessagesTable extends MailboxTable
 
         $table->bulkAction(__('mailbox::mailbox.mark_junk'), before: fn (array $ids): int => app(MarkJunk::class)->junk($mailbox, $this->messages($ids), auth()->user()));
 
-        if (! $mailbox->spamFilterMode()->isActive()) {
+        if ($this->folder->role !== FolderRole::Inbox || ! $mailbox->spamFilterMode()->isActive()) {
             return;
         }
 

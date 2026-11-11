@@ -121,6 +121,28 @@ it('releases a suggested inbox message with not spam and allowlists its sender f
             ]);
 });
 
+it('refuses not spam on a suggested message outside the inbox and junk folder', function (): void {
+    $mailbox = mailbox(['spam_filter_mode' => SpamFilterMode::Suggest]);
+    folder($mailbox);
+    $trash = folder($mailbox, 'Trash', FolderRole::Trash);
+    $message = storedMessage($trash, 1, ['spam_status' => SpamStatus::Suggested]);
+    $writer = member($mailbox, AccessLevel::Write);
+
+    $this->actingAs($writer)
+        ->get(route('mailbox.messages.show', [$mailbox, $message]))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('spamSuggested', false));
+
+    $this->actingAs($writer)
+        ->post(route('mailbox.messages.actions', $mailbox), [
+            'action' => 'not_junk',
+            'ids' => [$message->id],
+        ])
+        ->assertStatus(422);
+
+    expect(collect(MessagesTable::build($trash)->toArray()['bulkActions'])->pluck('label')->all())->not->toContain('Not spam');
+});
+
 it('offers no not spam for a suggested message once the spam filter is off', function (): void {
     $mailbox = mailbox();
     $message = storedMessage(folder($mailbox), 1, ['spam_status' => SpamStatus::Suggested]);

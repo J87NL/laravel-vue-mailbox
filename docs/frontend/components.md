@@ -67,7 +67,7 @@ message, the other actions go to the folder.
 | `message` | `{ id: number; is_flagged: boolean }` | The `message` prop |
 | `confirmDelete` | `boolean` | The `confirmDelete` prop |
 | `folderRole` | `MailboxFolder['role']` | The `folderRole` prop, picks "Markeer als spam" or "Geen spam" |
-| `spamSuggested` | `boolean` | The `spamSuggested` prop: also offers "Geen spam" outside the junk folder |
+| `spamSuggested` | `boolean` | The `spamSuggested` prop: also offers "Geen spam" on a suggested message in the inbox |
 
 ## Types
 
