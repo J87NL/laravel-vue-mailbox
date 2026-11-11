@@ -40,6 +40,7 @@ search. Other query parameters, such as `images`, are not passed on. "Load image
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
 | `message` | `object` | `id`, `subject`, `from_email`, `from_name`, `to`, `cc`, `sent_at`, `is_flagged`, `is_answered` |
 | `remoteImages` | `boolean` | Remote images are allowed in this render |
+| `spamSuggested` | `boolean` | The spam filter suggested the message and the mailbox's `spam_filter_mode` is not `off`: offers "Geen spam" outside the junk folder |
 | `spam` | `SpamBadge \| null` | The spam filter's verdict, see [Spam filter](#spam-filter); `null` when the message is not marked |
 
 `to` and `cc` are lists of `{ email, name }`. A flagged message shows a flag before its subject, labelled with the
@@ -124,7 +125,8 @@ The default page offers, depending on the URLs it gets:
 
 - Reply, Reply all and Forward, linking to `composeUrl` with `?reply={id}&mode=reply|reply_all|forward`. See
   [Compose, reply and forward](compose.md).
-- Archive, "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), Delete (with a
+- Archive, "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), "Geen spam" next to
+  "Markeer als spam" when `spamSuggested` is true, Delete (with a
   confirmation only when `confirmDelete` is true), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
   `actionsUrl`. See [Message actions](folders.md#message-actions).
 - Add to address book, posted to `contactUrl`.

@@ -21,6 +21,7 @@ use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\Mailbox\Support\DisplayTime;
 use J87NL\VueMailbox\Support\FolderListQuery;
 use J87NL\VueMailbox\Support\SpamBadge;
+use J87NL\VueMailbox\Support\SpamSuggestion;
 use TranquilTools\TableBuilder\TableBuilder;
 
 final class MessagesTable extends MailboxTable
@@ -191,6 +192,16 @@ final class MessagesTable extends MailboxTable
         }
 
         $table->bulkAction(__('mailbox::mailbox.mark_junk'), before: fn (array $ids): int => app(MarkJunk::class)->junk($mailbox, $this->messages($ids), auth()->user()));
+
+        if (! $mailbox->spamFilterMode()->isActive()) {
+            return;
+        }
+
+        $table->bulkAction(__('mailbox::mailbox.mark_not_junk'), before: fn (array $ids): int => app(MarkJunk::class)->notJunk(
+            $mailbox,
+            $this->messages($ids)->filter(fn (MailboxMessage $message): bool => SpamSuggestion::offersNotJunk($mailbox, $message))->values(),
+            auth()->user(),
+        ));
     }
 
     /**

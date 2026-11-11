@@ -51,7 +51,7 @@ Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk act
 | Mark as unread | core `MarkMessages::unread()` |
 | Move to folder | core `MoveMessages`, with a choice of the other selectable folders of the mailbox |
 | Mark as spam | core `MarkJunk::junk()`; not in the junk, sent and drafts folders |
-| Not spam | core `MarkJunk::notJunk()`; only in the junk folder |
+| Not spam | core `MarkJunk::notJunk()`; in the junk folder on every selected message, and in the other folders (not Sent and Drafts) only when the mailbox's `spam_filter_mode` is not `off`, on the selected messages the spam filter suggested (others are left alone) |
 
 Bulk actions only touch messages of the table's folder.
 

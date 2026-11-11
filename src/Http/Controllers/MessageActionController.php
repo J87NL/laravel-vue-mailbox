@@ -18,6 +18,7 @@ use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\VueMailbox\Support\FolderListQuery;
+use J87NL\VueMailbox\Support\SpamSuggestion;
 
 class MessageActionController extends Controller
 {
@@ -57,7 +58,7 @@ class MessageActionController extends Controller
         $back = $messages->first()?->folder;
         $user = $request->user();
 
-        abort_unless($this->fitsFolders($data['action'], $messages), 422);
+        abort_unless($this->fitsFolders($mailbox, $data['action'], $messages), 422);
 
         match ($data['action']) {
             'archive' => app(ArchiveMessages::class)->handle($mailbox, $messages, $user),
@@ -89,7 +90,7 @@ class MessageActionController extends Controller
     /**
      * @param  Collection<int, MailboxMessage>  $messages
      */
-    private function fitsFolders(string $action, Collection $messages): bool
+    private function fitsFolders(Mailbox $mailbox, string $action, Collection $messages): bool
     {
         if ($action === 'junk') {
             return ! $messages->contains(fn (MailboxMessage $message): bool => in_array($message->folder->role, [
@@ -99,7 +100,7 @@ class MessageActionController extends Controller
         }
 
         if ($action === 'not_junk') {
-            return $messages->every(fn (MailboxMessage $message): bool => $message->folder->role === FolderRole::Junk);
+            return $messages->every(fn (MailboxMessage $message): bool => $message->folder->role === FolderRole::Junk || SpamSuggestion::offersNotJunk($mailbox, $message));
         }
 
         return true;

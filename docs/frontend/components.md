@@ -65,6 +65,9 @@ message, the other actions go to the folder.
 | `contactUrl` | `string \| null` | The `contactUrl` prop |
 | `folders` | `MailboxFolder[]` | The `folders` prop, for the move select |
 | `message` | `{ id: number; is_flagged: boolean }` | The `message` prop |
+| `confirmDelete` | `boolean` | The `confirmDelete` prop |
+| `folderRole` | `MailboxFolder['role']` | The `folderRole` prop, picks "Markeer als spam" or "Geen spam" |
+| `spamSuggested` | `boolean` | The `spamSuggested` prop: also offers "Geen spam" outside the junk folder |
 
 ## Types
 

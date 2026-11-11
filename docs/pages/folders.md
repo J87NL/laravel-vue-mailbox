@@ -167,9 +167,14 @@ Ids of messages in other mailboxes are ignored. A `folder_id` of another mailbox
 
 `junk` ("Markeer als spam") and `not_junk` ("Geen spam") call the core `MarkJunk`: `junk` sets the IMAP keyword
 `$Junk` and moves the messages to the junk folder, `not_junk` sets `$NotJunk` and moves them to the inbox. Both are
-written to the audit trail (`marked_junk`, `marked_not_junk`). `junk` on a message in Sent or Drafts and `not_junk` on a message outside the junk
-folder answer `422`, like the buttons that are not offered there. See the core
-[spam action](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md#spam).
+written to the audit trail (`marked_junk`, `marked_not_junk`). `junk` on a message in Sent or Drafts answers `422`,
+like the button that is not offered there. `not_junk` accepts messages in the junk folder and messages the spam filter
+suggested (`spam_status` `suggested`) while the mailbox's `spam_filter_mode` is not `off`; any other message answers
+`422`. A suggested message is already in the inbox, so `not_junk` does not move it: the core sets `spam_status` to
+`released` and adds the sender to the mailbox's allowlist (source `not_junk`), because the action passes the user.
+`junk` on a suggested message moves it to the junk folder and clears `suggested`. See the core
+[spam action](https://github.com/J87NL/laravel-mailbox/blob/main/docs/message-actions.md#spam) and
+[spam filter](https://github.com/J87NL/laravel-mailbox/blob/main/docs/spam-filter.md#not-spam).
 
 After `flag`, `read` and `unflag` the user goes back to the previous page. After the other actions the user lands on
 the folder of the first matched message, or on the inbox when none of the ids matched, with the list query parameters

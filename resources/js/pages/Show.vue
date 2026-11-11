@@ -37,6 +37,7 @@ defineProps<{
         is_answered: boolean
     }
     spam?: SpamBadge | null
+    spamSuggested?: boolean
 }>()
 
 const { t } = useMailboxTranslations()
@@ -127,6 +128,7 @@ function addresses(list: MailAddress[] | null): string {
                     :folder-role="folderRole"
                     :folders="folders"
                     :message="message"
+                    :spam-suggested="spamSuggested"
                 />
                 <slot name="actions" />
                 <button type="button" :class="ui.button" @click="openFullscreen">{{ t('open_fullscreen') }}</button>
@@ -215,6 +217,7 @@ function addresses(list: MailAddress[] | null): string {
                             :folder-role="folderRole"
                             :folders="folders"
                             :message="message"
+                            :spam-suggested="spamSuggested"
                         />
                         <slot name="actions" />
                     </div>
