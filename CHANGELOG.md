@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.14.1 - 2026-11-11
+- Allows `j87nl/laravel-mailbox` ^0.14 next to ^0.13, so apps can install the core release that stores the mail server's spam verdict (`server_spam_flag`, `server_spam_score`). Nothing changes in this package. See `docs/upgrading.md`.
+
 ## 0.14.0 - 2026-11-11
 
 - **Requires `j87nl/laravel-mailbox` ^0.13**, which adds the spam filter: the mailbox's `spam_filter_mode`, the verdict on each message (`spam_score`, `spam_reason`, `spam_status`) and the allowlist. Publish the core migrations again and migrate. The "Spamfilter" select of the core `MailboxForm` shows on the mailbox settings page without changes here. See `docs/upgrading.md`.

@@ -3,6 +3,11 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## 0.14.1: core 0.14
+
+- Also accepts `j87nl/laravel-mailbox` ^0.14, which stores the mail server's spam verdict on each message. Run
+  `composer update j87nl/laravel-mailbox`, publish the core migrations again and migrate.
+
 ## From 0.13 to 0.14: spam filter
 
 - Needs `j87nl/laravel-mailbox` ^0.13, which adds the spam filter. Read its
