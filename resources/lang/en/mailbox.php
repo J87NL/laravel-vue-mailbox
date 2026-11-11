@@ -27,6 +27,9 @@ return [
     'refresh' => 'Refresh',
     'refreshing' => 'Refreshing…',
     'send_failed' => 'Message not sent. The mail server replied: :error',
+    'spam_moved' => 'Moved to spam by the filter',
+    'spam_score' => 'Spam score :score',
+    'spam_suggested' => 'Possibly spam',
     'switch_mailbox' => 'Switch mailbox',
     'template_insert_failed' => 'The template could not be inserted. Please try again.',
 ];

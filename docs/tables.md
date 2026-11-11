@@ -36,6 +36,11 @@ one or more attachments gets a paperclip icon after the subject (an inline SVG w
 `aria-label` and `<title>`, so it needs no Tailwind class of the host). The subject is escaped before the icon is added. The received
 date shows the time (`H:i`) for today and the date (`d-m-Y`) otherwise, in the display timezone of the core package.
 
+A message the core [spam filter](https://github.com/J87NL/laravel-mailbox/blob/main/docs/spam-filter.md) marked gets a
+badge before the subject: "Mogelijk spam" (`spam_status` `suggested`) or "Door filter naar spam" (`moved`), with the
+score and the classifier's reason as its tooltip (`title`). Like the paperclip it is styled inline. `released` and no
+status show nothing.
+
 Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk actions:
 
 | Bulk action | Does |

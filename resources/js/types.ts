@@ -10,6 +10,12 @@ export interface MailboxFolder {
     url: string
 }
 
+export interface SpamBadge {
+    detail: string
+    label: string
+    status: 'suggested' | 'moved'
+}
+
 export interface MailboxSummary {
     id: number
     name: string

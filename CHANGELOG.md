@@ -3,6 +3,7 @@
 ## 0.14.0 - 2026-11-11
 
 - **Requires `j87nl/laravel-mailbox` ^0.13**, which adds the spam filter: the mailbox's `spam_filter_mode`, the verdict on each message (`spam_score`, `spam_reason`, `spam_status`) and the allowlist. Publish the core migrations again and migrate. The "Spamfilter" select of the core `MailboxForm` shows on the mailbox settings page without changes here. See `docs/upgrading.md`.
+- Spam badges: a message the core spam filter marked shows "Mogelijk spam" (`spam_status` `suggested`) or "Door filter naar spam" (`moved`) before its subject in the message list, with the score and reason as tooltip, and after its subject on the message page with the score and reason below it. New prop `spam` (`{ status, label, detail }` or `null`) on the message view, new type `SpamBadge`, new class `J87NL\VueMailbox\Support\SpamBadge` and new translations `spam_suggested`, `spam_moved` and `spam_score` (nl and en). See `docs/pages/messages.md#spam-filter` and `docs/tables.md#messagestable`.
 
 ## 0.13.1 - 2026-11-05
 

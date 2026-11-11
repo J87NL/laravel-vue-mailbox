@@ -27,6 +27,9 @@ return [
     'refresh' => 'Vernieuwen',
     'refreshing' => 'Vernieuwen…',
     'send_failed' => 'Bericht niet verzonden. De mailserver gaf: :error',
+    'spam_moved' => 'Door filter naar spam',
+    'spam_score' => 'Spamscore :score',
+    'spam_suggested' => 'Mogelijk spam',
     'switch_mailbox' => 'Andere mailbox',
     'template_insert_failed' => 'Het sjabloon kon niet worden ingevoegd. Probeer het opnieuw.',
 ];

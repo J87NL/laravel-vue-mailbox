@@ -22,6 +22,7 @@ use J87NL\VueMailbox\Support\FolderListQuery;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Support\InlineUrls;
 use J87NL\VueMailbox\Support\MessageBodyLoader;
+use J87NL\VueMailbox\Support\SpamBadge;
 
 class MessageController extends Controller
 {
@@ -83,6 +84,7 @@ class MessageController extends Controller
                 'is_flagged',
                 'is_answered',
             ]),
+            'spam' => SpamBadge::for($message),
         ]);
     }
 

@@ -69,7 +69,7 @@ message, the other actions go to the folder.
 ## Types
 
 ```ts
-import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types';
+import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary, SpamBadge } from '@mailbox/types';
 ```
 
 | Type | Fields |
@@ -80,6 +80,7 @@ import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, Mai
 | `MailboxAttachment` | `filename` (nullable), `content_type`, `content_id` (nullable), `inline`, `url` |
 | `AuditEntry` | `action`, and the nullable `at`, `target`, `user` |
 | `ConversationEntry` | `id`, `current`, `folder`, `from`, `url`, and the nullable `subject`, `sent_at` |
+| `SpamBadge` | `status` (`'suggested' \| 'moved'`), `label`, `detail` |
 
 `MailboxFolder['role']` is `'inbox' | 'drafts' | 'sent' | 'archive' | 'junk' | 'trash' | 'custom'`.
 
