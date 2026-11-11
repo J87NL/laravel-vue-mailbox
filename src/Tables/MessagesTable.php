@@ -200,11 +200,24 @@ final class MessagesTable extends MailboxTable
             return;
         }
 
-        $table->bulkAction(__('mailbox::mailbox.mark_not_junk'), before: fn (array $ids): int => app(MarkJunk::class)->notJunk(
-            $mailbox,
-            $this->messages($ids)->filter(fn (MailboxMessage $message): bool => SpamSuggestion::offersNotJunk($mailbox, $message))->values(),
-            auth()->user(),
-        ));
+        $table->bulkAction(__('mailbox::mailbox.mark_not_junk'), before: fn (array $ids): int => $this->releaseSuggested($ids));
+    }
+
+    /**
+     * @param  array<int, int|string>  $ids
+     */
+    private function releaseSuggested(array $ids): int
+    {
+        $mailbox = $this->folder->mailbox;
+        $suggested = $this->messages($ids)
+            ->filter(fn (MailboxMessage $message): bool => SpamSuggestion::offersNotJunk($mailbox, $message))
+            ->values();
+
+        if ($suggested->isEmpty()) {
+            return 0;
+        }
+
+        return app(MarkJunk::class)->notJunk($mailbox, $suggested, auth()->user());
     }
 
     private function spamFilter(TableBuilder $table): void

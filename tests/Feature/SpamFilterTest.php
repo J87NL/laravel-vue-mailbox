@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Inertia\Testing\AssertableInertia;
+use J87NL\Mailbox\Actions\MarkJunk;
 use J87NL\Mailbox\Enums\AccessLevel;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Enums\SpamAllowlistSource;
@@ -169,6 +170,15 @@ it('only releases the suggested messages of a not spam bulk action', function ()
     $url = SignedTableUrl::make('table.bulk-action', MessagesTable::class, ['folder' => $inbox->id, 'grouped' => true], [
         'action' => base64_encode((string) array_search('Not spam', $bulkActions, true)),
     ]);
+
+    $markJunk = Mockery::mock(MarkJunk::class);
+    $markJunk->shouldNotReceive('notJunk');
+    $this->app->instance(MarkJunk::class, $markJunk);
+
+    $this->postJson($url, ['ids' => [$plain->id]])
+        ->assertOk();
+
+    $this->app->forgetInstance(MarkJunk::class);
 
     $this->postJson($url, ['ids' => [$suggested->id, $plain->id]])
         ->assertOk();
