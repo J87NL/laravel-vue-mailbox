@@ -17,6 +17,7 @@ const props = defineProps<{
         id: number
         is_flagged: boolean
     }
+    spamSuggested?: boolean
 }>()
 
 const { t } = useMailboxTranslations()
@@ -82,6 +83,7 @@ function replyUrl(mode: string): string {
         <template v-if="actionsUrl">
             <button type="button" :class="ui.button" @click="act('archive')">{{ t('archive') }}</button>
             <button v-if="junkAction" type="button" :class="ui.button" @click="act(junkAction)">{{ t(junkAction === 'junk' ? 'mark_junk' : 'mark_not_junk') }}</button>
+            <button v-if="spamSuggested && junkAction === 'junk'" type="button" :class="ui.button" @click="act('not_junk')">{{ t('mark_not_junk') }}</button>
             <button type="button" :class="ui.dangerButton" @click="act('delete')">{{ t('delete') }}</button>
             <button type="button" :class="ui.button" @click="act('unread')">{{ t('mark_unread') }}</button>
             <button type="button" :class="ui.button" @click="act(message.is_flagged ? 'unflag' : 'flag')">

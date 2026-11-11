@@ -1,6 +1,6 @@
 # J87 Laravel Vue Mailbox
 
-Vue 3 / Inertia UI for [`j87nl/laravel-mailbox`](https://github.com/J87NL/laravel-mailbox): folder list, message list (TableBuilder), message view in a sandboxed iframe, compose/reply/forward (FormBuilder) and mailbox settings with access management. The tables use compact cells and rows that open with a click or with Tab and Enter, see [Tables](docs/tables.md).
+Vue 3 / Inertia UI for [`j87nl/laravel-mailbox`](https://github.com/J87NL/laravel-mailbox): folder list, message list (TableBuilder), message view in a sandboxed iframe, compose/reply/forward (FormBuilder) and mailbox settings with access management and the trusted senders of the spam filter. The tables use compact cells and rows that open with a click or with Tab and Enter, see [Tables](docs/tables.md).
 
 ## Requirements
 
@@ -10,7 +10,7 @@ Vue 3 / Inertia UI for [`j87nl/laravel-mailbox`](https://github.com/J87NL/larave
 ## Installation
 
 ```bash
-composer require j87nl/laravel-vue-mailbox:^0.10 -W
+composer require j87nl/laravel-vue-mailbox:^0.14 -W
 php artisan mailbox:install
 php artisan migrate
 ```
@@ -96,7 +96,7 @@ The default pages read their texts from the Inertia prop `vue_mailbox_translatio
 | Page (`vue-mailbox.pages.*`) | Props |
 |---|---|
 | `mailbox/Index` | `composeUrl`, `contactsUrl`, `folder` (`id`, `label`, `name`, `role`, `syncs`) or null, `folderForm`, `folders`, `mailbox`, `mailboxes`, `olderMessagesUrl`, `refreshUrl`, `settingsUrl`, `syncNotice`, `syncing`, `table` |
-| `mailbox/Show` | `actionsUrl`, `attachments`, `backUrl`, `composeUrl`, `contactUrl`, `conversation`, `folders`, `hasRemoteImages`, `history`, `html`, `imageOrigin`, `mailbox`, `message`, `remoteImages` |
+| `mailbox/Show` | `actionsUrl`, `attachments`, `backUrl`, `composeUrl`, `contactUrl`, `conversation`, `folders`, `hasRemoteImages`, `history`, `html`, `imageOrigin`, `mailbox`, `message`, `remoteImages`, `spam`, `spamSuggested` |
 | `mailbox/Compose` | `backUrl`, `folders`, `form`, `mailbox`, `mode` |
 | `mailbox/Contacts/Index` | `backUrl`, `createUrl`, `folders`, `mailbox`, `table` |
 | `mailbox/Contacts/Edit` | `backUrl`, `destroyUrl`, `form`, `mailbox`, `title` |
@@ -105,7 +105,7 @@ The default pages read their texts from the Inertia prop `vue_mailbox_translatio
 
 Reply, reply all and forward put the original HTML in the compose body (Gmail-style header or "On … wrote:" blockquote). Its inline images use signed inline URLs with `data-mailbox-cid`; keep that attribute in your editor (the default HugeRTE options do). Inline SVG images are served with a locked-down CSP. After sending a reply or forward the app returns to the folder of the original message.
 
-The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['table', 'folders']"` to `TableBuilder` so a tick reloads only the table and the folder counts. Unread rows get `font-semibold` from the server, and a paperclip follows the subject of a message with attachments. The Refresh button queues a sync of the folder (`mailbox.folders.refresh`). When the server holds more mail in the folder than is stored (for example from before the core's `sync.initial_days`), an "Oudere berichten ophalen" button queues the core `FetchOlderMessagesJob` (`mailbox.folders.older`) and reloads the list a few seconds later. With the core `conversation_view` setting of a mailbox on, the list shows one row per conversation and the message view lists the conversation.
+The message table polls every `vue-mailbox.poll_seconds` (30); pass `:only="['table', 'folders']"` to `TableBuilder` so a tick reloads only the table and the folder counts. Unread rows get `font-semibold` from the server, and a paperclip follows the subject of a message with attachments. A message the core spam filter marked gets a "Mogelijk spam" or "Door filter naar spam" badge, in the list and on the message page, and a suggested one offers "Geen spam". The "Voorstellen" filter lists the suggested messages. The Refresh button queues a sync of the folder (`mailbox.folders.refresh`). When the server holds more mail in the folder than is stored (for example from before the core's `sync.initial_days`), an "Oudere berichten ophalen" button queues the core `FetchOlderMessagesJob` (`mailbox.folders.older`) and reloads the list a few seconds later. With the core `conversation_view` setting of a mailbox on, the list shows one row per conversation and the message view lists the conversation.
 
 The folder page shows only the folders of the open mailbox, with a compact mailbox switcher when the user has several (`vue-mailbox.mailbox_switcher`, default `true`). To list every mailbox in the host menu, use `J87NL\VueMailbox\Support\MailboxNavigation::for($user)` or the `ShareMailboxNavigation` middleware, which shares it as the `mailboxNavigation` prop (`id`, `name`, `email`, `unseen`, `url`, `active_path`); see `docs/navigation.md`.
 

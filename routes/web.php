@@ -13,6 +13,7 @@ use J87NL\VueMailbox\Http\Controllers\NotificationController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxAccessController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxSettingsController;
 use J87NL\VueMailbox\Http\Controllers\Settings\MailboxTemplateController;
+use J87NL\VueMailbox\Http\Controllers\Settings\SpamAllowlistController;
 use J87NL\VueMailbox\Http\Controllers\TemplateController;
 use J87NL\VueMailbox\Http\Middleware\ShareMailboxTranslations;
 use J87NL\VueMailbox\VueMailboxServiceProvider;
@@ -64,6 +65,10 @@ Route::prefix(config('vue-mailbox.routes.prefix'))
                     Route::get('{mailbox}/templates/{template}', [MailboxTemplateController::class, 'edit'])->name('templates.edit');
                     Route::put('{mailbox}/templates/{template}', [MailboxTemplateController::class, 'update'])->name('templates.update');
                     Route::delete('{mailbox}/templates/{template}', [MailboxTemplateController::class, 'destroy'])->name('templates.destroy');
+                    Route::post('{mailbox}/spam-allowlist', [SpamAllowlistController::class, 'store'])->name('spam-allowlist.store');
+                    Route::delete('{mailbox}/spam-allowlist/{entry}', [SpamAllowlistController::class, 'destroy'])
+                        ->whereNumber('entry')
+                        ->name('spam-allowlist.destroy');
                 });
             });
 

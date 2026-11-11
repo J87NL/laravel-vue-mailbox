@@ -16,10 +16,13 @@ use J87NL\Mailbox\Actions\MarkJunk;
 use J87NL\Mailbox\Actions\MarkMessages;
 use J87NL\Mailbox\Actions\MoveMessages;
 use J87NL\Mailbox\Enums\FolderRole;
+use J87NL\Mailbox\Enums\SpamStatus;
 use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\Mailbox\Support\DisplayTime;
 use J87NL\VueMailbox\Support\FolderListQuery;
+use J87NL\VueMailbox\Support\SpamBadge;
+use J87NL\VueMailbox\Support\SpamSuggestion;
 use TranquilTools\TableBuilder\TableBuilder;
 
 final class MessagesTable extends MailboxTable
@@ -76,6 +79,9 @@ final class MessagesTable extends MailboxTable
                 'is_answered',
                 'has_attachments',
                 'thread_key',
+                'spam_status',
+                'spam_score',
+                'spam_reason',
             ])
             ->whereBelongsTo($this->folder, 'folder');
 
@@ -140,6 +146,8 @@ final class MessagesTable extends MailboxTable
             ->emptyState(title: __('mailbox::mailbox.empty'))
             ->paginate(config('vue-mailbox.per_page'));
 
+        $this->spamFilter($table);
+
         if (! Gate::allows('workInMailbox', $this->folder->mailbox)) {
             return;
         }
@@ -187,6 +195,45 @@ final class MessagesTable extends MailboxTable
         }
 
         $table->bulkAction(__('mailbox::mailbox.mark_junk'), before: fn (array $ids): int => app(MarkJunk::class)->junk($mailbox, $this->messages($ids), auth()->user()));
+
+        if ($this->folder->role !== FolderRole::Inbox || ! $mailbox->spamFilterMode()->isActive()) {
+            return;
+        }
+
+        $table->bulkAction(__('mailbox::mailbox.mark_not_junk'), before: fn (array $ids): int => $this->releaseSuggested($ids));
+    }
+
+    /**
+     * @param  array<int, int|string>  $ids
+     */
+    private function releaseSuggested(array $ids): int
+    {
+        $mailbox = $this->folder->mailbox;
+        $suggested = $this->messages($ids)
+            ->filter(fn (MailboxMessage $message): bool => SpamSuggestion::offersNotJunk($mailbox, $message))
+            ->values();
+
+        if ($suggested->isEmpty()) {
+            return 0;
+        }
+
+        return app(MarkJunk::class)->notJunk($mailbox, $suggested, auth()->user());
+    }
+
+    private function spamFilter(TableBuilder $table): void
+    {
+        if (! $this->folder->mailbox->spamFilterMode()->isActive()) {
+            return;
+        }
+
+        $table->selectFilter(
+            'spam_status',
+            [
+                SpamStatus::Suggested->value => __('vue-mailbox::mailbox.spam_filter_suggested'),
+            ],
+            label: __('vue-mailbox::mailbox.spam_filter'),
+            noFilterOptionLabel: __('vue-mailbox::mailbox.spam_filter_all'),
+        );
     }
 
     /**
@@ -289,12 +336,28 @@ final class MessagesTable extends MailboxTable
         $answered = $message->is_answered ? '↩ ' : '';
         $count = (int) $message->getAttribute('thread_count');
         $text = $flag.$answered.($subject ?: '—').($count > 1 ? sprintf(' (%d)', $count) : '');
+        $badge = $this->spamBadge($message);
 
-        if (! $message->has_attachments) {
+        if (! $message->has_attachments && $badge === '') {
             return $text;
         }
 
-        return new HtmlString(sprintf('%s %s', e($text), $this->paperclip()));
+        return new HtmlString(trim(sprintf('%s %s %s', $badge, e($text), $message->has_attachments ? $this->paperclip() : '')));
+    }
+
+    private function spamBadge(MailboxMessage $message): string
+    {
+        $badge = SpamBadge::for($message);
+
+        if (is_null($badge)) {
+            return '';
+        }
+
+        return sprintf(
+            '<span title="%s" style="display:inline-block;padding:0 .4em;border-radius:.25rem;font-size:.75em;font-weight:500;background:#fef3c7;color:#92400e">%s</span>',
+            e($badge['detail']),
+            e($badge['label']),
+        );
     }
 
     private function paperclip(): string

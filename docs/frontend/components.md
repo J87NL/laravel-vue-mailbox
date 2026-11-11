@@ -65,11 +65,14 @@ message, the other actions go to the folder.
 | `contactUrl` | `string \| null` | The `contactUrl` prop |
 | `folders` | `MailboxFolder[]` | The `folders` prop, for the move select |
 | `message` | `{ id: number; is_flagged: boolean }` | The `message` prop |
+| `confirmDelete` | `boolean` | The `confirmDelete` prop |
+| `folderRole` | `MailboxFolder['role']` | The `folderRole` prop, picks "Markeer als spam" or "Geen spam" |
+| `spamSuggested` | `boolean` | The `spamSuggested` prop: also offers "Geen spam" on a suggested message in the inbox |
 
 ## Types
 
 ```ts
-import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types';
+import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary, SpamBadge } from '@mailbox/types';
 ```
 
 | Type | Fields |
@@ -80,6 +83,7 @@ import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, Mai
 | `MailboxAttachment` | `filename` (nullable), `content_type`, `content_id` (nullable), `inline`, `url` |
 | `AuditEntry` | `action`, and the nullable `at`, `target`, `user` |
 | `ConversationEntry` | `id`, `current`, `folder`, `from`, `url`, and the nullable `subject`, `sent_at` |
+| `SpamBadge` | `status` (`'suggested' \| 'moved'`), `label`, `detail` |
 
 `MailboxFolder['role']` is `'inbox' | 'drafts' | 'sent' | 'archive' | 'junk' | 'trash' | 'custom'`.
 

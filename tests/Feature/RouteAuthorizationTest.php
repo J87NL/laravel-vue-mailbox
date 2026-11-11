@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
 use J87NL\Mailbox\Enums\AccessLevel;
+use J87NL\Mailbox\Enums\SpamAllowlistSource;
 use J87NL\Mailbox\MailboxServiceProvider;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxAccess;
@@ -43,6 +44,12 @@ function endpoint(string $name, Mailbox $mailbox): array
             'name' => 'Welcome',
         ], [
             'body' => '<p>Hi {voornaam}</p>',
+        ]);
+    $allowlistEntry = $mailbox->spamAllowlist()
+        ->firstOrCreate([
+            'pattern' => 'trusted@example.org',
+        ], [
+            'source' => SpamAllowlistSource::Manual,
         ]);
 
     return match ($name) {
@@ -154,6 +161,14 @@ function endpoint(string $name, Mailbox $mailbox): array
             'delete',
             route('mailbox.settings.templates.destroy', [$mailbox, $template]),
         ],
+        'settings.spam-allowlist.store' => [
+            'post',
+            route('mailbox.settings.spam-allowlist.store', $mailbox),
+        ],
+        'settings.spam-allowlist.destroy' => [
+            'delete',
+            route('mailbox.settings.spam-allowlist.destroy', [$mailbox, $allowlistEntry->id]),
+        ],
         'settings.create' => [
             'get',
             route('mailbox.settings.create'),
@@ -216,6 +231,8 @@ function routeMatrix(): array
         'settings.templates.edit' => 'manage',
         'settings.templates.update' => 'manage',
         'settings.templates.destroy' => 'manage',
+        'settings.spam-allowlist.store' => 'manage',
+        'settings.spam-allowlist.destroy' => 'manage',
         'settings.create' => 'admin',
         'settings.store' => 'admin',
         'settings.destroy' => 'admin',

@@ -3,6 +3,28 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.13 to 0.14: spam filter
+
+- Needs `j87nl/laravel-mailbox` ^0.13, which adds the spam filter. Read its
+  [upgrade notes](https://github.com/J87NL/laravel-mailbox/blob/main/docs/upgrading.md) and
+  [spam filter docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/spam-filter.md). Publish the core
+  migrations again and migrate, it adds the spam columns and `mailbox_spam_allowlist`:
+
+  ```bash
+  php artisan vendor:publish --tag=mailbox-migrations
+  php artisan migrate
+  ```
+
+- The mailbox settings page shows the "Spamfilter" select of the core `MailboxForm`, `off` by default. Nothing changes
+  for a mailbox until it is set to another mode and the app binds a classifier.
+- Rebuild the frontend (`npm run build`). The settings page gets the "Vertrouwde afzenders" section, the message list
+  and message page the spam badges, "Geen spam" on suggested messages and the "Voorstellen" filter.
+- An app with copied pages: `Show` passes the new `spamSuggested` prop to `MessageActions` and shows the `spam` badge,
+  and `Settings/Edit` adds the trusted senders section with `spamAllowlistTable` and `spamAllowlistForm` (see the
+  default pages).
+- The new routes `mailbox.settings.spam-allowlist.store` and `.destroy` need `manageMailbox`. An app that lists the
+  package routes for its own permission sync adds them.
+
 ## From 0.12 to 0.13: Gmail All Mail
 
 - Needs `j87nl/laravel-mailbox` ^0.12, which syncs Gmail's All Mail within `sync.initial_days`. Read its

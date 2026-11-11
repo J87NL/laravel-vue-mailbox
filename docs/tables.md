@@ -26,6 +26,7 @@ MessagesTable::build($folder);
 | Columns | From (name, or the address), Subject, Received |
 | Sort | `sent_at`, newest first |
 | Global search | `subject`, `from_email`, `from_name` |
+| Filter | "Spam" (`spam_status`), only while the mailbox's `spam_filter_mode` is not `off`: "Voorstellen" lists the messages the spam filter suggested |
 | Per page | `config('vue-mailbox.per_page')`, default 50 |
 | Poll | `config('vue-mailbox.poll_seconds')`, default 30 |
 | Row link | `mailbox.messages.show`, with the current `messages_*` query parameters (search, filters, sort, page) |
@@ -35,6 +36,16 @@ The subject is prefixed with `⚑` for flagged and `↩` for answered messages, 
 one or more attachments gets a paperclip icon after the subject (an inline SVG with `role="img"` and a translated
 `aria-label` and `<title>`, so it needs no Tailwind class of the host). The subject is escaped before the icon is added. The received
 date shows the time (`H:i`) for today and the date (`d-m-Y`) otherwise, in the display timezone of the core package.
+
+A message the core [spam filter](https://github.com/J87NL/laravel-mailbox/blob/main/docs/spam-filter.md) marked gets a
+badge before the subject: "Mogelijk spam" (`spam_status` `suggested`) or "Door filter naar spam" (`moved`), with the
+score and the classifier's reason as its tooltip (`title`). Like the paperclip it is styled inline. `released` and no
+status show nothing.
+
+The "Spam" filter is a TableBuilder select filter on `spam_status` with one option, "Voorstellen" (`suggested`). Like
+the search it lives in the URL (`messages_filter[spam_status]=suggested`), so it survives a refresh, Back from a
+message and a shared link. While it is set, the table lists messages instead of conversations, see
+[Conversations](#conversations).
 
 Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk actions:
 
@@ -46,7 +57,7 @@ Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk act
 | Mark as unread | core `MarkMessages::unread()` |
 | Move to folder | core `MoveMessages`, with a choice of the other selectable folders of the mailbox |
 | Mark as spam | core `MarkJunk::junk()`; not in the junk, sent and drafts folders |
-| Not spam | core `MarkJunk::notJunk()`; only in the junk folder |
+| Not spam | core `MarkJunk::notJunk()`; in the junk folder on every selected message, and in the inbox only when the mailbox's `spam_filter_mode` is not `off`, on the selected messages the spam filter suggested (others are left alone; a selection without one does not call the core at all) |
 
 Bulk actions only touch messages of the table's folder.
 
@@ -118,6 +129,24 @@ MailboxAccessTable::build($mailbox);
 | Row action | Remove, with a confirmation, to `mailbox.settings.access.destroy` |
 
 Viewing needs `manageMailbox`. An accessor the resolver has no label for shows as `{type} #{id}`.
+
+## SpamAllowlistTable
+
+```php
+SpamAllowlistTable::build($mailbox);
+```
+
+| Setting | Value |
+|---|---|
+| Rows | The allowlist entries of the mailbox and the global ones (`mailbox_id` `null`) |
+| Columns | E-mail address or domain (sortable), Source ("Handmatig", "Geen spam", "Standaard"), Applies to ("Deze mailbox" or "Alle mailboxen") |
+| Sort | `pattern` |
+| Global search | `pattern` |
+| Column toggle | off |
+| Per page | 50 |
+| Row action | Delete, with a confirmation, to `mailbox.settings.spam-allowlist.destroy`; only on entries of this mailbox |
+
+Viewing needs `manageMailbox`. See [Trusted senders](pages/settings.md#trusted-senders).
 
 ## MailboxTemplatesTable
 

@@ -93,6 +93,8 @@ read the raw message the core cached on that first fetch (core `cache.raw_hours`
 | GET | `settings/{mailbox}/templates/{template}` | `mailbox.settings.templates.edit` | `manageMailbox` |
 | PUT | `settings/{mailbox}/templates/{template}` | `mailbox.settings.templates.update` | `manageMailbox` |
 | DELETE | `settings/{mailbox}/templates/{template}` | `mailbox.settings.templates.destroy` | `manageMailbox` |
+| POST | `settings/{mailbox}/spam-allowlist` | `mailbox.settings.spam-allowlist.store` | `manageMailbox` |
+| DELETE | `settings/{mailbox}/spam-allowlist/{entry}` | `mailbox.settings.spam-allowlist.destroy` | `manageMailbox` |
 
 `mailbox.settings.accessors` is the search behind the access form, limited to 60 requests per minute per user
 (`VueMailboxServiceProvider::ACCESSOR_SEARCH_LIMITER`).

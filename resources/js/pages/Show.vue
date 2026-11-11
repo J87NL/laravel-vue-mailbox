@@ -5,7 +5,7 @@ import FolderList from '@mailbox/components/FolderList.vue'
 import MessageActions from '@mailbox/components/MessageActions.vue'
 import MessageFrame from '@mailbox/components/MessageFrame.vue'
 import NotificationToggle from '@mailbox/components/NotificationToggle.vue'
-import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary } from '@mailbox/types'
+import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary, SpamBadge } from '@mailbox/types'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
@@ -36,6 +36,8 @@ defineProps<{
         is_flagged: boolean
         is_answered: boolean
     }
+    spam?: SpamBadge | null
+    spamSuggested?: boolean
 }>()
 
 const { t } = useMailboxTranslations()
@@ -126,6 +128,7 @@ function addresses(list: MailAddress[] | null): string {
                     :folder-role="folderRole"
                     :folders="folders"
                     :message="message"
+                    :spam-suggested="spamSuggested"
                 />
                 <slot name="actions" />
                 <button type="button" :class="ui.button" @click="openFullscreen">{{ t('open_fullscreen') }}</button>
@@ -155,7 +158,13 @@ function addresses(list: MailAddress[] | null): string {
                     <h1 class="flex items-center gap-2 text-xl font-semibold">
                         <span v-if="message.is_flagged" class="shrink-0 text-amber-500" role="img" :aria-label="t('flagged')" :title="t('flagged')">⚑</span>
                         {{ message.subject ?? t('no_subject') }}
+                        <span
+                            v-if="spam"
+                            class="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-900 dark:text-amber-100"
+                            :title="spam.detail || undefined"
+                        >{{ spam.label }}</span>
                     </h1>
+                    <p v-if="spam?.detail" :class="[ui.muted, 'mt-1']">{{ spam.detail }}</p>
                     <dl class="mt-2 grid grid-cols-[4rem_1fr] gap-x-2 text-sm text-gray-600 dark:text-gray-300">
                         <dt>{{ t('from') }}</dt>
                         <dd>{{ message.from_name ? `${message.from_name} <${message.from_email}>` : message.from_email }}</dd>
@@ -208,6 +217,7 @@ function addresses(list: MailAddress[] | null): string {
                             :folder-role="folderRole"
                             :folders="folders"
                             :message="message"
+                            :spam-suggested="spamSuggested"
                         />
                         <slot name="actions" />
                     </div>
