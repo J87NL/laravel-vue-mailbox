@@ -157,3 +157,30 @@ it('only releases the suggested messages of a not spam bulk action', function ()
             ->pluck('pattern')
             ->all())->toBe(['friend@example.org']);
 });
+
+it('filters the message list on the messages the spam filter suggested', function (): void {
+    $mailbox = mailbox(['spam_filter_mode' => SpamFilterMode::Suggest]);
+    $inbox = folder($mailbox);
+    $suggested = storedMessage($inbox, 1, ['spam_status' => SpamStatus::Suggested]);
+    storedMessage($inbox, 2, ['spam_status' => SpamStatus::Released]);
+    storedMessage($inbox, 3);
+    $reader = member($mailbox, AccessLevel::Read);
+
+    $this->actingAs($reader)
+        ->get(route('mailbox.folders.show', [
+            $mailbox,
+            $inbox,
+            'messages_filter' => [
+                'spam_status' => 'suggested',
+            ],
+        ]))
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->has('table.data', 1)
+            ->where('table.data.0.id', $suggested->id));
+
+    $off = mailbox(['name' => 'Off']);
+    $this->actingAs(member($off, AccessLevel::Read));
+
+    expect(MessagesTable::build($inbox)->toArray()['filters']->pluck('key')->all())->toBe(['spam_status'])
+        ->and(MessagesTable::build(folder($off))->toArray()['filters']->all())->toBe([]);
+});

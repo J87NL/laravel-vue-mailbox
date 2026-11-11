@@ -16,6 +16,7 @@ use J87NL\Mailbox\Actions\MarkJunk;
 use J87NL\Mailbox\Actions\MarkMessages;
 use J87NL\Mailbox\Actions\MoveMessages;
 use J87NL\Mailbox\Enums\FolderRole;
+use J87NL\Mailbox\Enums\SpamStatus;
 use J87NL\Mailbox\Models\MailboxFolder;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\Mailbox\Support\DisplayTime;
@@ -145,6 +146,8 @@ final class MessagesTable extends MailboxTable
             ->emptyState(title: __('mailbox::mailbox.empty'))
             ->paginate(config('vue-mailbox.per_page'));
 
+        $this->spamFilter($table);
+
         if (! Gate::allows('workInMailbox', $this->folder->mailbox)) {
             return;
         }
@@ -202,6 +205,22 @@ final class MessagesTable extends MailboxTable
             $this->messages($ids)->filter(fn (MailboxMessage $message): bool => SpamSuggestion::offersNotJunk($mailbox, $message))->values(),
             auth()->user(),
         ));
+    }
+
+    private function spamFilter(TableBuilder $table): void
+    {
+        if (! $this->folder->mailbox->spamFilterMode()->isActive()) {
+            return;
+        }
+
+        $table->selectFilter(
+            'spam_status',
+            [
+                SpamStatus::Suggested->value => __('vue-mailbox::mailbox.spam_filter_suggested'),
+            ],
+            label: __('vue-mailbox::mailbox.spam_filter'),
+            noFilterOptionLabel: __('vue-mailbox::mailbox.spam_filter_all'),
+        );
     }
 
     /**

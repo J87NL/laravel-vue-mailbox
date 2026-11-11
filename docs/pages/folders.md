@@ -141,7 +141,8 @@ The table is a `MessagesTable` (TableBuilder). It polls every `vue-mailbox.poll_
 With the conversation view of the mailbox on, the table shows one row per conversation. See
 [Tables](../tables.md#conversations).
 
-Columns, bulk actions and row styling are described in [Tables](../tables.md#messagestable).
+Columns, the spam badge and the "Voorstellen" filter, bulk actions and row styling are described in
+[Tables](../tables.md#messagestable).
 
 ## Adding a folder
 

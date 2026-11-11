@@ -26,6 +26,7 @@ MessagesTable::build($folder);
 | Columns | From (name, or the address), Subject, Received |
 | Sort | `sent_at`, newest first |
 | Global search | `subject`, `from_email`, `from_name` |
+| Filter | "Spam" (`spam_status`), only while the mailbox's `spam_filter_mode` is not `off`: "Voorstellen" lists the messages the spam filter suggested |
 | Per page | `config('vue-mailbox.per_page')`, default 50 |
 | Poll | `config('vue-mailbox.poll_seconds')`, default 30 |
 | Row link | `mailbox.messages.show`, with the current `messages_*` query parameters (search, filters, sort, page) |
@@ -40,6 +41,11 @@ A message the core [spam filter](https://github.com/J87NL/laravel-mailbox/blob/m
 badge before the subject: "Mogelijk spam" (`spam_status` `suggested`) or "Door filter naar spam" (`moved`), with the
 score and the classifier's reason as its tooltip (`title`). Like the paperclip it is styled inline. `released` and no
 status show nothing.
+
+The "Spam" filter is a TableBuilder select filter on `spam_status` with one option, "Voorstellen" (`suggested`). Like
+the search it lives in the URL (`messages_filter[spam_status]=suggested`), so it survives a refresh, Back from a
+message and a shared link. While it is set, the table lists messages instead of conversations, see
+[Conversations](#conversations).
 
 Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk actions:
 
