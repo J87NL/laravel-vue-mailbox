@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.0 - 2026-11-11
+
+- **Requires `j87nl/laravel-mailbox` ^0.13**, which adds the spam filter: the mailbox's `spam_filter_mode`, the verdict on each message (`spam_score`, `spam_reason`, `spam_status`) and the allowlist. Publish the core migrations again and migrate. The "Spamfilter" select of the core `MailboxForm` shows on the mailbox settings page without changes here. See `docs/upgrading.md`.
+
 ## 0.13.1 - 2026-11-05
 
 - A message the mail server refuses (for example `550 5.7.1` for suspected spam) no longer ends in a server error page. Nothing is sent, the compose form keeps the message and shows the server's answer on the body field (new translation `send_failed`). See `docs/pages/compose.md#sending`.

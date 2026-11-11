@@ -10,7 +10,7 @@ Vue 3 / Inertia UI for [`j87nl/laravel-mailbox`](https://github.com/J87NL/larave
 ## Installation
 
 ```bash
-composer require j87nl/laravel-vue-mailbox:^0.10 -W
+composer require j87nl/laravel-vue-mailbox:^0.14 -W
 php artisan mailbox:install
 php artisan migrate
 ```

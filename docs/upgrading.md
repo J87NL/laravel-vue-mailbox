@@ -3,6 +3,21 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.13 to 0.14: spam filter
+
+- Needs `j87nl/laravel-mailbox` ^0.13, which adds the spam filter. Read its
+  [upgrade notes](https://github.com/J87NL/laravel-mailbox/blob/main/docs/upgrading.md) and
+  [spam filter docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/spam-filter.md). Publish the core
+  migrations again and migrate, it adds the spam columns and `mailbox_spam_allowlist`:
+
+  ```bash
+  php artisan vendor:publish --tag=mailbox-migrations
+  php artisan migrate
+  ```
+
+- The mailbox settings page shows the "Spamfilter" select of the core `MailboxForm`, `off` by default. Nothing changes
+  for a mailbox until it is set to another mode and the app binds a classifier.
+
 ## From 0.12 to 0.13: Gmail All Mail
 
 - Needs `j87nl/laravel-mailbox` ^0.12, which syncs Gmail's All Mail within `sync.initial_days`. Read its

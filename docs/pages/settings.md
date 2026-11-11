@@ -106,3 +106,10 @@ page of the mailbox with a `success` flash message.
 The general section of the form has "Bevestigen bij verwijderen" (`confirm_delete`, off by default). When it is on,
 deleting messages from the message view or the bulk action asks for confirmation through the host's `confirm` dialog.
 When it is off, they are deleted right away. Deleting a contact, template, access row or mailbox always asks.
+
+## Spam filter
+
+The form has the "Spamfilter" select of the core `MailboxForm` (`spam_filter_mode`: `off`, `measure`, `suggest` or
+`auto`, `off` by default). The core does the filtering, see its
+[spam filter docs](https://github.com/J87NL/laravel-mailbox/blob/main/docs/spam-filter.md). Without a classifier bound
+in the app, no mode does anything.
