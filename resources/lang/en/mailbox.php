@@ -5,6 +5,9 @@ declare(strict_types=1);
 return [
     'close' => 'Close',
     'conversation' => 'Conversation',
+    'delete_conversation_title' => 'What do you want to delete?',
+    'delete_this_message' => 'Only this message',
+    'delete_whole_conversation' => 'Whole conversation',
     'fetch_older' => 'Fetch older messages',
     'fetching_older' => 'Fetching…',
     'flagged' => 'Flagged',

@@ -2,6 +2,7 @@
 import { Link, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import type { MailboxFolder } from '../types'
+import { useMailboxChoice } from '../choice'
 import { useMailboxConfirm } from '../confirm'
 import { useMailboxTranslations } from '../translations'
 import { ui } from '../ui'
@@ -11,6 +12,7 @@ const props = defineProps<{
     composeUrl: string | null
     confirmDelete?: boolean
     contactUrl: string | null
+    conversationCount?: number
     folderRole?: MailboxFolder['role']
     folders: MailboxFolder[]
     message: {
@@ -22,6 +24,7 @@ const props = defineProps<{
 
 const { t } = useMailboxTranslations()
 const confirm = useMailboxConfirm()
+const choose = useMailboxChoice()
 
 const moveTarget = ref<number | ''>('')
 
@@ -37,16 +40,41 @@ const junkAction = computed((): 'junk' | 'not_junk' | null => {
     return 'junk'
 })
 
-async function act(action: string, extra: Record<string, unknown> = {}): Promise<void> {
+function act(action: string, extra: Record<string, unknown> = {}): void {
     if (!props.actionsUrl) {
         return
     }
 
-    if (action === 'delete' && props.confirmDelete && !(await confirm(t('message_delete_confirm')))) {
-        return
+    router.post(props.actionsUrl, { action, ids: [props.message.id], ...extra }, { preserveScroll: true, preserveState: true })
+}
+
+async function deleteAction(): Promise<string | null> {
+    if (choose && (props.conversationCount ?? 0) > 1) {
+        const choice = await choose({
+            title: t('delete_conversation_title'),
+            choices: [
+                { value: 'delete', label: t('delete_this_message') },
+                { value: 'delete_conversation', label: t('delete_whole_conversation'), destructive: true },
+                { value: 'cancel', label: t('cancel') },
+            ],
+        })
+
+        return choice === 'delete' || choice === 'delete_conversation' ? choice : null
     }
 
-    router.post(props.actionsUrl, { action, ids: [props.message.id], ...extra }, { preserveScroll: true, preserveState: true })
+    if (props.confirmDelete && !(await confirm(t('message_delete_confirm')))) {
+        return null
+    }
+
+    return 'delete'
+}
+
+async function remove(): Promise<void> {
+    const action = await deleteAction()
+
+    if (action) {
+        act(action)
+    }
 }
 
 function move(): void {
@@ -54,7 +82,7 @@ function move(): void {
         return
     }
 
-    void act('move', { folder_id: moveTarget.value })
+    act('move', { folder_id: moveTarget.value })
 }
 
 function addContact(): void {
@@ -84,7 +112,7 @@ function replyUrl(mode: string): string {
             <button type="button" :class="ui.button" @click="act('archive')">{{ t('archive') }}</button>
             <button v-if="junkAction" type="button" :class="ui.button" @click="act(junkAction)">{{ t(junkAction === 'junk' ? 'mark_junk' : 'mark_not_junk') }}</button>
             <button v-if="spamSuggested && junkAction === 'junk'" type="button" :class="ui.button" @click="act('not_junk')">{{ t('mark_not_junk') }}</button>
-            <button type="button" :class="ui.dangerButton" @click="act('delete')">{{ t('delete') }}</button>
+            <button type="button" :class="ui.dangerButton" @click="remove">{{ t('delete') }}</button>
             <button type="button" :class="ui.button" @click="act('unread')">{{ t('mark_unread') }}</button>
             <button type="button" :class="ui.button" @click="act(message.is_flagged ? 'unflag' : 'flag')">
                 {{ message.is_flagged ? t('unflag') : t('flag') }}

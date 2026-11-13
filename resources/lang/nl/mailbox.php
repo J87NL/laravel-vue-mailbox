@@ -5,6 +5,9 @@ declare(strict_types=1);
 return [
     'close' => 'Sluiten',
     'conversation' => 'Gesprek',
+    'delete_conversation_title' => 'Wat wil je verwijderen?',
+    'delete_this_message' => 'Alleen dit bericht',
+    'delete_whole_conversation' => 'Hele conversatie',
     'fetch_older' => 'Oudere berichten ophalen',
     'fetching_older' => 'Bezig met ophalen…',
     'flagged' => 'Gemarkeerd',

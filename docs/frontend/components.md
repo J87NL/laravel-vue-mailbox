@@ -10,6 +10,7 @@ Everything below is imported through the `@mailbox` alias, which points to
 | `@mailbox/components/MessageActions.vue` | Reply, forward and message action buttons of the message view |
 | `@mailbox/components/NotificationToggle.vue` | The button that turns browser notifications on and off, for one mailbox with `mailbox-id` or for all without it, see [Browser notifications](../notifications.md) |
 | `@mailbox/notifications` | `useMailboxNotifications()`, `MAILBOX_NOTIFICATIONS`, `MAILBOX_NOTIFICATIONS_STORAGE_KEY` |
+| `@mailbox/choice` | `useMailboxChoice()`, `MAILBOX_CHOICE` and the types `MailboxChoice`, `MailboxChoiceOptions`, `MailboxChoiceOption` |
 | `@mailbox/confirm` | `useMailboxConfirm()`, `MAILBOX_CONFIRM` |
 | `@mailbox/padding` | `useMailboxPagePadding()`, `MAILBOX_PAGE_PADDING` |
 | `@mailbox/translations` | `useMailboxTranslations()`, `MAILBOX_TRANSLATIONS` |
@@ -53,7 +54,8 @@ it sends `html`. See [Message view](../pages/messages.md#the-message-frame).
 
 ## MessageActions
 
-The reply, reply all, forward, archive, delete (with a confirmation through `confirm`), mark unread, flag and move
+The reply, reply all, forward, archive, delete (with a confirmation through `confirm`, or the choice between this message and the
+whole conversation through `mailboxChoice`, see [Choices](#choices)), mark unread, flag and move
 controls, and "Add to address book". It renders only the controls whose URL it gets, inside a `display: contents` wrapper, so they lay out as items of
 your toolbar. Every action posts with `preserveState`; flag and unflag return to the
 message, the other actions go to the folder.
@@ -66,6 +68,7 @@ message, the other actions go to the folder.
 | `folders` | `MailboxFolder[]` | The `folders` prop, for the move select |
 | `message` | `{ id: number; is_flagged: boolean }` | The `message` prop |
 | `confirmDelete` | `boolean` | The `confirmDelete` prop |
+| `conversationCount` | `number` | The number of entries in the `conversation` prop: above 1, Delete asks this message or the whole conversation |
 | `folderRole` | `MailboxFolder['role']` | The `folderRole` prop, picks "Markeer als spam" or "Geen spam" |
 | `spamSuggested` | `boolean` | The `spamSuggested` prop: also offers "Geen spam" on a suggested message in the inbox |
 
@@ -145,6 +148,29 @@ app.provide('confirm', (message: string): Promise<boolean> => openConfirmDialog(
 
 Without a provided function every confirmation resolves to `false`, so the delete does nothing. `j87nl/laravel-vue-cms`
 uses the same key, so one provide serves both.
+
+## Choices
+
+Delete in the message view of a message whose conversation lists more than one message asks "Alleen dit bericht",
+"Hele conversatie" or "Annuleren" through `useMailboxChoice()` from `@mailbox/choice`. It injects the function your app
+provides under the key `mailboxChoice` (`MAILBOX_CHOICE`). This is a choice, not a confirmation, so it is asked also when
+the mailbox has "Bevestigen bij verwijderen" off. The function gets a title and the choices, and resolves to the `value`
+of the chosen one, or `null` when the user closes the dialog:
+
+```ts
+import type { MailboxChoiceOptions } from '@mailbox/choice';
+
+app.provide('mailboxChoice', (options: MailboxChoiceOptions): Promise<string | null> => openChoiceDialog(options));
+```
+
+`options` is `{ title: string, choices: { value: string, label: string, destructive?: boolean }[] }`. Show one button
+per choice in the given order and style a `destructive` one as a danger button. The last choice is the cancel button
+(value `cancel`); any value other than `delete` or `delete_conversation`, and `null`, does nothing. "Hele conversatie"
+posts `delete_conversation`, see [Message actions](../pages/folders.md#message-actions).
+
+Without a provided function the message view deletes only the open message, as before: with a confirmation through
+`confirm` when `confirmDelete` is true. Like the `confirm` dialog, the choice dialog needs a z-index above `40` to show
+on top of the full-screen message.
 
 ## Padding inside your own layout
 

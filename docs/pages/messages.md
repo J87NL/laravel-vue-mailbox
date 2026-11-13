@@ -28,9 +28,9 @@ search. Other query parameters, such as `images`, are not passed on. "Load image
 | `attachments` | `MailboxAttachment[]` | Downloadable attachments, see below |
 | `backUrl` | `string` | URL of the message's folder, with the list query (see below) |
 | `composeUrl` | `string \| null` | Compose URL, `null` without `workInMailbox` |
-| `confirmDelete` | `boolean` | The mailbox's `confirm_delete`: Delete asks for confirmation first |
+| `confirmDelete` | `boolean` | The mailbox's `confirm_delete`: Delete asks for confirmation first, unless the conversation lists more than one message and the host provides `mailboxChoice` |
 | `contactUrl` | `string \| null` | "Add to address book" URL, `null` without `workInMailbox` or without a sender address |
-| `conversation` | `ConversationEntry[]` | The messages of the conversation, oldest first, see below; empty when the conversation view is off or the message is alone |
+| `conversation` | `ConversationEntry[]` | The messages of the conversation, oldest first, see below; empty when the conversation view is off or the message is alone. With more than one entry Delete asks this message or the whole conversation |
 | `folderRole` | `string` | Role of the message's folder (`inbox`, `junk`, …), picks the spam button |
 | `folders` | `MailboxFolder[]` | Folder list, see [Folders and message list](folders.md#folder-list) |
 | `hasRemoteImages` | `boolean` | The HTML references remote images that are blocked |
@@ -83,7 +83,7 @@ button close it, and focus returns to the button. While it is open, every other 
 `inert`, so keyboard focus and assistive technology stay inside the dialog; elements added later, such as the host's
 confirm dialog, are not affected. Flag and unflag keep the dialog open (`preserveState`); mark unread, archive,
 delete and move go to the folder. The host's confirm dialog, which the delete action asks through
-`confirm`, needs a higher z-index than `40` to show on top; the dialogs of shadcn-vue and reka-ui use `z-50`.
+`confirm`, and its choice dialog (`mailboxChoice`) need a higher z-index than `40` to show on top; the dialogs of shadcn-vue and reka-ui use `z-50`.
 
 ## Conversation
 
@@ -127,7 +127,9 @@ The default page offers, depending on the URLs it gets:
   [Compose, reply and forward](compose.md).
 - Archive, "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), "Geen spam" next to
   "Markeer als spam" when `spamSuggested` is true, Delete (with a
-  confirmation only when `confirmDelete` is true), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
+  confirmation only when `confirmDelete` is true; when `conversation` lists more than one message it asks "Alleen dit
+  bericht" or "Hele conversatie" instead, through the host's `mailboxChoice`, see
+  [Choices](../frontend/components.md#choices)), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
   `actionsUrl`. See [Message actions](folders.md#message-actions).
 - Add to address book, posted to `contactUrl`.
 - Full screen, see above.

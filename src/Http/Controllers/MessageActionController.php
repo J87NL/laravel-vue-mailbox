@@ -17,6 +17,7 @@ use J87NL\Mailbox\Actions\MoveMessages;
 use J87NL\Mailbox\Enums\FolderRole;
 use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
+use J87NL\VueMailbox\Support\ConversationMessages;
 use J87NL\VueMailbox\Support\FolderListQuery;
 use J87NL\VueMailbox\Support\SpamSuggestion;
 
@@ -30,6 +31,7 @@ class MessageActionController extends Controller
                 Rule::in([
                     'archive',
                     'delete',
+                    'delete_conversation',
                     'flag',
                     'junk',
                     'move',
@@ -59,10 +61,12 @@ class MessageActionController extends Controller
         $user = $request->user();
 
         abort_unless($this->fitsFolders($mailbox, $data['action'], $messages), 422);
+        abort_if($data['action'] === 'delete_conversation' && (count($data['ids']) !== 1 || $messages->count() !== 1), 422);
 
         match ($data['action']) {
             'archive' => app(ArchiveMessages::class)->handle($mailbox, $messages, $user),
             'delete' => app(DeleteMessages::class)->handle($mailbox, $messages, $user),
+            'delete_conversation' => app(DeleteMessages::class)->handle($mailbox, app(ConversationMessages::class)->toDelete($mailbox, $messages->sole()), $user),
             'flag' => app(MarkMessages::class)->flag($messages, $user),
             'junk' => app(MarkJunk::class)->junk($mailbox, $messages, $user),
             'not_junk' => app(MarkJunk::class)->notJunk($mailbox, $messages, $user),
