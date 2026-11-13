@@ -225,6 +225,14 @@ it('refuses a conversation delete for anything but one message of the mailbox', 
         'second',
     ]],
     'a message of another mailbox' => [['foreign']],
+    'a message and one of another mailbox' => [[
+        'first',
+        'foreign',
+    ]],
+    'the same message twice' => [[
+        'first',
+        'first',
+    ]],
 ]);
 
 it('refuses a conversation delete without write access', function (): void {

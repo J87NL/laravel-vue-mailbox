@@ -61,7 +61,7 @@ class MessageActionController extends Controller
         $user = $request->user();
 
         abort_unless($this->fitsFolders($mailbox, $data['action'], $messages), 422);
-        abort_if($data['action'] === 'delete_conversation' && $messages->count() !== 1, 422);
+        abort_if($data['action'] === 'delete_conversation' && (count($data['ids']) !== 1 || $messages->count() !== 1), 422);
 
         match ($data['action']) {
             'archive' => app(ArchiveMessages::class)->handle($mailbox, $messages, $user),
