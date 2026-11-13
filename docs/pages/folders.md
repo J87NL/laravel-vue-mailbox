@@ -160,11 +160,19 @@ core action, see [message actions](https://github.com/J87NL/laravel-mailbox/blob
 
 | Field | Rules |
 |---|---|
-| `action` | required, one of `archive`, `delete`, `flag`, `junk`, `move`, `not_junk`, `read`, `unflag`, `unread` |
+| `action` | required, one of `archive`, `delete`, `delete_conversation`, `flag`, `junk`, `move`, `not_junk`, `read`, `unflag`, `unread` |
 | `ids` | required array of message ids, at most 500 |
 | `folder_id` | required when `action` is `move`, a folder of the same mailbox |
 
 Ids of messages in other mailboxes are ignored. A `folder_id` of another mailbox answers `404`.
+
+`delete_conversation` deletes the conversation of one message: `ids` holds exactly that message, anything else answers
+`422`. The server looks up the conversation itself, all messages of the mailbox with the same conversation key across
+folders, with the same All Mail rule as the [conversation on the message page](messages.md#conversation) but without
+its limit of 50. Outside the trash every message of the conversation that is not in the trash moves to the trash, also
+from Sent or Archive, and messages already in the trash stay there. On a message in the trash it permanently deletes
+only the messages of the conversation that are in the trash. Without the conversation view, or for a message without a
+conversation key, it deletes only that message. Both go through the core `DeleteMessages`.
 
 `junk` ("Markeer als spam") and `not_junk` ("Geen spam") call the core `MarkJunk`: `junk` sets the IMAP keyword
 `$Junk` and moves the messages to the junk folder, `not_junk` sets `$NotJunk` and moves them to the inbox. Both are

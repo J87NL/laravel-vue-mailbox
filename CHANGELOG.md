@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.15.0 - 2026-11-13
+- Delete a whole conversation: `mailbox.messages.actions` accepts `delete_conversation` with the id of one message (any other selection answers `422`). The server looks up the conversation itself, across folders and without the limit of 50 of the message page, with the same All Mail rule. Outside the trash it moves every message of the conversation that is not in the trash to the trash and leaves the messages already there alone. On a message in the trash it permanently deletes only the conversation's messages in the trash. Same `workInMailbox` gate as `delete`. New class `J87NL\VueMailbox\Support\ConversationMessages`, which the message page now also uses for its conversation list. See `docs/pages/folders.md#message-actions`.
+
 ## 0.14.1 - 2026-11-11
 - Allows `j87nl/laravel-mailbox` ^0.14 next to ^0.13, so apps can install the core release that stores the mail server's spam verdict (`server_spam_flag`, `server_spam_score`). Nothing changes in this package. See `docs/upgrading.md`.
 
