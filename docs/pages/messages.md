@@ -127,7 +127,9 @@ The default page offers, depending on the URLs it gets:
   [Compose, reply and forward](compose.md).
 - Archive, "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), "Geen spam" next to
   "Markeer als spam" when `spamSuggested` is true, Delete (with a
-  confirmation only when `confirmDelete` is true), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
+  confirmation only when `confirmDelete` is true; when `conversation` lists more than one message it asks "Alleen dit
+  bericht" or "Hele conversatie" instead, through the host's `mailboxChoice`, see
+  [Choices](../frontend/components.md#choices)), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
   `actionsUrl`. See [Message actions](folders.md#message-actions).
 - Add to address book, posted to `contactUrl`.
 - Full screen, see above.

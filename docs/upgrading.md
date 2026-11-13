@@ -3,6 +3,17 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.14 to 0.15: delete a whole conversation
+
+- Rebuild the frontend (`npm run build`). Delete in the message view of a conversation with more than one message
+  asks "Alleen dit bericht" or "Hele conversatie" through the function the app provides under the Vue injection key
+  `mailboxChoice`. Provide one, see [Components and helpers](frontend/components.md#choices). Without it Delete keeps
+  removing only the open message.
+- An app with copied pages: `Show` passes the new `conversationCount` prop (`conversation?.length ?? 0`) to both
+  `MessageActions`. Nothing else changes for it.
+- Nothing to publish or migrate. The new action `delete_conversation` runs on the existing `mailbox.messages.actions`
+  route.
+
 ## 0.14.1: core 0.14
 
 - Also accepts `j87nl/laravel-mailbox` ^0.14, which stores the mail server's spam verdict on each message. Run
