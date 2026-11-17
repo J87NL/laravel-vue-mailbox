@@ -34,6 +34,17 @@ The server finds each neighbour with at most two `limit 1` queries on the list q
 sent_at)` index of the core, so it never loads the list. The page number in the query (`messages_page`) is kept as it
 was, so Back lands on the page the list was on before, also after stepping past its last row.
 
+The default page shows "Vorige" and "Volgende" (`previous_message`, `next_message`) next to Back, disabled at the ends
+of the list.
+
+### Keyboard shortcuts
+
+J opens the next message and K the previous one, the Gmail keys: in the default newest-first list J goes down to an
+older message and K up to a newer one. The keys do nothing while the focus is in an input, a textarea, a select, an
+editable element or a modal dialog (the full-screen view and the host's dialogs included), with Ctrl, Alt, Shift or
+Meta held, or while the message frame has the focus. The page uses `useMessageHotkeys()` from `@mailbox/hotkeys`, see
+[Components and helpers](../frontend/components.md#message-hotkeys).
+
 ## Props
 
 | Prop | Type | Description |
@@ -148,6 +159,7 @@ The default page offers, depending on the URLs it gets:
   [Choices](../frontend/components.md#choices)), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
   `actionsUrl`. See [Message actions](folders.md#message-actions).
 - Add to address book, posted to `contactUrl`.
+- Previous and Next, see [Previous and next](#previous-and-next).
 - Full screen, see above.
 - The toggle for browser notifications of this mailbox, see [Browser notifications](../notifications.md).
 
