@@ -20,6 +20,44 @@ page) on the row link. The message page passes them on to `backUrl`, `composeUrl
 links, so Back, the redirect after an action and the redirect after sending a reply land on the same list with the same
 search. Other query parameters, such as `images`, are not passed on. "Load images" keeps the current query.
 
+## Previous and next
+
+`previousUrl` and `nextUrl` link the message above and below the open one in the message list it was opened from:
+the folder of the message, with the search, filters and sort of the list query (`messages_*`), which the links keep.
+The list is ordered on `sent_at`, newest first unless the query sorts it oldest first (`messages_sort=sent_at`);
+messages with the same date follow their id, and messages without a date come last in the newest-first order. With
+the conversation view on and no search or filter, the list has one row per conversation, so the links go to the latest
+message in that folder of the previous or next conversation, also when an older message of the conversation is open.
+Both are `null` at the ends of the list.
+
+The server finds each neighbour with at most two `limit 1` queries on the list query, on the `(mailbox_folder_id,
+sent_at)` index of the core, so it never loads the list. The page number in the query (`messages_page`) is kept as it
+was, so Back lands on the page the list was on before, also after stepping past its last row.
+
+The default page shows "Vorige" and "Volgende" (`previous_message`, `next_message`) next to Back, disabled at the ends
+of the list.
+
+### Keyboard shortcuts
+
+J opens the next message and K the previous one, the Gmail keys: in the default newest-first list J goes down to an
+older message and K up to a newer one. The keys do nothing while the focus is in an input, a textarea, a select, an
+editable element or a modal dialog (the full-screen view and the host's dialogs included), with Ctrl, Alt, Shift or
+Meta held, or while the message frame has the focus. The page uses `useMessageHotkeys()` from `@mailbox/hotkeys`, see
+[Components and helpers](../frontend/components.md#message-hotkeys).
+
+## Open the next message after archiving
+
+Next to Archive the default page has the checkbox "Daarna volgende openen" (`open_next_after_archive`). With it on,
+Archive posts `open_next: true` and the server lands on the next message of the list (the one "Volgende" pointed to)
+instead of the folder, or on the folder when the archived message was the last one. The next message opens with a fresh page state
+(full-screen view closed, scrolled to the top). See
+[Message actions](folders.md#message-actions).
+
+The choice is a personal reading habit, not a property of a shared mailbox, so it is stored per browser in
+`localStorage` under `vue-mailbox.open-next-after-archive` (`on` or `off`), like the
+[notification toggle](../notifications.md). It is off until the user turns it on and holds for every mailbox. The
+toolbar and the full-screen view share it. A copied page uses `useOpenNextAfterArchive()` from `@mailbox/archiveNext`.
+
 ## Props
 
 | Prop | Type | Description |
@@ -39,6 +77,8 @@ search. Other query parameters, such as `images`, are not passed on. "Load image
 | `imageOrigin` | `string` | Scheme, host and port of the current request, for the image policy of the frame |
 | `mailbox` | `object` | `email`, `id`, `name` of the mailbox |
 | `message` | `object` | `id`, `subject`, `from_email`, `from_name`, `to`, `cc`, `sent_at`, `is_flagged`, `is_answered` |
+| `nextUrl` | `string \| null` | The next message of the list, `null` at its end, see [Previous and next](#previous-and-next) |
+| `previousUrl` | `string \| null` | The previous message of the list, `null` at its start |
 | `remoteImages` | `boolean` | Remote images are allowed in this render |
 | `spamSuggested` | `boolean` | The spam filter suggested the message, it is in the inbox and the mailbox's `spam_filter_mode` is not `off`: offers "Geen spam" next to "Markeer als spam" |
 | `spam` | `SpamBadge \| null` | The spam filter's verdict, see [Spam filter](#spam-filter); `null` when the message is not marked |
@@ -125,13 +165,14 @@ The default page offers, depending on the URLs it gets:
 
 - Reply, Reply all and Forward, linking to `composeUrl` with `?reply={id}&mode=reply|reply_all|forward`. See
   [Compose, reply and forward](compose.md).
-- Archive, "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), "Geen spam" next to
+- Archive with the "Daarna volgende openen" checkbox (see [Open the next message after archiving](#open-the-next-message-after-archiving)), "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), "Geen spam" next to
   "Markeer als spam" when `spamSuggested` is true, Delete (with a
   confirmation only when `confirmDelete` is true; when `conversation` lists more than one message it asks "Alleen dit
   bericht" or "Hele conversatie" instead, through the host's `mailboxChoice`, see
   [Choices](../frontend/components.md#choices)), Mark unread, Flag or Unflag, and a "Move to" select, all posted to
   `actionsUrl`. See [Message actions](folders.md#message-actions).
 - Add to address book, posted to `contactUrl`.
+- Previous and Next, see [Previous and next](#previous-and-next).
 - Full screen, see above.
 - The toggle for browser notifications of this mailbox, see [Browser notifications](../notifications.md).
 

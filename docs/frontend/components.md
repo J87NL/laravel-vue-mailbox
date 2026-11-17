@@ -10,8 +10,10 @@ Everything below is imported through the `@mailbox` alias, which points to
 | `@mailbox/components/MessageActions.vue` | Reply, forward and message action buttons of the message view |
 | `@mailbox/components/NotificationToggle.vue` | The button that turns browser notifications on and off, for one mailbox with `mailbox-id` or for all without it, see [Browser notifications](../notifications.md) |
 | `@mailbox/notifications` | `useMailboxNotifications()`, `MAILBOX_NOTIFICATIONS`, `MAILBOX_NOTIFICATIONS_STORAGE_KEY` |
+| `@mailbox/archiveNext` | `useOpenNextAfterArchive()` (`{ openNext, setOpenNext }`) and `MAILBOX_OPEN_NEXT_STORAGE_KEY`, the "Daarna volgende openen" preference of this browser, see [Open the next message after archiving](../pages/messages.md#open-the-next-message-after-archiving) |
 | `@mailbox/choice` | `useMailboxChoice()`, `MAILBOX_CHOICE` and the types `MailboxChoice`, `MailboxChoiceOptions`, `MailboxChoiceOption` |
 | `@mailbox/confirm` | `useMailboxConfirm()`, `MAILBOX_CONFIRM` |
+| `@mailbox/hotkeys` | `useMessageHotkeys()` and the type `MessageHotkeysOptions`, see [Message hotkeys](#message-hotkeys) |
 | `@mailbox/padding` | `useMailboxPagePadding()`, `MAILBOX_PAGE_PADDING` |
 | `@mailbox/translations` | `useMailboxTranslations()`, `MAILBOX_TRANSLATIONS` |
 | `@mailbox/types` | `MailboxFolder`, `MailboxSummary`, `MailAddress`, `MailboxAttachment`, `AuditEntry` |
@@ -186,3 +188,21 @@ provide('pagePadding', false)
 
 `useMailboxPagePadding()` from `@mailbox/padding` reads the key. Without a provider it returns `true`, so the pages look
 as before. The other mailbox pages keep their padding.
+
+## Message hotkeys
+
+`useMessageHotkeys({ next, previous })` from `@mailbox/hotkeys` listens on `window` while the component is mounted and
+visits `next()` on J and `previous()` on K with the Inertia router. A function that returns `null` leaves the key alone.
+Keys typed in an input, textarea, select, editable element or modal dialog (`aria-modal="true"`), and keys with Ctrl,
+Alt, Shift or Meta, and a held key that repeats, are ignored. The host's confirm and choice dialogs need
+`aria-modal="true"` on their dialog element (the dialogs of reka-ui and shadcn-vue have it), otherwise J and K still
+navigate behind an open dialog. The message view passes its `nextUrl` and `previousUrl`; a copied page does the same:
+
+```ts
+import { useMessageHotkeys } from '@mailbox/hotkeys';
+
+useMessageHotkeys({
+    next: () => props.nextUrl ?? null,
+    previous: () => props.previousUrl ?? null,
+});
+```

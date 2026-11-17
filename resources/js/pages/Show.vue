@@ -5,11 +5,12 @@ import FolderList from '@mailbox/components/FolderList.vue'
 import MessageActions from '@mailbox/components/MessageActions.vue'
 import MessageFrame from '@mailbox/components/MessageFrame.vue'
 import NotificationToggle from '@mailbox/components/NotificationToggle.vue'
+import { useMessageHotkeys } from '@mailbox/hotkeys'
 import type { AuditEntry, ConversationEntry, MailAddress, MailboxAttachment, MailboxFolder, MailboxSummary, SpamBadge } from '@mailbox/types'
 import { useMailboxTranslations } from '@mailbox/translations'
 import { ui } from '@mailbox/ui'
 
-defineProps<{
+const props = defineProps<{
     actionsUrl: string | null
     attachments: MailboxAttachment[]
     backUrl: string
@@ -36,12 +37,19 @@ defineProps<{
         is_flagged: boolean
         is_answered: boolean
     }
+    nextUrl?: string | null
+    previousUrl?: string | null
     spam?: SpamBadge | null
     spamSuggested?: boolean
 }>()
 
 const { t } = useMailboxTranslations()
 const page = usePage()
+
+useMessageHotkeys({
+    next: () => props.nextUrl ?? null,
+    previous: () => props.previousUrl ?? null,
+})
 
 const dialog = ref<HTMLElement | null>(null)
 const fullscreen = ref(false)
@@ -120,6 +128,22 @@ function addresses(list: MailAddress[] | null): string {
         <main class="flex min-w-0 flex-1 flex-col gap-4">
             <div :class="ui.toolbar">
                 <Link :href="backUrl" :class="ui.button">{{ t('back') }}</Link>
+                <Link
+                    v-if="previousUrl"
+                    :href="previousUrl"
+                    :class="ui.button"
+                    :title="t('previous_message_hint')"
+                    aria-keyshortcuts="K"
+                >{{ t('previous_message') }}</Link>
+                <button v-else type="button" :class="ui.button" disabled>{{ t('previous_message') }}</button>
+                <Link
+                    v-if="nextUrl"
+                    :href="nextUrl"
+                    :class="ui.button"
+                    :title="t('next_message_hint')"
+                    aria-keyshortcuts="J"
+                >{{ t('next_message') }}</Link>
+                <button v-else type="button" :class="ui.button" disabled>{{ t('next_message') }}</button>
                 <MessageActions
                     :actions-url="actionsUrl"
                     :compose-url="composeUrl"

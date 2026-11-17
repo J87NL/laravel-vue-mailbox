@@ -2,6 +2,7 @@
 import { Link, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import type { MailboxFolder } from '../types'
+import { useOpenNextAfterArchive } from '../archiveNext'
 import { useMailboxChoice } from '../choice'
 import { useMailboxConfirm } from '../confirm'
 import { useMailboxTranslations } from '../translations'
@@ -25,6 +26,7 @@ const props = defineProps<{
 const { t } = useMailboxTranslations()
 const confirm = useMailboxConfirm()
 const choose = useMailboxChoice()
+const { openNext, setOpenNext } = useOpenNextAfterArchive()
 
 const moveTarget = ref<number | ''>('')
 
@@ -77,6 +79,16 @@ async function remove(): Promise<void> {
     }
 }
 
+function archive(): void {
+    if (!openNext.value || !props.actionsUrl) {
+        act('archive')
+
+        return
+    }
+
+    router.post(props.actionsUrl, { action: 'archive', ids: [props.message.id], open_next: true })
+}
+
 function move(): void {
     if (moveTarget.value === '') {
         return
@@ -109,7 +121,16 @@ function replyUrl(mode: string): string {
             <Link :href="replyUrl('forward')" :class="ui.button">{{ t('forward') }}</Link>
         </template>
         <template v-if="actionsUrl">
-            <button type="button" :class="ui.button" @click="act('archive')">{{ t('archive') }}</button>
+            <button type="button" :class="ui.button" @click="archive">{{ t('archive') }}</button>
+            <label class="inline-flex items-center gap-1.5 text-sm" :title="t('open_next_after_archive_hint')">
+                <input
+                    type="checkbox"
+                    class="rounded border-gray-300 dark:border-gray-600"
+                    :checked="openNext"
+                    @change="setOpenNext(($event.target as HTMLInputElement).checked)"
+                >
+                {{ t('open_next_after_archive') }}
+            </label>
             <button v-if="junkAction" type="button" :class="ui.button" @click="act(junkAction)">{{ t(junkAction === 'junk' ? 'mark_junk' : 'mark_not_junk') }}</button>
             <button v-if="spamSuggested && junkAction === 'junk'" type="button" :class="ui.button" @click="act('not_junk')">{{ t('mark_not_junk') }}</button>
             <button type="button" :class="ui.dangerButton" @click="remove">{{ t('delete') }}</button>
