@@ -76,7 +76,10 @@ class MessageNeighbours
     private function descending(Builder $list): bool
     {
         $order = collect($list->getQuery()->orders ?? [])
-            ->first(fn (array $order): bool => ($order['column'] ?? null) === 'sent_at');
+            ->first(fn (array $order): bool => in_array($order['column'] ?? null, [
+                'sent_at',
+                'mailbox_messages.sent_at',
+            ], true));
 
         return is_null($order) || mb_strtolower((string) $order['direction']) === 'desc';
     }
@@ -89,6 +92,7 @@ class MessageNeighbours
     {
         foreach ($this->segments($anchor, $larger) as $segment) {
             $id = $segment($list->clone()
+                ->select('mailbox_messages.id')
                 ->reorder()
                 ->when($excludedIds !== [], fn (Builder $query): Builder => $query->whereKeyNot($excludedIds)))
                 ->value('mailbox_messages.id');

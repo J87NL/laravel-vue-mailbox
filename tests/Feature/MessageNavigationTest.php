@@ -239,3 +239,41 @@ it('only opens the next message after archiving a single message', function (str
         ],
     ],
 ]);
+
+it('opens the next conversation after archiving in the conversation view', function (): void {
+    [$mailbox, , $messages] = navigableInbox(['conversation_view' => true]);
+    $latestInThread = storedMessage($messages['newest']->folder, 5, [
+        'sent_at' => now()->subMinutes(30),
+        'thread_key' => 'thread@example.org',
+    ]);
+    storedMessage($messages['newest']->folder, 6, [
+        'sent_at' => now()->subDays(3),
+        'thread_key' => 'thread@example.org',
+    ]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.messages.actions', $mailbox), [
+            'action' => 'archive',
+            'ids' => [$latestInThread->id],
+            'open_next' => true,
+        ])
+        ->assertRedirect(messageUrl($mailbox, $messages['newest']));
+});
+
+it('ignores open next for a message of another mailbox', function (): void {
+    [$mailbox] = navigableInbox();
+    $other = mailbox(['email' => 'other@example.com']);
+    $foreign = storedMessage(folder($other), 1, ['sent_at' => now()]);
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.messages.actions', $mailbox), [
+            'action' => 'archive',
+            'ids' => [$foreign->id],
+            'open_next' => true,
+        ])
+        ->assertRedirect(route('mailbox.folders.show', $mailbox));
+
+    expect(MailboxMessage::query()
+        ->whereKey($foreign->id)
+        ->exists())->toBeTrue();
+});
