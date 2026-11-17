@@ -80,7 +80,13 @@ async function remove(): Promise<void> {
 }
 
 function archive(): void {
-    act('archive', openNext.value ? { open_next: true } : {})
+    if (!openNext.value || !props.actionsUrl) {
+        act('archive')
+
+        return
+    }
+
+    router.post(props.actionsUrl, { action: 'archive', ids: [props.message.id], open_next: true })
 }
 
 function move(): void {

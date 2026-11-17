@@ -49,7 +49,8 @@ Meta held, or while the message frame has the focus. The page uses `useMessageHo
 
 Next to Archive the default page has the checkbox "Daarna volgende openen" (`open_next_after_archive`). With it on,
 Archive posts `open_next: true` and the server lands on the next message of the list (the one "Volgende" pointed to)
-instead of the folder, or on the folder when the archived message was the last one. See
+instead of the folder, or on the folder when the archived message was the last one. The next message opens with a fresh page state
+(full-screen view closed, scrolled to the top). See
 [Message actions](folders.md#message-actions).
 
 The choice is a personal reading habit, not a property of a shared mailbox, so it is stored per browser in

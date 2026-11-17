@@ -22,6 +22,7 @@ function ignoredTarget(target: EventTarget | null): boolean {
 
 function ignoredEvent(event: KeyboardEvent): boolean {
     return event.defaultPrevented
+        || event.repeat
         || event.isComposing
         || event.altKey
         || event.ctrlKey

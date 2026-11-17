@@ -194,7 +194,9 @@ as before. The other mailbox pages keep their padding.
 `useMessageHotkeys({ next, previous })` from `@mailbox/hotkeys` listens on `window` while the component is mounted and
 visits `next()` on J and `previous()` on K with the Inertia router. A function that returns `null` leaves the key alone.
 Keys typed in an input, textarea, select, editable element or modal dialog (`aria-modal="true"`), and keys with Ctrl,
-Alt, Shift or Meta, are ignored. The message view passes its `nextUrl` and `previousUrl`; a copied page does the same:
+Alt, Shift or Meta, and a held key that repeats, are ignored. The host's confirm and choice dialogs need
+`aria-modal="true"` on their dialog element (the dialogs of reka-ui and shadcn-vue have it), otherwise J and K still
+navigate behind an open dialog. The message view passes its `nextUrl` and `previousUrl`; a copied page does the same:
 
 ```ts
 import { useMessageHotkeys } from '@mailbox/hotkeys';
