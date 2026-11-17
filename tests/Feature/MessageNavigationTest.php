@@ -181,3 +181,61 @@ it('stays within the folder of the message', function (): void {
 
     expect(neighbourUrls($mailbox, $messages['newest'])['previous'])->toBeNull();
 });
+
+it('opens the next message after archiving when asked', function (): void {
+    [$mailbox, $inbox, $messages] = navigableInbox();
+    $listQuery = ['messages_filter' => ['global' => 'invoice']];
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.messages.actions', [$mailbox, ...$listQuery]), [
+            'action' => 'archive',
+            'ids' => [$messages['newest']->id],
+            'open_next' => true,
+        ])
+        ->assertRedirect(messageUrl($mailbox, $messages['oldest'], $listQuery));
+
+    $this->post(route('mailbox.messages.actions', [$mailbox, ...$listQuery]), [
+        'action' => 'archive',
+        'ids' => [$messages['oldest']->id],
+        'open_next' => true,
+    ])
+        ->assertRedirect(route('mailbox.folders.show', [$mailbox, $inbox, ...$listQuery]));
+});
+
+it('returns to the list after archiving without the option', function (): void {
+    [$mailbox, $inbox, $messages] = navigableInbox();
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.messages.actions', $mailbox), [
+            'action' => 'archive',
+            'ids' => [$messages['newest']->id],
+            'open_next' => false,
+        ])
+        ->assertRedirect(route('mailbox.folders.show', [$mailbox, $inbox]));
+});
+
+it('only opens the next message after archiving a single message', function (string $action, array $keys): void {
+    [$mailbox, $inbox, $messages] = navigableInbox();
+
+    $this->actingAs(member($mailbox, AccessLevel::Write))
+        ->post(route('mailbox.messages.actions', $mailbox), [
+            'action' => $action,
+            'ids' => collect($keys)->map(fn (string $key): int => $messages[$key]->id)->all(),
+            'open_next' => true,
+        ])
+        ->assertRedirect(route('mailbox.folders.show', [$mailbox, $inbox]));
+})->with([
+    'two archived messages' => [
+        'archive',
+        [
+            'newest',
+            'middle',
+        ],
+    ],
+    'another action' => [
+        'delete',
+        [
+            'newest',
+        ],
+    ],
+]);

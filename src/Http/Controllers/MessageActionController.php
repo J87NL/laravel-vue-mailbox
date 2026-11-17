@@ -19,6 +19,7 @@ use J87NL\Mailbox\Models\Mailbox;
 use J87NL\Mailbox\Models\MailboxMessage;
 use J87NL\VueMailbox\Support\ConversationMessages;
 use J87NL\VueMailbox\Support\FolderListQuery;
+use J87NL\VueMailbox\Support\MessageNeighbours;
 use J87NL\VueMailbox\Support\SpamSuggestion;
 
 class MessageActionController extends Controller
@@ -54,6 +55,10 @@ class MessageActionController extends Controller
             'ids.*' => [
                 'integer',
             ],
+            'open_next' => [
+                'sometimes',
+                'boolean',
+            ],
         ]);
 
         $messages = $mailbox->messages()->with('folder')->whereKey($data['ids'])->get();
@@ -62,6 +67,10 @@ class MessageActionController extends Controller
 
         abort_unless($this->fitsFolders($mailbox, $data['action'], $messages), 422);
         abort_if($data['action'] === 'delete_conversation' && (count($data['ids']) !== 1 || $messages->count() !== 1), 422);
+
+        $next = $this->opensNext($request, $data, $messages)
+            ? app(MessageNeighbours::class)->next($mailbox, $messages->sole(), $messages->modelKeys())
+            : null;
 
         match ($data['action']) {
             'archive' => app(ArchiveMessages::class)->handle($mailbox, $messages, $user),
@@ -85,10 +94,30 @@ class MessageActionController extends Controller
             return back();
         }
 
+        if (! is_null($next)) {
+            return redirect()->route(config('vue-mailbox.routes.name').'messages.show', [
+                $mailbox,
+                $next,
+                ...FolderListQuery::from($request),
+            ]);
+        }
+
         return redirect()->route(config('vue-mailbox.routes.name').'folders.show', [
             ...array_filter([$mailbox, $back]),
             ...FolderListQuery::from($request),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  Collection<int, MailboxMessage>  $messages
+     */
+    private function opensNext(Request $request, array $data, Collection $messages): bool
+    {
+        return $data['action'] === 'archive'
+            && $request->boolean('open_next')
+            && count($data['ids']) === 1
+            && $messages->count() === 1;
     }
 
     /**

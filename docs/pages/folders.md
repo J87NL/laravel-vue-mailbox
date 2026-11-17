@@ -163,6 +163,7 @@ core action, see [message actions](https://github.com/J87NL/laravel-mailbox/blob
 | `action` | required, one of `archive`, `delete`, `delete_conversation`, `flag`, `junk`, `move`, `not_junk`, `read`, `unflag`, `unread` |
 | `ids` | required array of message ids, at most 500 |
 | `folder_id` | required when `action` is `move`, a folder of the same mailbox |
+| `open_next` | optional boolean, only used by `archive` of a single message, see below |
 
 Ids of messages in other mailboxes are ignored. A `folder_id` of another mailbox answers `404`.
 
@@ -188,6 +189,11 @@ filter suggested (`spam_status` `suggested`) while the mailbox's `spam_filter_mo
 After `flag`, `read` and `unflag` the user goes back to the previous page. After the other actions the user lands on
 the folder of the first matched message, or on the inbox when none of the ids matched, with the list query parameters
 (`messages_*`) of the request kept. See [Back to the list](messages.md#back-to-the-list).
+
+`archive` with `open_next` true and exactly one id lands on the next message of the list instead, the one `nextUrl`
+of the [message page](messages.md#previous-and-next) pointed to, found before the message is moved and with the same
+list query kept. At the end of the list it lands on the folder as usual. The message page sends it when the user turned
+on "Daarna volgende openen", see [Open the next message after archiving](messages.md#open-the-next-message-after-archiving).
 
 ```ts
 import { router } from '@inertiajs/vue3';
