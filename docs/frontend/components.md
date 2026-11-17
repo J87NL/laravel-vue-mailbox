@@ -10,6 +10,7 @@ Everything below is imported through the `@mailbox` alias, which points to
 | `@mailbox/components/MessageActions.vue` | Reply, forward and message action buttons of the message view |
 | `@mailbox/components/NotificationToggle.vue` | The button that turns browser notifications on and off, for one mailbox with `mailbox-id` or for all without it, see [Browser notifications](../notifications.md) |
 | `@mailbox/notifications` | `useMailboxNotifications()`, `MAILBOX_NOTIFICATIONS`, `MAILBOX_NOTIFICATIONS_STORAGE_KEY` |
+| `@mailbox/archiveNext` | `useOpenNextAfterArchive()` (`{ openNext, setOpenNext }`) and `MAILBOX_OPEN_NEXT_STORAGE_KEY`, the "Daarna volgende openen" preference of this browser, see [Open the next message after archiving](../pages/messages.md#open-the-next-message-after-archiving) |
 | `@mailbox/choice` | `useMailboxChoice()`, `MAILBOX_CHOICE` and the types `MailboxChoice`, `MailboxChoiceOptions`, `MailboxChoiceOption` |
 | `@mailbox/confirm` | `useMailboxConfirm()`, `MAILBOX_CONFIRM` |
 | `@mailbox/hotkeys` | `useMessageHotkeys()` and the type `MessageHotkeysOptions`, see [Message hotkeys](#message-hotkeys) |

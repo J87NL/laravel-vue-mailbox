@@ -29,6 +29,8 @@ return [
     'notifications_off_hint' => 'Notifications are off. You get a notification for new mail while this app is open.',
     'notifications_on_hint' => 'Notifications are on. You get a notification for new mail while this app is open.',
     'open_fullscreen' => 'Full screen',
+    'open_next_after_archive' => 'Then open next',
+    'open_next_after_archive_hint' => 'After archiving, open the next message instead of returning to the list. Applies to this browser.',
     'previous_message' => 'Previous',
     'previous_message_hint' => 'Previous message (K)',
     'refresh' => 'Refresh',

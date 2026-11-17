@@ -45,6 +45,18 @@ editable element or a modal dialog (the full-screen view and the host's dialogs 
 Meta held, or while the message frame has the focus. The page uses `useMessageHotkeys()` from `@mailbox/hotkeys`, see
 [Components and helpers](../frontend/components.md#message-hotkeys).
 
+## Open the next message after archiving
+
+Next to Archive the default page has the checkbox "Daarna volgende openen" (`open_next_after_archive`). With it on,
+Archive posts `open_next: true` and the server lands on the next message of the list (the one "Volgende" pointed to)
+instead of the folder, or on the folder when the archived message was the last one. See
+[Message actions](folders.md#message-actions).
+
+The choice is a personal reading habit, not a property of a shared mailbox, so it is stored per browser in
+`localStorage` under `vue-mailbox.open-next-after-archive` (`on` or `off`), like the
+[notification toggle](../notifications.md). It is off until the user turns it on and holds for every mailbox. The
+toolbar and the full-screen view share it. A copied page uses `useOpenNextAfterArchive()` from `@mailbox/archiveNext`.
+
 ## Props
 
 | Prop | Type | Description |
@@ -152,7 +164,7 @@ The default page offers, depending on the URLs it gets:
 
 - Reply, Reply all and Forward, linking to `composeUrl` with `?reply={id}&mode=reply|reply_all|forward`. See
   [Compose, reply and forward](compose.md).
-- Archive, "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), "Geen spam" next to
+- Archive with the "Daarna volgende openen" checkbox (see [Open the next message after archiving](#open-the-next-message-after-archiving)), "Markeer als spam" (or "Geen spam" in the junk folder, none in Sent and Drafts), "Geen spam" next to
   "Markeer als spam" when `spamSuggested` is true, Delete (with a
   confirmation only when `confirmDelete` is true; when `conversation` lists more than one message it asks "Alleen dit
   bericht" or "Hele conversatie" instead, through the host's `mailboxChoice`, see

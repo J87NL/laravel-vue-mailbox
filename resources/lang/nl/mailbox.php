@@ -29,6 +29,8 @@ return [
     'notifications_off_hint' => 'Meldingen staan uit. Je krijgt een melding bij nieuwe mail zolang deze app open staat.',
     'notifications_on_hint' => 'Meldingen staan aan. Je krijgt een melding bij nieuwe mail zolang deze app open staat.',
     'open_fullscreen' => 'Volledig scherm',
+    'open_next_after_archive' => 'Daarna volgende openen',
+    'open_next_after_archive_hint' => 'Na archiveren direct het volgende bericht openen in plaats van terug naar de lijst. Geldt voor deze browser.',
     'previous_message' => 'Vorige',
     'previous_message_hint' => 'Vorig bericht (K)',
     'refresh' => 'Vernieuwen',

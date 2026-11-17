@@ -3,6 +3,16 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## From 0.15 to 0.16: previous, next and open next after archiving
+
+- Rebuild the frontend (`npm run build`). The message view gets "Vorige" and "Volgende", the J and K keys and the
+  "Daarna volgende openen" checkbox next to Archive.
+- An app with copied pages: `Show` gets the new props `previousUrl` and `nextUrl`. Show them as links and call
+  `useMessageHotkeys()` from `@mailbox/hotkeys` for the keys, see [Components and helpers](frontend/components.md#message-hotkeys).
+  A copied `MessageActions` sends `open_next: true` with `archive` when `useOpenNextAfterArchive()` from
+  `@mailbox/archiveNext` is on.
+- Nothing to publish or migrate. `open_next` is a new optional field of the existing `mailbox.messages.actions` route.
+
 ## From 0.14 to 0.15: delete a whole conversation
 
 - Rebuild the frontend (`npm run build`). Delete in the message view of a conversation with more than one message
