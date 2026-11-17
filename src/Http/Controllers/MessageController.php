@@ -21,6 +21,7 @@ use J87NL\VueMailbox\Support\FolderListQuery;
 use J87NL\VueMailbox\Support\FolderTree;
 use J87NL\VueMailbox\Support\InlineUrls;
 use J87NL\VueMailbox\Support\MessageBodyLoader;
+use J87NL\VueMailbox\Support\MessageNeighbours;
 use J87NL\VueMailbox\Support\SpamBadge;
 use J87NL\VueMailbox\Support\SpamSuggestion;
 
@@ -32,6 +33,7 @@ class MessageController extends Controller
         private readonly MessageHtml $html,
         private readonly InlineUrls $inlineUrls,
         private readonly ConversationMessages $conversationMessages,
+        private readonly MessageNeighbours $neighbours,
     ) {}
 
     public function show(
@@ -55,6 +57,7 @@ class MessageController extends Controller
 
         $routes = config('vue-mailbox.routes.name');
         $listQuery = FolderListQuery::from($request);
+        $neighbours = $this->neighbours->around($mailbox, $message);
 
         return Inertia::render(config('vue-mailbox.pages.show'), [
             ...$this->body($message, $request->boolean('images')),
@@ -85,9 +88,23 @@ class MessageController extends Controller
                 'is_flagged',
                 'is_answered',
             ]),
+            'nextUrl' => $this->messageUrl($mailbox, $neighbours['next'], $listQuery),
+            'previousUrl' => $this->messageUrl($mailbox, $neighbours['previous'], $listQuery),
             'spam' => SpamBadge::for($message),
             'spamSuggested' => SpamSuggestion::offersNotJunk($mailbox, $message),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $listQuery
+     */
+    private function messageUrl(Mailbox $mailbox, ?int $id, array $listQuery): ?string
+    {
+        if (is_null($id)) {
+            return null;
+        }
+
+        return route(config('vue-mailbox.routes.name').'messages.show', [$mailbox, $id, ...$listQuery]);
     }
 
     /**

@@ -85,7 +85,7 @@ final class MessagesTable extends MailboxTable
             ])
             ->whereBelongsTo($this->folder, 'folder');
 
-        if (! $this->conversations() || $this->filtering()) {
+        if (! $this->groupsConversations()) {
             return $query;
         }
 
@@ -119,6 +119,11 @@ final class MessagesTable extends MailboxTable
                             });
                     });
             });
+    }
+
+    public function groupsConversations(): bool
+    {
+        return $this->conversations() && ! $this->filtering();
     }
 
     public function configure(TableBuilder $table): void
