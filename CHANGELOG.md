@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.16.1 - 2026-11-23
+- Allows `j87nl/laravel-mailbox` ^0.15 next to ^0.13 and ^0.14, so apps can install the core release that keeps a spam verdict when a message moves to another folder (new table `mailbox_spam_verdicts`). Nothing changes in this package. See `docs/upgrading.md`.
+
 ## 0.16.0 - 2026-11-17
 - Previous and next on the message page: new props `previousUrl` and `nextUrl` link the message above and below the open one in the message list it came from, same folder, with the search, filters and sort of the list query (`messages_*`), which the links keep. In the conversation view they step from conversation to conversation. `null` at the ends of the list. The server finds each neighbour with at most two `limit 1` queries on the core's `(mailbox_folder_id, sent_at)` index. New class `J87NL\VueMailbox\Support\MessageNeighbours` and new method `MessagesTable::groupsConversations()`. See `docs/pages/messages.md#previous-and-next`.
 - The message view shows "Vorige" and "Volgende" next to Back, disabled at the ends of the list, and J opens the next message and K the previous one, as in Gmail. The keys are ignored while typing in an input, textarea, select or editable element, inside a modal dialog and with a modifier key. New helper `useMessageHotkeys()` from `@mailbox/hotkeys` and new translations `next_message`, `next_message_hint`, `previous_message` and `previous_message_hint` (nl and en). See `docs/pages/messages.md#keyboard-shortcuts` and `docs/frontend/components.md#message-hotkeys`.

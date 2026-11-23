@@ -3,6 +3,11 @@
 Run `composer update j87nl/laravel-vue-mailbox` and read the section for every version you skip. The
 [changelog](https://github.com/J87NL/laravel-vue-mailbox/blob/main/CHANGELOG.md) lists every change.
 
+## 0.16.1: core 0.15
+
+- Also accepts `j87nl/laravel-mailbox` ^0.15, which keeps a spam verdict when a message moves to another folder. Run
+  `composer update j87nl/laravel-mailbox`, publish the core migrations again and migrate.
+
 ## From 0.15 to 0.16: previous, next and open next after archiving
 
 - Rebuild the frontend (`npm run build`). The message view gets "Vorige" and "Volgende", the J and K keys and the
