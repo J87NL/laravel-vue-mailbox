@@ -5,7 +5,7 @@
 - PHP 8.4+
 - Laravel 11, 12 or 13 (as required by `j87nl/laravel-mailbox`)
 - Inertia (`inertiajs/inertia-laravel` v2 or v3) with Vue 3
-- `tranquil-tools/laravel-vue-form-builder` ^1.13 and `tranquil-tools/laravel-vue-table-builder` ^1.9, with their
+- `tranquil-tools/laravel-vue-form-builder` ^1.13 and `tranquil-tools/laravel-vue-table-builder` ^1.20, with their
   `@form-builder` and `@table-builder` Vite aliases set up as their own docs describe
 
 `j87nl/laravel-mailbox` (0.13, 0.14 or 0.15) and both TranquilTools packages are Composer dependencies, so they are installed with
@@ -18,7 +18,7 @@ composer require j87nl/laravel-vue-mailbox:^0.16 -W
 ```
 
 Name the version and pass `-W` (`--with-all-dependencies`). This package requires
-`tranquil-tools/laravel-vue-form-builder` ^1.13 and `tranquil-tools/laravel-vue-table-builder` ^1.9, and the core
+`tranquil-tools/laravel-vue-form-builder` ^1.13 and `tranquil-tools/laravel-vue-table-builder` ^1.20, and the core
 requires `tranquil-tools/laravel-form-builder` ^1.8; `laravel-table-builder` comes along with the table builder. The
 0.1.x releases of this package still accept much older TranquilTools versions (`laravel-vue-form-builder` ^1.2). So
 when your app has older versions locked, a plain `composer require` does not update them but picks 0.1.x, without the

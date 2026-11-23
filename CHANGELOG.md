@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.0 - 2026-11-23
+- Requires `tranquil-tools/laravel-vue-table-builder` ^1.20 (with `tranquil-tools/laravel-table-builder` ^1.6). Rebuild the frontend (`npm run build`). See `docs/upgrading.md`.
+
 ## 0.16.1 - 2026-11-23
 - Allows `j87nl/laravel-mailbox` ^0.15 next to ^0.13 and ^0.14, so apps can install the core release that keeps a spam verdict when a message moves to another folder (new table `mailbox_spam_verdicts`). Nothing changes in this package. See `docs/upgrading.md`.
 
