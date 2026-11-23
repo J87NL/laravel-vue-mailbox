@@ -151,3 +151,20 @@ it('marks messages with attachments with a paperclip in the subject instead of a
         ->and($subjects[1])->toContain('aria-label="Has attachments"')
         ->and($subjects[2])->toBe('Plain');
 });
+
+it('keeps the bulk actions bar visible for writers only', function (AccessLevel $level, bool $visible): void {
+    $mailbox = mailbox();
+    $folder = folder($mailbox);
+    $this->actingAs(member($mailbox, $level));
+
+    expect(MessagesTable::build($folder)->toArray()['bulkActionsAlwaysVisible'])->toBe($visible);
+})->with([
+    'reader' => [
+        AccessLevel::Read,
+        false,
+    ],
+    'writer' => [
+        AccessLevel::Write,
+        true,
+    ],
+]);

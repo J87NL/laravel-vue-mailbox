@@ -59,7 +59,9 @@ Viewing needs `accessMailbox`. With `workInMailbox` the table has these bulk act
 | Mark as spam | core `MarkJunk::junk()`; not in the junk, sent and drafts folders |
 | Not spam | core `MarkJunk::notJunk()`; in the junk folder on every selected message, and in the inbox only when the mailbox's `spam_filter_mode` is not `off`, on the selected messages the spam filter suggested (others are left alone; a selection without one does not call the core at all) |
 
-Bulk actions only touch messages of the table's folder.
+Bulk actions only touch messages of the table's folder. For writers the bulk actions bar stays visible without a
+selection (`bulkActionsAlwaysVisible()`): it shows 0 selected and its menu is disabled until a message is selected.
+Readers have no bulk actions and see no bar.
 
 ### Conversations
 
