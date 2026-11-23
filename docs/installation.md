@@ -14,7 +14,7 @@ this package.
 ## 1. Install via Composer
 
 ```bash
-composer require j87nl/laravel-vue-mailbox:^0.16 -W
+composer require j87nl/laravel-vue-mailbox:^0.17 -W
 ```
 
 Name the version and pass `-W` (`--with-all-dependencies`). This package requires
